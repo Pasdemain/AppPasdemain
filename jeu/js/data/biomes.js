@@ -10,7 +10,9 @@
   'use strict';
   const NF = w.NF;
 
-  const WAVES_PER_BIOME = NF.WAVES_PER_BIOME = 50;
+  const WAVES_PER_BIOME = NF.WAVES_PER_BIOME = 25;
+  /* un boss toutes les 5 vagues : 5 boss par secteur */
+  const WAVES_PER_BOSS = NF.WAVES_PER_BOSS = 5;
 
   const BIOMES = NF.BIOMES = [
     {
@@ -70,20 +72,20 @@
       index,
       tier: Math.floor(n / BIOMES.length),
       biome: BIOMES[index],
-      /** vague relative au secteur, de 1 à 50 */
+      /** vague relative au secteur, de 1 à 25 */
       local: ((wave - 1) % WAVES_PER_BIOME) + 1
     };
   };
 
-  /** Première vague d'un secteur (index 0 → 1, index 1 → 51…) */
+  /** Première vague d'un secteur (index 0 → 1, index 1 → 26…) */
   NF.biomeFirstWave = index => index * WAVES_PER_BIOME + 1;
 
   /** Le boss de cette vague, s'il y en a un */
   NF.bossForWave = function (wave) {
     const info = NF.biomeInfo(wave);
-    if (info.local % 10 !== 0) return null;
+    if (info.local % WAVES_PER_BOSS !== 0) return null;
     return {
-      id: info.biome.bosses[(info.local / 10) - 1],
+      id: info.biome.bosses[(info.local / WAVES_PER_BOSS) - 1],
       tier: info.tier,
       biome: info.biome
     };

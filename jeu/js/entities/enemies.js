@@ -21,19 +21,19 @@
     },
     rusher: {
       name: 'Éclaireur', ai: 'rush', hp: 15, dmg: 12, speed: 178, r: 11, xp: 3,
-      color: '#9dff4d', sides: 3, mw: { 0: 2, 1: 1 }, weight: 70
+      color: '#9dff4d', sides: 3, mw: { 0: 1, 1: 1 }, weight: 70
     },
     turret: {
       name: 'Sentinelle', ai: 'kite', hp: 34, dmg: 8, speed: 62, r: 15, xp: 4,
-      color: '#ff8a3e', sides: 4, mw: { 0: 3, 1: 1 }, weight: 55, range: 330, fireCd: 1.7
+      color: '#ff8a3e', sides: 4, mw: { 0: 2, 1: 1 }, weight: 55, range: 330, fireCd: 1.7
     },
     tank: {
       name: 'Blindé', ai: 'chase', hp: 130, dmg: 18, speed: 52, r: 24, xp: 8,
-      color: '#8b5cff', sides: 6, mw: { 0: 5, 1: 2, 2: 2 }, weight: 40, knockRes: .75
+      color: '#8b5cff', sides: 6, mw: { 0: 3, 1: 1, 2: 1 }, weight: 40, knockRes: .75
     },
     splitter: {
       name: 'Réplicant', ai: 'chase', hp: 46, dmg: 10, speed: 84, r: 18, xp: 5,
-      color: '#ff3ea5', sides: 5, mw: { 0: 6, 1: 3 }, weight: 45, split: 3
+      color: '#ff3ea5', sides: 5, mw: { 0: 3, 1: 2 }, weight: 45, split: 3
     },
     mini: {
       name: 'Fragment', ai: 'rush', hp: 12, dmg: 7, speed: 150, r: 9, xp: 1,
@@ -41,49 +41,49 @@
     },
     orbiter: {
       name: 'Rôdeur', ai: 'orbit', hp: 40, dmg: 10, speed: 130, r: 13, xp: 5,
-      color: '#7dd3ff', sides: 4, mw: { 0: 8, 1: 3 }, weight: 45, orbitR: 220, fireCd: 1.3
+      color: '#7dd3ff', sides: 4, mw: { 0: 4, 1: 2 }, weight: 45, orbitR: 220, fireCd: 1.3
     },
     healer: {
       name: 'Réparateur', ai: 'flee', hp: 58, dmg: 6, speed: 78, r: 15, xp: 7,
-      color: '#9dff4d', sides: 6, mw: { 0: 10, 1: 5 }, weight: 28, healR: 200, healCd: 1.6
+      color: '#9dff4d', sides: 6, mw: { 0: 5, 1: 3 }, weight: 28, healR: 200, healCd: 1.6
     },
     shielder: {
       name: 'Égide', ai: 'chase', hp: 76, dmg: 10, speed: 70, r: 17, xp: 8,
-      color: '#3ef2ff', sides: 8, mw: { 0: 12, 1: 6, 2: 5 }, weight: 26, auraR: 190
+      color: '#3ef2ff', sides: 8, mw: { 0: 6, 1: 3, 2: 3 }, weight: 26, auraR: 190
     },
     bomber: {
       name: 'Charge Vive', ai: 'rush', hp: 30, dmg: 26, speed: 132, r: 15, xp: 5,
-      color: '#ffb43e', sides: 5, mw: { 0: 9, 1: 4, 2: 7 }, weight: 34, boom: 110
+      color: '#ffb43e', sides: 5, mw: { 0: 5, 1: 2, 2: 4 }, weight: 34, boom: 110
     },
     sniper: {
       name: 'Perce-Ciel', ai: 'snipe', hp: 44, dmg: 22, speed: 58, r: 14, xp: 8,
-      color: '#ff4d5e', sides: 3, mw: { 0: 14, 1: 7, 2: 6 }, weight: 26, range: 620, fireCd: 3.0
+      color: '#ff4d5e', sides: 3, mw: { 0: 7, 1: 4, 2: 3 }, weight: 26, range: 620, fireCd: 3.0
     },
     swarm: {
       name: 'Nuée', ai: 'swarm', hp: 9, dmg: 6, speed: 168, r: 7, xp: 1,
-      color: '#c58bff', sides: 3, mw: { 0: 7, 1: 2, 2: 3 }, weight: 50, packed: true
+      color: '#c58bff', sides: 3, mw: { 0: 4, 1: 1, 2: 2 }, weight: 50, packed: true
     },
 
     /* ---------------- Secteur 2 — LA FAILLE ---------------- */
     phantom: {
       name: 'Spectre', ai: 'blink', hp: 52, dmg: 15, speed: 66, r: 14, xp: 7,
-      color: '#b57bff', sides: 3, mw: { 1: 1, 2: 12 }, weight: 60, blinkCd: 3.2
+      color: '#b57bff', sides: 3, mw: { 1: 1, 2: 6 }, weight: 60, blinkCd: 3.2
     },
     spawner: {
       name: 'Couveuse', ai: 'spawner', hp: 120, dmg: 10, speed: 34, r: 20, xp: 12,
-      color: '#ff6b4d', sides: 6, mw: { 1: 4 }, weight: 30, knockRes: .6, broodCd: 5.5
+      color: '#ff6b4d', sides: 6, mw: { 1: 2 }, weight: 30, knockRes: .6, broodCd: 5.5
     },
     warden: {
       name: 'Gardien', ai: 'chase', hp: 90, dmg: 20, speed: 66, r: 19, xp: 12,
-      color: '#ffd23e', sides: 5, mw: { 1: 8 }, weight: 28, knockRes: .5, ward: 0.45
+      color: '#ffd23e', sides: 5, mw: { 1: 4 }, weight: 28, knockRes: .5, ward: 0.45
     },
     leech: {
       name: 'Sangsue', ai: 'leech', hp: 46, dmg: 8, speed: 142, r: 12, xp: 4,
-      color: '#4dffc3', sides: 4, mw: { 1: 12 }, weight: 26
+      color: '#4dffc3', sides: 4, mw: { 1: 6 }, weight: 26
     },
     harrier: {
       name: 'Faucheur', ai: 'harrier', hp: 62, dmg: 16, speed: 152, r: 13, xp: 9,
-      color: '#ff2d55', sides: 3, mw: { 1: 16, 2: 10 }, weight: 30, orbitR: 250, fireCd: 2.2
+      color: '#ff2d55', sides: 3, mw: { 1: 8, 2: 5 }, weight: 30, orbitR: 250, fireCd: 2.2
     },
 
     /* ---------------- Secteur 3 — LE NOYAU ---------------- */
@@ -93,11 +93,11 @@
     },
     mortar: {
       name: 'Mortier', ai: 'mortar', hp: 68, dmg: 22, speed: 46, r: 18, xp: 10,
-      color: '#ffd23e', sides: 6, mw: { 2: 4 }, weight: 40, range: 560, fireCd: 3.4
+      color: '#ffd23e', sides: 6, mw: { 2: 2 }, weight: 40, range: 560, fireCd: 3.4
     },
     magnetron: {
       name: 'Aimant', ai: 'magnetron', hp: 96, dmg: 12, speed: 58, r: 20, xp: 11,
-      color: '#c58bff', sides: 8, mw: { 2: 8 }, weight: 30, pullR: 420, knockRes: .6
+      color: '#c58bff', sides: 8, mw: { 2: 4 }, weight: 30, pullR: 420, knockRes: .6
     }
   };
 

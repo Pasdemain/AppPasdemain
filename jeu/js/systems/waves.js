@@ -1,6 +1,7 @@
 /* ============================================================
    waves.js — enchaînement infini des vagues
-   Vague %10 = boss. Difficulté exponentielle bornée par des paliers.
+   Une vague sur cinq est une vague de boss. La courbe de difficulté est
+   polynomiale et se rejoue à l'identique dans chaque secteur.
    ============================================================ */
 (function (w) {
   'use strict';
@@ -33,25 +34,28 @@
     /** Multiplicateurs de difficulté.
 
         La courbe est identique dans chaque secteur — elle suit la vague
-        LOCALE (1 à 50), pas la vague absolue. Une partie est donc toujours
+        LOCALE (1 à 25), pas la vague absolue. Une partie est donc toujours
         le même arc : on repart du niveau 1 et on monte en puissance sur
-        50 vagues. Ce qui change d'un secteur à l'autre, c'est un
+        25 vagues. Ce qui change d'un secteur à l'autre, c'est un
         multiplicateur global : le secteur EST le palier de difficulté, et
-        l'arbre de talents est ce qui permet de l'encaisser. */
+        l'arbre de talents est ce qui permet de l'encaisser.
+
+        Les coefficients sont doublés par rapport à un secteur de 50 vagues :
+        le même écart de puissance est franchi, mais deux fois plus vite. */
     scaleFor(n) {
       const info = NF.biomeInfo(n);
       const k = info.local - 1;
       const b = info.biome;
       const sector = info.tier * NF.BIOMES.length + info.index;
       return {
-        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * Math.pow(1.9, sector),
+        hp: (1 + 0.72 * k + 0.058 * k * k) * b.hpMul * Math.pow(1.9, sector),
         /* les dégâts montent bien plus doucement que les PV : sinon deux
            contacts suffisent à tuer et aucune quantité de vie ne suit */
-        dmg: (1 + 0.055 * k + 0.0009 * k * k) * b.dmgMul * Math.pow(1.3, sector),
-        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul * (1 + 0.04 * sector)),
+        dmg: (1 + 0.110 * k + 0.0036 * k * k) * b.dmgMul * Math.pow(1.3, sector),
+        speed: Math.min(1.6, (1 + 0.016 * k) * b.speedMul * (1 + 0.04 * sector)),
         /* le coût d'un niveau croît géométriquement : l'XP doit suivre,
            sinon la montée en puissance décroche en fin de partie */
-        xp: Math.pow(1.055, k)
+        xp: Math.pow(1.125, k)
       };
     }
 
@@ -92,15 +96,15 @@
         g.onBossSpawn(boss);
         this.total = 1;
         // quelques sbires d'accompagnement
-        const adds = Math.min(14, 4 + Math.floor(NF.biomeInfo(n).local / 10) * 2);
+        const adds = Math.min(14, 4 + Math.floor(NF.biomeInfo(n).local / NF.WAVES_PER_BOSS) * 2);
         for (let i = 0; i < adds; i++) this.queue.push({ id: this.pickType(n), delay: 1.5 + i * 0.6 });
       } else {
         /* ---------- vague normale ---------- */
         this.state = 'spawning';
-        const count = Math.min(120, Math.round(7 + NF.biomeInfo(n).local * 1.7));
+        const count = Math.min(120, Math.round(7 + NF.biomeInfo(n).local * 3.4));
         this.total = count;
         const loc = NF.biomeInfo(n).local;
-        const eliteChance = loc >= 5 ? Math.min(0.22, (loc - 4) * 0.012) : 0;
+        const eliteChance = loc >= 3 ? Math.min(0.22, (loc - 2) * 0.024) : 0;
         let t = 0;
         for (let i = 0; i < count; i++) {
           // les ennemis arrivent par petits paquets
@@ -187,7 +191,7 @@
     finish() {
       const g = this.game;
       this.state = 'cleared';
-      this.breakT = this.wave % 10 === 0 ? 5.0 : 2.6;
+      this.breakT = this.wave % NF.WAVES_PER_BOSS === 0 ? 5.0 : 2.6;
       g.onWaveClear(this.wave);
     }
 

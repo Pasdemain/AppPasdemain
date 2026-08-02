@@ -699,10 +699,13 @@ body.in-interlude .hud-top,
 body.in-interlude .hud-wave,
 body.in-interlude #bossBar,
 body.in-interlude #questTracker,
+body.in-interlude #toasts,
 body.in-interlude #weaponStrip { display: none; }
-/* en défense orbitale on ne saute pas : les boutons disparaissent */
+/* hors course d'obstacles on ne saute pas : les boutons disparaissent */
 body.in-interlude.no-action #btnDash,
 body.in-interlude.no-action #btnUlt { display: none; }
+/* en partition, tout l'écran est une piste : pas de joystick fantôme */
+body.in-interlude.rythme #stickBase { display: none; }
 
 </style>
 </head>
@@ -919,13 +922,16 @@ body.in-interlude.no-action #btnUlt { display: none; }
       <h3>Progression</h3>
       <p>Les ennemis lâchent des <b>éclats d'XP</b>. À chaque niveau, choisis une carte parmi trois : nouvelle arme, amélioration d'arme ou statistique.</p>
       <h3>Secteurs</h3>
-      <p>Chaque secteur compte <b>50 vagues</b> et cinq boss, et <b>une partie couvre un secteur</b> :
-      nettoyer la vague 50 termine la partie sur une victoire et ouvre le secteur suivant.</p>
+      <p>Chaque secteur compte <b>25 vagues</b> et cinq boss, et <b>une partie couvre un secteur</b> :
+      nettoyer la vague 25 termine la partie sur une victoire et ouvre le secteur suivant.</p>
       <p>Tu repars toujours du <b>niveau 1</b>, quel que soit le secteur : ce qui change, c'est un
       multiplicateur global. Le secteur est donc le <b>palier de difficulté</b>, et c'est l'arbre de
       talents qui te permet de l'encaisser. Les secteurs déjà nettoyés restent rejouables.</p>
       <h3>Boss</h3>
-      <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
+      <p>Toutes les <b>5 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
+      <p>Certains interrompent le combat : <b>séquence d'action rapide</b>, mini-jeu hors de l'arène, ou
+      <b>partition</b> où les notes défilent — chaque note frappée à temps entame le boss, chaque note
+      manquée te coûte de la vie, et le combo multiplie les dégâts.</p>
       <h3>Après la partie</h3>
       <p>Tu gagnes des <b>cristaux ◈</b> selon ta vague atteinte. Dépense-les dans l'Arsenal (nouvelles armes) et dans l'<b>arbre de talents</b>.</p>
       <h3>Récompense du jour</h3>
@@ -1966,7 +1972,9 @@ body.in-interlude.no-action #btnUlt { display: none; }
   'use strict';
   const NF = w.NF;
 
-  const WAVES_PER_BIOME = NF.WAVES_PER_BIOME = 50;
+  const WAVES_PER_BIOME = NF.WAVES_PER_BIOME = 25;
+  /* un boss toutes les 5 vagues : 5 boss par secteur */
+  const WAVES_PER_BOSS = NF.WAVES_PER_BOSS = 5;
 
   const BIOMES = NF.BIOMES = [
     {
@@ -2026,20 +2034,20 @@ body.in-interlude.no-action #btnUlt { display: none; }
       index,
       tier: Math.floor(n / BIOMES.length),
       biome: BIOMES[index],
-      /** vague relative au secteur, de 1 à 50 */
+      /** vague relative au secteur, de 1 à 25 */
       local: ((wave - 1) % WAVES_PER_BIOME) + 1
     };
   };
 
-  /** Première vague d'un secteur (index 0 → 1, index 1 → 51…) */
+  /** Première vague d'un secteur (index 0 → 1, index 1 → 26…) */
   NF.biomeFirstWave = index => index * WAVES_PER_BIOME + 1;
 
   /** Le boss de cette vague, s'il y en a un */
   NF.bossForWave = function (wave) {
     const info = NF.biomeInfo(wave);
-    if (info.local % 10 !== 0) return null;
+    if (info.local % WAVES_PER_BOSS !== 0) return null;
     return {
-      id: info.biome.bosses[(info.local / 10) - 1],
+      id: info.biome.bosses[(info.local / WAVES_PER_BOSS) - 1],
       tier: info.tier,
       biome: info.biome
     };
@@ -3205,19 +3213,19 @@ body.in-interlude.no-action #btnUlt { display: none; }
     },
     rusher: {
       name: 'Éclaireur', ai: 'rush', hp: 15, dmg: 12, speed: 178, r: 11, xp: 3,
-      color: '#9dff4d', sides: 3, mw: { 0: 2, 1: 1 }, weight: 70
+      color: '#9dff4d', sides: 3, mw: { 0: 1, 1: 1 }, weight: 70
     },
     turret: {
       name: 'Sentinelle', ai: 'kite', hp: 34, dmg: 8, speed: 62, r: 15, xp: 4,
-      color: '#ff8a3e', sides: 4, mw: { 0: 3, 1: 1 }, weight: 55, range: 330, fireCd: 1.7
+      color: '#ff8a3e', sides: 4, mw: { 0: 2, 1: 1 }, weight: 55, range: 330, fireCd: 1.7
     },
     tank: {
       name: 'Blindé', ai: 'chase', hp: 130, dmg: 18, speed: 52, r: 24, xp: 8,
-      color: '#8b5cff', sides: 6, mw: { 0: 5, 1: 2, 2: 2 }, weight: 40, knockRes: .75
+      color: '#8b5cff', sides: 6, mw: { 0: 3, 1: 1, 2: 1 }, weight: 40, knockRes: .75
     },
     splitter: {
       name: 'Réplicant', ai: 'chase', hp: 46, dmg: 10, speed: 84, r: 18, xp: 5,
-      color: '#ff3ea5', sides: 5, mw: { 0: 6, 1: 3 }, weight: 45, split: 3
+      color: '#ff3ea5', sides: 5, mw: { 0: 3, 1: 2 }, weight: 45, split: 3
     },
     mini: {
       name: 'Fragment', ai: 'rush', hp: 12, dmg: 7, speed: 150, r: 9, xp: 1,
@@ -3225,49 +3233,49 @@ body.in-interlude.no-action #btnUlt { display: none; }
     },
     orbiter: {
       name: 'Rôdeur', ai: 'orbit', hp: 40, dmg: 10, speed: 130, r: 13, xp: 5,
-      color: '#7dd3ff', sides: 4, mw: { 0: 8, 1: 3 }, weight: 45, orbitR: 220, fireCd: 1.3
+      color: '#7dd3ff', sides: 4, mw: { 0: 4, 1: 2 }, weight: 45, orbitR: 220, fireCd: 1.3
     },
     healer: {
       name: 'Réparateur', ai: 'flee', hp: 58, dmg: 6, speed: 78, r: 15, xp: 7,
-      color: '#9dff4d', sides: 6, mw: { 0: 10, 1: 5 }, weight: 28, healR: 200, healCd: 1.6
+      color: '#9dff4d', sides: 6, mw: { 0: 5, 1: 3 }, weight: 28, healR: 200, healCd: 1.6
     },
     shielder: {
       name: 'Égide', ai: 'chase', hp: 76, dmg: 10, speed: 70, r: 17, xp: 8,
-      color: '#3ef2ff', sides: 8, mw: { 0: 12, 1: 6, 2: 5 }, weight: 26, auraR: 190
+      color: '#3ef2ff', sides: 8, mw: { 0: 6, 1: 3, 2: 3 }, weight: 26, auraR: 190
     },
     bomber: {
       name: 'Charge Vive', ai: 'rush', hp: 30, dmg: 26, speed: 132, r: 15, xp: 5,
-      color: '#ffb43e', sides: 5, mw: { 0: 9, 1: 4, 2: 7 }, weight: 34, boom: 110
+      color: '#ffb43e', sides: 5, mw: { 0: 5, 1: 2, 2: 4 }, weight: 34, boom: 110
     },
     sniper: {
       name: 'Perce-Ciel', ai: 'snipe', hp: 44, dmg: 22, speed: 58, r: 14, xp: 8,
-      color: '#ff4d5e', sides: 3, mw: { 0: 14, 1: 7, 2: 6 }, weight: 26, range: 620, fireCd: 3.0
+      color: '#ff4d5e', sides: 3, mw: { 0: 7, 1: 4, 2: 3 }, weight: 26, range: 620, fireCd: 3.0
     },
     swarm: {
       name: 'Nuée', ai: 'swarm', hp: 9, dmg: 6, speed: 168, r: 7, xp: 1,
-      color: '#c58bff', sides: 3, mw: { 0: 7, 1: 2, 2: 3 }, weight: 50, packed: true
+      color: '#c58bff', sides: 3, mw: { 0: 4, 1: 1, 2: 2 }, weight: 50, packed: true
     },
 
     /* ---------------- Secteur 2 — LA FAILLE ---------------- */
     phantom: {
       name: 'Spectre', ai: 'blink', hp: 52, dmg: 15, speed: 66, r: 14, xp: 7,
-      color: '#b57bff', sides: 3, mw: { 1: 1, 2: 12 }, weight: 60, blinkCd: 3.2
+      color: '#b57bff', sides: 3, mw: { 1: 1, 2: 6 }, weight: 60, blinkCd: 3.2
     },
     spawner: {
       name: 'Couveuse', ai: 'spawner', hp: 120, dmg: 10, speed: 34, r: 20, xp: 12,
-      color: '#ff6b4d', sides: 6, mw: { 1: 4 }, weight: 30, knockRes: .6, broodCd: 5.5
+      color: '#ff6b4d', sides: 6, mw: { 1: 2 }, weight: 30, knockRes: .6, broodCd: 5.5
     },
     warden: {
       name: 'Gardien', ai: 'chase', hp: 90, dmg: 20, speed: 66, r: 19, xp: 12,
-      color: '#ffd23e', sides: 5, mw: { 1: 8 }, weight: 28, knockRes: .5, ward: 0.45
+      color: '#ffd23e', sides: 5, mw: { 1: 4 }, weight: 28, knockRes: .5, ward: 0.45
     },
     leech: {
       name: 'Sangsue', ai: 'leech', hp: 46, dmg: 8, speed: 142, r: 12, xp: 4,
-      color: '#4dffc3', sides: 4, mw: { 1: 12 }, weight: 26
+      color: '#4dffc3', sides: 4, mw: { 1: 6 }, weight: 26
     },
     harrier: {
       name: 'Faucheur', ai: 'harrier', hp: 62, dmg: 16, speed: 152, r: 13, xp: 9,
-      color: '#ff2d55', sides: 3, mw: { 1: 16, 2: 10 }, weight: 30, orbitR: 250, fireCd: 2.2
+      color: '#ff2d55', sides: 3, mw: { 1: 8, 2: 5 }, weight: 30, orbitR: 250, fireCd: 2.2
     },
 
     /* ---------------- Secteur 3 — LE NOYAU ---------------- */
@@ -3277,11 +3285,11 @@ body.in-interlude.no-action #btnUlt { display: none; }
     },
     mortar: {
       name: 'Mortier', ai: 'mortar', hp: 68, dmg: 22, speed: 46, r: 18, xp: 10,
-      color: '#ffd23e', sides: 6, mw: { 2: 4 }, weight: 40, range: 560, fireCd: 3.4
+      color: '#ffd23e', sides: 6, mw: { 2: 2 }, weight: 40, range: 560, fireCd: 3.4
     },
     magnetron: {
       name: 'Aimant', ai: 'magnetron', hp: 96, dmg: 12, speed: 58, r: 20, xp: 11,
-      color: '#c58bff', sides: 8, mw: { 2: 8 }, weight: 30, pullR: 420, knockRes: .6
+      color: '#c58bff', sides: 8, mw: { 2: 4 }, weight: 30, pullR: 420, knockRes: .6
     }
   };
 
@@ -3716,9 +3724,9 @@ body.in-interlude.no-action #btnUlt { display: none; }
 
 /* ===== js/entities/bosses.js ===== */
 /* ============================================================
-   bosses.js — boss toutes les 10 vagues
-   Cinq archétypes avec des mécaniques propres, rejoués en boucle
-   avec un palier (Mk II, Mk III…) pour des vagues illimitées.
+   bosses.js — un boss toutes les 5 vagues, cinq par secteur
+   Chacun a sa mécanique propre ; passé le dernier secteur la liste
+   reprend au palier supérieur (Mk II, Mk III…) sans fin.
    ============================================================ */
 (function (w) {
   'use strict';
@@ -3764,6 +3772,15 @@ body.in-interlude.no-action #btnUlt { display: none; }
         if (!b.invuln) {
           b.vulnT -= dt;
           b.hint = 'NOYAU EXPOSÉ — frappe maintenant !';
+          /* à découvert il panique et arrose autour de lui */
+          b.panicT = (b.panicT || 0) - dt;
+          if (b.panicT <= 0) {
+            b.panicT = 1.1;
+            const off = U.rand(0, U.TAU);
+            for (let i = 0; i < 12; i++) {
+              game.enemyShoot(b, off + i * U.TAU / 12, { speed: 210, dmg: b.dmg * .4, r: 6, color: '#ffd23e' });
+            }
+          }
           if (b.vulnT <= 0) {                       // les nœuds se reforment
             b.spawnNodes(game);
             game.toast('LES NŒUDS SE REFORMENT', 'warn');
@@ -3821,13 +3838,25 @@ body.in-interlude.no-action #btnUlt { display: none; }
       },
       update(b, dt, game) {
         const p = game.player;
-        b.hint = 'Traverse l\'anneau par l\'intérieur';
 
-        /* aspiration */
+        /* à partir de la phase 2 il inverse son souffle : on ne peut plus
+           se contenter de lutter toujours dans le même sens */
+        b.blowT = (b.blowT || 6) - dt;
+        if (b.blowT <= 0 && b.phase >= 2) {
+          b.blowT = 7;
+          b.blow = 2.6;
+          game.toast('INVERSION DU SOUFFLE', 'warn');
+          FX.screenFlash('#7dd3ff', .3);
+        }
+        if (b.blow > 0) b.blow -= dt;
+        b.hint = b.blow > 0 ? 'SOUFFLE INVERSÉ — il te repousse'
+                            : 'Traverse l\'anneau par l\'intérieur';
+
+        /* aspiration (ou expulsion) */
         const d = U.dist(b.x, b.y, p.x, p.y);
         if (d > 30) {
           const a = U.angle(p.x, p.y, b.x, b.y);
-          const pull = (b.phase >= 3 ? 160 : 110) * U.clamp(d / 500, .35, 1);
+          const pull = (b.phase >= 3 ? 160 : 110) * U.clamp(d / 500, .35, 1) * (b.blow > 0 ? -1 : 1);
           p.x += Math.cos(a) * pull * dt;
           p.y += Math.sin(a) * pull * dt;
         }
@@ -3899,6 +3928,22 @@ body.in-interlude.no-action #btnUlt { display: none; }
         }
         if (b.coreOff > 0) b.coreOff -= dt;
 
+        /* un leurre allume parfois un faux cœur pendant que le vrai
+           s'éteint : la lecture ne suffit plus, il faut vérifier */
+        b.fakeT = (b.fakeT || 9) - dt;
+        if (b.fakeT <= 0 && b.phase >= 2 && b.decoys.length) {
+          b.fakeT = 11;
+          b.fake = U.pick(b.decoys);
+          b.fakeLeft = 3;
+          b.coreOff = 3;
+          game.toast('CŒUR FANTÔME', 'bad');
+        }
+        if (b.fakeLeft > 0) {
+          b.fakeLeft -= dt;
+          if (b.fakeLeft <= 0) b.fake = null;
+        }
+        if (b.fake && b.fake.dead) b.fake = null;
+
         /* faisceaux croisés depuis chaque copie */
         b.beamT -= dt;
         if (b.beamT <= 0) {
@@ -3928,14 +3973,18 @@ body.in-interlude.no-action #btnUlt { display: none; }
         game.toast('L\'HYDRE SE DÉDOUBLE', 'bad');
       },
       draw(b, ctx) {
+        const glow = (x, y) => {
+          const pulse = .55 + .45 * Math.sin(performance.now() / 140);
+          ctx.globalAlpha = pulse;
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(x, y, 11, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = pulse * .5;
+          ctx.beginPath(); ctx.arc(x, y, 20, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = 1;
+        };
+        if (b.fake && !b.fake.dead) glow(b.fake.x, b.fake.y);
         if (b.coreOff > 0) return;
-        const pulse = .55 + .45 * Math.sin(performance.now() / 140);
-        ctx.globalAlpha = pulse;
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, U.TAU); ctx.fill();
-        ctx.globalAlpha = pulse * .5;
-        ctx.beginPath(); ctx.arc(b.x, b.y, 20, 0, U.TAU); ctx.fill();
-        ctx.globalAlpha = 1;
+        glow(b.x, b.y);
       }
     },
 
@@ -3952,13 +4001,31 @@ body.in-interlude.no-action #btnUlt { display: none; }
       },
       update(b, dt, game) {
         const p = game.player;
-        b.hint = 'Contourne le bouclier';
 
         /* le bouclier suit le joueur, avec un temps de retard */
         b.snapT -= dt;
         const want = U.angle(b.x, b.y, p.x, p.y);
         const rate = b.phase >= 3 ? 1.5 : (b.phase >= 2 ? 1.1 : .8);
         b.shieldA = U.turnTo(b.shieldA, want, rate * dt);
+
+        /* rester dans son axe le charge : le bouclier n'est plus seulement
+           une gêne, il devient une menace si on ne le contourne pas */
+        const inFront = Math.abs(U.angleDiff(b.shieldA, want)) < b.shieldArc / 2;
+        b.overload = U.clamp((b.overload || 0) + (inFront ? dt * 24 : -dt * 32), 0, 100);
+        b.hint = b.overload > 45
+          ? `Bouclier en surcharge ${Math.round(b.overload)} % — sors de son axe`
+          : 'Contourne le bouclier';
+        if (b.overload >= 100) {
+          b.overload = 0;
+          for (let i = -1; i <= 1; i++) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: b.shieldA + i * .3,
+              len: 950, width: 32, telegraph: .65, duration: .5,
+              dmg: b.dmg * 1.3, color: '#3ef2ff', owner: b, followOwner: true
+            }));
+          }
+          game.toast('DÉCHARGE FRONTALE', 'bad');
+        }
 
         /* charge télégraphiée */
         b.chargeT -= dt;
@@ -4008,6 +4075,17 @@ body.in-interlude.no-action #btnUlt { display: none; }
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r + 14, b.shieldA - b.shieldArc / 2, b.shieldA + b.shieldArc / 2);
         ctx.stroke();
+        /* la charge se lit sur le bouclier lui-même */
+        const k = (b.overload || 0) / 100;
+        if (k > 0) {
+          ctx.globalAlpha = .35 + .5 * k;
+          ctx.strokeStyle = k > .8 ? '#ff4d5e' : '#ffd23e';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 22, b.shieldA - b.shieldArc / 2,
+            b.shieldA - b.shieldArc / 2 + b.shieldArc * k);
+          ctx.stroke();
+        }
         ctx.restore();
         ctx.globalAlpha = 1;
       },
@@ -4089,6 +4167,24 @@ body.in-interlude.no-action #btnUlt { display: none; }
       onPhase(b, game) {
         b.spawnPillars(game, 2);
         game.toast('NOUVEAUX PILIERS', 'bad');
+        /* phase 2 : il recompile le secteur et t'impose son tempo */
+        if (b.phase === 2 && !b.scored) {
+          b.scored = true;
+          NF.Interlude.start(game, {
+            mode: 'partition',
+            title: 'RECOMPILATION',
+            subtitle: 'Frappe la piste en rythme — chaque note l\'entame',
+            duration: 26, bpm: 100, lanes: 4, need: 0.5, color: '#c58bff',
+            onHit: (g, combo, mult) =>
+              g.damageEnemy(b, b.maxHp * 0.0022 * mult, { silent: true, source: 'rythme' }),
+            onMiss: (g) => NF.Interlude.noteCost(g, 0.032),
+            onWin: (g) => {
+              g.damageEnemy(b, b.maxHp * 0.08, { silent: true, source: 'rythme' });
+              g.toast('SÉQUENCE COMPILÉE', 'good');
+            },
+            onLose: (g) => g.toast('COMPILATION ÉCHOUÉE', 'bad')
+          });
+        }
       }
     },
 
@@ -4109,29 +4205,37 @@ body.in-interlude.no-action #btnUlt { display: none; }
         b.decoys = [];
         b.shieldA = 0; b.shieldArc = Math.PI * .8;
         b.salvoT = 3;
-        b.spawnNodes(game);
-        b.hint = 'Phase 1 — détruis les nœuds';
+        /* l'ordre des trois défenses est tiré au sort : impossible de
+           réciter le combat appris la partie d'avant */
+        b.order = [1, 2, 3];
+        for (let i = 2; i > 0; i--) {
+          const j = U.randInt(0, i);
+          const t = b.order[i]; b.order[i] = b.order[j]; b.order[j] = t;
+        }
+        b.mode = b.order[0];
+        if (b.mode === 1) b.spawnNodes(game);
+        if (b.mode === 3) b.spawnDecoys(game, 2);
       },
       update(b, dt, game) {
         const p = game.player;
 
-        if (b.phase === 1) {
+        if (b.mode === 1) {
           b.nodes = b.nodes.filter(n => !n.dead);
           b.invuln = b.nodes.length > 0;
-          b.hint = b.invuln ? `Phase 1 — nœuds restants : ${b.nodes.length}` : 'Noyau exposé !';
+          b.hint = b.invuln ? `Nœuds restants : ${b.nodes.length}` : 'Noyau exposé !';
           if (!b.invuln) {
             b.vulnT -= dt;
             if (b.vulnT <= 0) b.spawnNodes(game);
           }
-        } else if (b.phase === 2) {
+        } else if (b.mode === 2) {
           /* bouclier frontal : il faut la contourner */
           b.invuln = false;
-          b.hint = 'Phase 2 — frappe-la dans le dos';
+          b.hint = 'Frappe-la dans le dos';
           b.shieldA = U.turnTo(b.shieldA, U.angle(b.x, b.y, p.x, p.y), 1.15 * dt);
         } else {
           /* leurres : seule celle au cœur allumé encaisse */
           b.invuln = false;
-          b.hint = 'Phase 3 — vise le cœur allumé';
+          b.hint = 'Vise le cœur allumé';
           b.decoys = b.decoys.filter(d => !d.dead);
           b.swapT = (b.swapT || 4) - dt;
           if (b.swapT <= 0) {
@@ -4162,12 +4266,15 @@ body.in-interlude.no-action #btnUlt { display: none; }
         for (const n of b.nodes) if (!n.dead) n.dead = true;
         b.nodes = [];
         b.invuln = false;
-        if (b.phase === 3) b.spawnDecoys(game, 2);
-        game.toast('LA CHIMÈRE CHANGE DE DÉFENSE', 'bad');
+        b.mode = b.order[b.phase - 1];
+        if (b.mode === 1) b.spawnNodes(game);
+        if (b.mode === 3 && !b.decoys.filter(d => !d.dead).length) b.spawnDecoys(game, 2);
+        const nom = { 1: 'NŒUDS', 2: 'BOUCLIER', 3: 'LEURRES' }[b.mode];
+        game.toast('LA CHIMÈRE PASSE EN ' + nom, 'bad');
         FX.screenFlash(b.color, .4);
       },
       draw(b, ctx) {
-        if (b.phase === 2) {
+        if (b.mode === 2) {
           ctx.save();
           ctx.strokeStyle = b.color; ctx.lineCap = 'round';
           ctx.globalAlpha = .8; ctx.lineWidth = 7;
@@ -4176,7 +4283,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
           ctx.stroke();
           ctx.restore(); ctx.globalAlpha = 1;
         }
-        if (b.phase === 3 && !(b.coreOff > 0)) {
+        if (b.mode === 3 && !(b.coreOff > 0)) {
           const pulse = .5 + .5 * Math.sin(performance.now() / 140);
           ctx.globalAlpha = pulse; ctx.fillStyle = '#fff';
           ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, U.TAU); ctx.fill();
@@ -4184,7 +4291,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
         }
       },
       block(b, x, y) {
-        if (b.phase !== 2) return false;
+        if (b.mode !== 2) return false;
         return Math.abs(U.angleDiff(b.shieldA, U.angle(b.x, b.y, x, y))) < b.shieldArc / 2;
       }
     },
@@ -4251,6 +4358,24 @@ body.in-interlude.no-action #btnUlt { display: none; }
       onPhase(b, game) {
         game.toast('PRÉDICTION AFFINÉE', 'bad');
         b.trail.length = 0;
+        /* il ne se contente plus d'anticiper : il impose la mesure */
+        if (b.phase === 2 && !b.scored) {
+          b.scored = true;
+          NF.Interlude.start(game, {
+            mode: 'partition',
+            title: 'TEMPO IMPOSÉ',
+            subtitle: 'Il a déjà écrit la suite — joue-la sans faute',
+            duration: 28, bpm: 112, lanes: 4, need: 0.55, color: '#7dd3ff',
+            onHit: (g, combo, mult) =>
+              g.damageEnemy(b, b.maxHp * 0.0022 * mult, { silent: true, source: 'rythme' }),
+            onMiss: (g) => NF.Interlude.noteCost(g, 0.035),
+            onWin: (g) => {
+              g.damageEnemy(b, b.maxHp * 0.1, { silent: true, source: 'rythme' });
+              g.toast('PRÉDICTION DÉJOUÉE', 'good');
+            },
+            onLose: (g) => g.toast('IL AVAIT VU JUSTE', 'bad')
+          });
+        }
       },
       draw(b, ctx) {
         /* fil reliant les positions mémorisées */
@@ -4280,10 +4405,11 @@ body.in-interlude.no-action #btnUlt { display: none; }
         b.pods = b.pods.filter(p => !p.dead);
         b.invuln = b.pods.length > 0;
         b.hint = b.invuln
-          ? `Couveuses actives : ${b.pods.length} — la coque est scellée`
+          ? `Couveuses : ${b.pods.length} — elles rampent vers la ruche`
           : 'Coque ouverte — frappe !';
 
-        /* les couveuses recrachent des nuées */
+        /* les couveuses recrachent des nuées — et rampent vers la ruche :
+           laissée tranquille, chacune la ravitaille de 8 % */
         for (const pod of b.pods) {
           pod.broodT = (pod.broodT || U.rand(1, 3)) - dt;
           if (pod.broodT <= 0) {
@@ -4292,6 +4418,17 @@ body.in-interlude.no-action #btnUlt { display: none; }
               const pt = U.ringPoint(pod.x, pod.y, 28, 50);
               game.spawnAdd('swarm', pt.x, pt.y, b.tierScale);
             }
+          }
+          const a = U.angle(pod.x, pod.y, b.x, b.y);
+          const sp = 13 + b.phase * 7;
+          pod.x += Math.cos(a) * sp * dt;
+          pod.y += Math.sin(a) * sp * dt;
+          if (U.dist(pod.x, pod.y, b.x, b.y) < b.r + 30) {
+            pod.dead = true;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.08);
+            game.toast('COUVEUSE RÉABSORBÉE (+8 %)', 'bad');
+            FX.screenFlash('#ffb43e', .3);
+            FX.burst(b.x, b.y, 16, '#ffb43e', { speed: 240, life: .5, glow: true });
           }
         }
 
@@ -4356,6 +4493,11 @@ body.in-interlude.no-action #btnUlt { display: none; }
           b.invT = b.phase >= 3 ? 9 : 12;
           b.warned = false;
           game.invertT = b.phase >= 3 ? 6 : 4.5;
+          /* le miroir ne retourne pas que tes commandes : les tirs déjà
+             en l'air repartent d'où ils venaient */
+          let n = 0;
+          for (const bl of game.ebullets) { bl.vx = -bl.vx; bl.vy = -bl.vy; n++; }
+          if (n) game.toast('LES TIRS REPARTENT EN ARRIÈRE', 'warn');
           U.buzz([30, 50, 30]);
         }
 
@@ -4406,7 +4548,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
         const p = game.player;
         b.brood = b.brood.filter(e => !e.dead);
         b.hint = b.brood.length
-          ? `Elle va avaler ${b.brood.length} sbire${b.brood.length > 1 ? 's' : ''}`
+          ? `${b.brood.length} lien${b.brood.length > 1 ? 's' : ''} à rompre — chacun lui coûte 3 %`
           : 'Reste hors de son puits';
 
         /* aspiration permanente */
@@ -4443,6 +4585,14 @@ body.in-interlude.no-action #btnUlt { display: none; }
               const pt = U.ringPoint(b.x, b.y, 180, 300);
               const e = game.spawnAdd(U.pick(['phantom', 'harrier', 'warden']), pt.x, pt.y, b.tierScale);
               e.devoured = true;
+              /* tuer un sbire relié ne fait plus que la priver du repas :
+                 le lien se retourne contre elle */
+              e.onDeath = () => {
+                if (b.dead) return;
+                game.damageEnemy(b, b.maxHp * 0.03, { silent: true, source: 'lien' });
+                game.zaps.push(new NF.Zap(e.x, e.y, b.x, b.y, C.lime));
+                FX.text(b.x, b.y - 60, 'LIEN RETOURNÉ', C.lime, true);
+              };
               b.brood.push(e);
             }
             game.toast('ELLE INVOQUE — TUE-LES VITE', 'warn');
@@ -4505,8 +4655,12 @@ body.in-interlude.no-action #btnUlt { display: none; }
       update(b, dt, game) {
         /* la chaleur monte ; à saturation, il se verrouille et lance le QTE */
         if (!b.venting) {
-          b.heat += dt * (7 + b.phase * 2.5);
-          b.hint = `Surchauffe ${Math.min(100, Math.round(b.heat))} % — purges réussies : ${b.purges}/3`;
+          /* rester au contact le fait chauffer bien plus vite : combattre
+             au corps à corps veut dire enchaîner les purges */
+          const close = U.dist(b.x, b.y, game.player.x, game.player.y) < 260;
+          b.heat += dt * (7 + b.phase * 2.5) * (close ? 1.9 : 1);
+          b.hint = `Surchauffe ${Math.min(100, Math.round(b.heat))} %`
+            + (close ? ' (au contact : ×1,9)' : '') + ` — purges : ${b.purges}`;
           if (b.heat >= 100) {
             b.venting = true;
             b.invuln = true;
@@ -4586,10 +4740,11 @@ body.in-interlude.no-action #btnUlt { display: none; }
       hint: 'Elle finira par t\'expédier en orbite : tiens la ligne',
       init(b) {
         b.beamT = 3;
-        b.sent = false;
+        b.sent = 0;
       },
       update(b, dt, game) {
-        b.hint = b.sent ? 'Retour en arène — finis-la' : 'Elle prépare un transfert orbital';
+        b.hint = b.sent >= 2 ? 'Plus de relais — finis-la'
+          : `Transferts orbitaux subis : ${b.sent}/2`;
 
         b.beamT -= dt;
         if (b.beamT <= 0) {
@@ -4607,24 +4762,27 @@ body.in-interlude.no-action #btnUlt { display: none; }
         b.driftTo(dt, game, 280, .6);
       },
       onPhase(b, game) {
-        /* au passage en phase 2 : transfert dans la défense orbitale */
-        if (b.phase !== 2 || b.sent) { game.toast('SENTINELLE RECONFIGURÉE', 'bad'); return; }
-        b.sent = true;
+        /* elle expédie en orbite à chaque changement de phase, la seconde
+           fois sur un relais plus serré */
+        if (b.sent >= 2) { game.toast('SENTINELLE RECONFIGURÉE', 'bad'); return; }
+        b.sent++;
+        const second = b.sent === 2;
         b.invuln = true;
         NF.Interlude.start(game, {
           mode: 'invaders',
-          title: 'TRANSFERT ORBITAL',
-          subtitle: 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
-          duration: 20, hp: 3, color: '#7dd3ff',
+          title: second ? 'SECOND TRANSFERT' : 'TRANSFERT ORBITAL',
+          subtitle: second ? 'Relais renforcé — moins de marge'
+                           : 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
+          duration: second ? 18 : 20, hp: 3, color: '#7dd3ff',
           onWin: (g) => {
             b.invuln = false;
-            g.damageEnemy(b, b.maxHp * 0.3, { silent: true, source: 'interlude' });
+            g.damageEnemy(b, b.maxHp * (second ? 0.24 : 0.28), { silent: true, source: 'interlude' });
             FX.text(b.x, b.y - 60, 'RELAIS DÉTRUIT', C.lime, true);
             g.toast('ORBITE NETTOYÉE — ELLE ENCAISSE', 'good');
           },
           onLose: (g) => {
             b.invuln = false;
-            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.1);
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.09);
             g.toast('LA SENTINELLE SE RECHARGE', 'bad');
           }
         });
@@ -4666,9 +4824,11 @@ body.in-interlude.no-action #btnUlt { display: none; }
         b.invuln = true;
         NF.Interlude.start(game, {
           mode: 'conduit',
-          title: 'CONDUIT DE DONNÉES',
-          subtitle: 'DASH ou ULT pour sauter — double saut autorisé',
+          title: b.runs === 2 ? 'CONDUIT EN SURRÉGIME' : 'CONDUIT DE DONNÉES',
+          subtitle: b.runs === 2 ? 'Ça va plus vite, et ça vient aussi du plafond'
+                                 : 'DASH ou ULT pour sauter — double saut autorisé',
           duration: 14 + b.runs * 3, hp: 3, color: '#9dff4d',
+          rush: b.runs === 2,
           onWin: (g) => {
             b.invuln = false;
             g.damageEnemy(b, b.maxHp * 0.28, { silent: true, source: 'interlude' });
@@ -4702,7 +4862,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
           ? 'Bouclier hors service — achève-la'
           : (b.invuln
             ? 'Bouclier actif — attends la fenêtre de résonance'
-            : `Bouclier brisé (${b.breaks}/3) — frappe !`);
+            : `Bouclier brisé (${b.breaks}/3) — rattrape-la et frappe !`);
 
         /* anneaux concentriques à esquiver */
         b.ringT -= dt;
@@ -4730,7 +4890,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
               color: '#c58bff',
               onWin: (g) => {
                 b.invuln = false; b.breaks++;
-                b.openT = 9;
+                b.openT = 11;
                 FX.shockwave(b.x, b.y, 260, '#c58bff', .6);
                 g.toast(b.breaks >= 3 ? 'BOUCLIER HORS SERVICE' : 'BOUCLIER SATURÉ', 'good');
               },
@@ -4748,7 +4908,10 @@ body.in-interlude.no-action #btnUlt { display: none; }
           if (b.openT <= 0) { b.invuln = true; b.qteT = 4; game.toast('LE BOUCLIER SE REFORME', 'warn'); }
         }
 
-        b.driftTo(dt, game, 260, .45);
+        /* à découvert elle décroche : la fenêtre ne se joue pas sur place,
+           il faut la poursuivre */
+        if (!b.invuln && b.breaks < 3) b.driftTo(dt, game, 400, .95);
+        else b.driftTo(dt, game, 260, .45);
       },
       onPhase(b, game) {
         game.toast('FRÉQUENCE MODIFIÉE', 'bad');
@@ -4804,22 +4967,24 @@ body.in-interlude.no-action #btnUlt { display: none; }
       onPhase(b, game) {
         b.invuln = true;
         if (b.phase === 2) {
-          /* première épreuve : purge en trois temps */
-          NF.QTE.start(game, {
-            type: 'timing',
+          /* première épreuve : la partition du protocole, la plus dense
+             du jeu — il n'est pas invulnérable, chaque note l'entame */
+          b.invuln = false;
+          NF.Interlude.start(game, {
+            mode: 'partition',
             title: 'PROTOCOLE — ÉPREUVE 1',
-            hint: 'Trois synchronisations d\'affilée',
-            rounds: 3, speed: 1.7, width: 0.2, color: '#ffd23e',
+            subtitle: 'Sa cadence, ta main. Ne romps pas le combo.',
+            duration: 30, bpm: 124, lanes: 4, need: 0.6, color: '#ffd23e',
+            comboStep: 0.09, maxBonus: 2.6,
+            onHit: (g, combo, mult) =>
+              g.damageEnemy(b, b.maxHp * 0.0018 * mult, { silent: true, source: 'rythme' }),
+            onMiss: (g) => NF.Interlude.noteCost(g, 0.04),
             onWin: (g) => {
-              b.invuln = false; b.trialsDone++;
-              g.damageEnemy(b, b.maxHp * 0.12, { silent: true, source: 'qte' });
+              b.trialsDone++;
+              g.damageEnemy(b, b.maxHp * 0.1, { silent: true, source: 'rythme' });
               g.toast('ÉPREUVE FRANCHIE', 'good');
             },
-            onLose: (g) => {
-              b.invuln = false;
-              g.hurtPlayer(b.dmg * 1.6, b);
-              g.toast('ÉPREUVE ÉCHOUÉE', 'bad');
-            }
+            onLose: (g) => g.toast('ÉPREUVE ÉCHOUÉE', 'bad')
           });
         } else {
           /* seconde épreuve : défense orbitale */
@@ -4827,7 +4992,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
             mode: 'invaders',
             title: 'PROTOCOLE — ÉPREUVE 2',
             subtitle: 'Le cœur t\'expulse : tiens la ligne orbitale',
-            duration: 22, hp: 2, color: '#ffd23e',
+            duration: 22, hp: 3, color: '#ffd23e',
             onWin: (g) => {
               b.invuln = false; b.trialsDone++;
               g.damageEnemy(b, b.maxHp * 0.2, { silent: true, source: 'interlude' });
@@ -4919,6 +5084,14 @@ body.in-interlude.no-action #btnUlt { display: none; }
         const e = game.spawnAdd('node', this.x, this.y, this.tierScale);
         e.anchor = { boss: this, ang: i * U.TAU / this.nodeCount, rad: 165, spd: .55 };
         e.maxHp *= 1.6; e.hp = e.maxHp;
+        /* un nœud qui saute relâche sa charge : ne reste pas collé */
+        e.onDeath = () => {
+          game.hazards.push(new NF.Hazard({
+            kind: 'ring', x: e.x, y: e.y, r: 40, rInner: 0,
+            telegraph: .35, duration: .9, grow: 240,
+            dmg: this.dmg * .8, color: '#ffd23e', tickRate: .5
+          }));
+        };
         this.nodes.push(e);
       }
       this.vulnT = 9;
@@ -5757,12 +5930,15 @@ body.in-interlude.no-action #btnUlt { display: none; }
    principale est mise de côté : c'est ce module qui met à jour et
    dessine, dans son propre repère écran.
 
-   Deux formes :
-     • invaders — le vaisseau glisse en bas, les colonnes descendent
-     • conduit  — course d'obstacles, on saute pour ne pas percuter
+   Trois formes :
+     • invaders  — le vaisseau glisse en bas, les colonnes descendent
+     • conduit   — course d'obstacles, on saute pour ne pas percuter
+     • partition — les notes défilent, on frappe en rythme
 
-   Dans les deux cas l'interlude renvoie « réussi » ou « raté », et le
-   boss décide de la suite.
+   Chaque interlude renvoie « réussi » ou « raté », et le boss décide de
+   la suite. La partition, elle, agit aussi pendant qu'elle se joue :
+   chaque note touchée blesse le boss, chaque note manquée blesse le
+   joueur, et le combo fait monter la mise.
    ============================================================ */
 (function (w) {
   'use strict';
@@ -5775,7 +5951,11 @@ body.in-interlude.no-action #btnUlt { display: none; }
       if (game.interlude) return;
       const o = Object.assign({
         mode: 'invaders', title: '', subtitle: '',
-        duration: 22, color: '#ffd23e', hp: 3,
+        duration: 22, color: '#ffd23e', hp: 3, rush: false,
+        /* partition */
+        lanes: 4, bpm: 104, window: 0.17, need: 0.6,
+        comboStep: 0.08, maxBonus: 2.0,
+        onHit: null, onMiss: null,
         onWin: null, onLose: null
       }, opt);
 
@@ -5792,7 +5972,9 @@ body.in-interlude.no-action #btnUlt { display: none; }
         onGround: true, jumps: 0
       };
 
-      if (o.mode === 'invaders') {
+      if (o.mode === 'partition') {
+        this.buildChart(st);
+      } else if (o.mode === 'invaders') {
         st.py = st.h - 110;
         this.buildFormation(st);
       } else {
@@ -5800,14 +5982,17 @@ body.in-interlude.no-action #btnUlt { display: none; }
            doit jamais masquer le vaisseau ni les obstacles */
         st.groundY = st.h - 250;
         st.py = st.groundY;
-        st.speed = 320;
+        st.speed = o.rush ? 400 : 320;
       }
 
       game.interlude = st;
+      this.gameRef = game;
       /* l'écran appartient au mini-jeu : on efface le HUD d'arène, et les
          boutons d'action avec lui quand ils ne servent à rien */
       document.body.classList.add('in-interlude');
-      document.body.classList.toggle('no-action', o.mode === 'invaders');
+      document.body.classList.toggle('no-action', o.mode !== 'conduit');
+      document.body.classList.toggle('rythme', o.mode === 'partition');
+      if (o.mode === 'partition') this.listenLanes(st);
       NF.Input.reset();
       FX.screenFlash('#fff', .8);
       U.buzz([50, 40, 80]);
@@ -5854,7 +6039,8 @@ body.in-interlude.no-action #btnUlt { display: none; }
       }
 
       const mv = NF.Input.read();
-      if (st.o.mode === 'invaders') this.updateInvaders(dt, game, st, mv);
+      if (st.o.mode === 'partition') this.updateChart(dt, game, st);
+      else if (st.o.mode === 'invaders') this.updateInvaders(dt, game, st, mv);
       else this.updateConduit(dt, game, st, mv);
 
       /* particules locales */
@@ -5899,10 +6085,22 @@ body.in-interlude.no-action #btnUlt { display: none; }
       FX.screenFlash('#ff4d5e', .6);
     },
 
+    /** Démontage sans verdict : mort du joueur, abandon, nouvelle partie.
+        Sans ça les écouteurs de piste survivent à l'interlude et avalent
+        les touchers des menus. */
+    abort(game) {
+      if (!game.interlude) { this.stopLanes(); return; }
+      game.interlude = null;
+      this.stopLanes();
+      document.body.classList.remove('in-interlude', 'no-action', 'rythme');
+      NF.Input.reset();
+    },
+
     finish(game) {
       const st = game.interlude;
       game.interlude = null;
-      document.body.classList.remove('in-interlude', 'no-action');
+      this.stopLanes();
+      document.body.classList.remove('in-interlude', 'no-action', 'rythme');
       game._last = performance.now();
       NF.Input.reset();
       game.player.invuln = Math.max(game.player.invuln, 1.2);
@@ -5946,7 +6144,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
         /* tir ennemi */
         f.fireT -= dt;
         if (f.fireT <= 0) {
-          f.fireT = U.rand(2.2, 6);
+          f.fireT = U.rand(2.8, 7);
           st.bullets.push({ x: f.x, y: f.y + 16, vy: 300, own: 0 });
         }
         /* la formation atteint le sol : c'est perdu */
@@ -5980,7 +6178,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
        ============================================================ */
     updateConduit(dt, game, st, mv) {
       if (st.invuln > 0) st.invuln -= dt;
-      st.speed = 320 + st.t * 9;
+      st.speed = (st.o.rush ? 400 : 320) + st.t * (st.o.rush ? 13 : 9);
       st.scrollX += st.speed * dt;
 
       /* saut : le bouton DASH ou un appui sur la moitié droite */
@@ -6001,7 +6199,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
       st.spawnT -= dt;
       if (st.spawnT <= 0) {
         st.spawnT = U.rand(0.75, 1.25) * (340 / st.speed) * 1.6;
-        const kind = U.chance(.28) ? 'haut' : 'bas';
+        const kind = U.chance(st.o.rush ? .45 : .28) ? 'haut' : 'bas';
         st.obstacles.push({
           x: st.w + 40,
           h: kind === 'bas' ? U.rand(38, 76) : 52,
@@ -6023,6 +6221,238 @@ body.in-interlude.no-action #btnUlt { display: none; }
         }
       }
       U.prune(st.obstacles);
+    },
+
+    /* ============================================================
+       Mode 3 — PARTITION (jeu de rythme)
+
+       Les notes descendent vers une ligne de frappe. Frappée dans la
+       fenêtre, une note arrache de la vie au boss ; laissée passer, elle
+       en coûte au joueur. Le combo multiplie les dégâts, et le rater
+       remet le multiplicateur à plat : c'est là qu'est la tension.
+       ============================================================ */
+
+    /** Géométrie de la piste, recalculée à la volée (rotation, resize) */
+    lanesGeom(st) {
+      const n = st.o.lanes;
+      const pad = 14;
+      const wLane = (st.w - pad * 2) / n;
+      return { n, pad, wLane, topY: 104, lineY: st.h - 190 };
+    },
+
+    laneX(st, i) {
+      const g = this.lanesGeom(st);
+      return g.pad + g.wLane * (i + 0.5);
+    },
+
+    /** Compose la partition : densité croissante, jamais deux notes
+        simultanées sur la même piste. */
+    buildChart(st) {
+      const o = st.o;
+      st.notes = [];
+      st.combo = 0; st.bestCombo = 0;
+      st.hits = 0; st.misses = 0;
+      st.flash = new Array(o.lanes).fill(0);
+      st.judge = null;
+      st.approach = 1.75;                        // temps de descente d'une note
+      st.mult = () => 1 + Math.min(o.maxBonus, st.combo * o.comboStep);
+
+      const beat = 60 / o.bpm;
+      const step = beat / 2;                     // croches
+      let t = 2.0, last = -1;
+      while (t < o.duration - 0.6) {
+        /* la densité monte au fil du morceau */
+        const k = t / o.duration;
+        if (U.chance(0.42 + k * 0.34)) {
+          let lane = U.randInt(0, o.lanes - 1);
+          if (lane === last && U.chance(.7)) lane = (lane + 1 + U.randInt(0, o.lanes - 2)) % o.lanes;
+          st.notes.push({ lane, t, done: false, ok: false });
+          last = lane;
+          /* rafale : une deuxième note sur une autre piste */
+          if (k > .45 && U.chance(.18)) {
+            const other = (lane + 1 + U.randInt(0, o.lanes - 2)) % o.lanes;
+            st.notes.push({ lane: other, t, done: false, ok: false });
+          }
+        }
+        t += step;
+      }
+      st.total = st.notes.length;
+    },
+
+    /** Écoute des frappes : tout l'écran est jouable, la colonne décide
+        de la piste. Le clavier reste dispo pour tester au bureau. */
+    listenLanes(st) {
+      this.stopLanes();
+      const hit = (clientX) => {
+        const g = this.lanesGeom(st);
+        const i = U.clamp(Math.floor((clientX - g.pad) / g.wLane), 0, g.n - 1);
+        this.strike(st, i);
+      };
+      this._onTouch = (e) => {
+        if (!this.gameRef || !this.gameRef.interlude) return;
+        e.preventDefault();
+        for (const t of e.changedTouches) hit(t.clientX);
+      };
+      this._onMouse = (e) => { if (this.gameRef && this.gameRef.interlude) hit(e.clientX); };
+      this._onKey = (e) => {
+        const map = { '1': 0, '2': 1, '3': 2, '4': 3, d: 0, f: 1, j: 2, k: 3 };
+        const i = map[e.key.toLowerCase()];
+        if (i !== undefined && i < st.o.lanes) { e.preventDefault(); this.strike(st, i); }
+      };
+      document.addEventListener('touchstart', this._onTouch, { passive: false });
+      document.addEventListener('mousedown', this._onMouse);
+      w.addEventListener('keydown', this._onKey);
+    },
+
+    stopLanes() {
+      if (this._onTouch) document.removeEventListener('touchstart', this._onTouch, { passive: false });
+      if (this._onMouse) document.removeEventListener('mousedown', this._onMouse);
+      if (this._onKey) w.removeEventListener('keydown', this._onKey);
+      this._onTouch = this._onMouse = this._onKey = null;
+    },
+
+    /** Coût d'une note manquée.
+
+        On passe par player.hurt pour que l'armure, le bouclier et la
+        sauvegarde d'urgence s'appliquent, mais on neutralise les images
+        d'invincibilité : sinon deux notes ratées coup sur coup n'en
+        coûteraient qu'une, et le rythme n'aurait plus d'enjeu. */
+    noteCost(game, frac) {
+      const p = game.player;
+      if (!p.alive) return;
+      const revives = p.revives;
+      p.invuln = 0;
+      p.hurt(p.stats.maxHp * frac, game);
+      if (p.revives === revives) p.invuln = 0;
+    },
+
+    /** Frappe du joueur sur une piste */
+    strike(st, lane) {
+      if (st.done || st.intro > 0) return;
+      st.flash[lane] = .18;
+      const now = st.songT;
+      const o = st.o;
+      /* la note la plus proche de la ligne, sur cette piste */
+      let best = null, bestD = 1e9;
+      for (const n of st.notes) {
+        if (n.done || n.lane !== lane) continue;
+        const d = Math.abs(n.t - now);
+        if (d < bestD) { bestD = d; best = n; }
+      }
+      if (!best || bestD > o.window) { this.breakCombo(st, false); return; }
+      best.done = true; best.ok = true;
+      st.hits++;
+      st.combo++;
+      st.bestCombo = Math.max(st.bestCombo, st.combo);
+      const mult = st.mult();
+      const g = this.lanesGeom(st);
+      this.burst(st, this.laneX(st, lane), g.lineY, 12, o.color);
+      st.judge = { text: bestD < o.window * .4 ? 'PARFAIT' : 'BIEN', col: '#9dff4d', t: .5 };
+      U.buzz(bestD < o.window * .4 ? 12 : 8);
+      if (o.onHit) o.onHit(this.gameRef, st.combo, mult);
+    },
+
+    /** Note manquée, ou frappe dans le vide */
+    breakCombo(st, real) {
+      const o = st.o;
+      st.combo = 0;
+      if (!real) { st.judge = { text: 'À CÔTÉ', col: '#ffb43e', t: .4 }; return; }
+      st.misses++;
+      st.judge = { text: 'RATÉ', col: '#ff4d5e', t: .5 };
+      st.shake = 12;
+      FX.screenFlash('#ff4d5e', .28);
+      U.buzz(45);
+      if (o.onMiss) o.onMiss(this.gameRef);
+    },
+
+    updateChart(dt, game, st) {
+      this.gameRef = game;
+      st.songT = st.t - 1.6;                     // l'intro ne compte pas
+      const o = st.o;
+
+      for (let i = 0; i < st.flash.length; i++) if (st.flash[i] > 0) st.flash[i] -= dt;
+      if (st.judge && (st.judge.t -= dt) <= 0) st.judge = null;
+
+      /* notes dépassées */
+      for (const n of st.notes) {
+        if (n.done || n.t > st.songT - o.window) continue;
+        n.done = true; n.ok = false;
+        this.breakCombo(st, true);
+      }
+
+      /* fin du morceau : le verdict tient à la précision */
+      if (st.songT > o.duration) {
+        const ratio = st.total ? st.hits / st.total : 1;
+        if (ratio >= o.need) this.win(game, st); else this.lose(game, st);
+      }
+    },
+
+    drawChart(ctx, st, col) {
+      const g = this.lanesGeom(st);
+      const now = st.songT;
+
+      /* pistes */
+      for (let i = 0; i < g.n; i++) {
+        const x = g.pad + g.wLane * i;
+        ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.025)' : 'rgba(255,255,255,.05)';
+        ctx.fillRect(x, g.topY, g.wLane - 3, g.lineY - g.topY + 60);
+      }
+
+      /* ligne de frappe */
+      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = .85;
+      ctx.beginPath(); ctx.moveTo(g.pad, g.lineY); ctx.lineTo(st.w - g.pad, g.lineY); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      /* pastilles de frappe */
+      for (let i = 0; i < g.n; i++) {
+        const x = this.laneX(st, i);
+        const lit = st.flash[i] > 0;
+        ctx.globalAlpha = lit ? .9 : .3;
+        ctx.fillStyle = lit ? col : 'rgba(255,255,255,.10)';
+        ctx.beginPath(); ctx.arc(x, g.lineY, 26, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = col; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, g.lineY, 26, 0, U.TAU); ctx.stroke();
+      }
+
+      /* notes */
+      for (const n of st.notes) {
+        if (n.done) continue;
+        const dt2 = n.t - now;
+        if (dt2 > st.approach || dt2 < -st.o.window) continue;
+        const y = g.lineY - (dt2 / st.approach) * (g.lineY - g.topY);
+        const x = this.laneX(st, n.lane);
+        const close = 1 - U.clamp(Math.abs(dt2) / st.approach, 0, 1);
+        ctx.globalAlpha = .2 + .3 * close;
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(x, y, 30, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#0a1024';
+        ctx.strokeStyle = col; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, 21, 0, U.TAU); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(x, y, 6, 0, U.TAU); ctx.fill();
+      }
+
+      /* verdict de la dernière frappe */
+      if (st.judge) {
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = U.clamp(st.judge.t * 2.5, 0, 1);
+        ctx.fillStyle = st.judge.col;
+        ctx.font = '900 22px ui-sans-serif,system-ui,sans-serif';
+        ctx.fillText(st.judge.text, st.w / 2, g.lineY - 70);
+        ctx.globalAlpha = 1;
+        ctx.textAlign = 'left';
+      }
+
+      /* précision courante */
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#8fa3bd';
+      ctx.font = '700 12px ui-sans-serif,system-ui,sans-serif';
+      const seen = st.hits + st.misses;
+      ctx.fillText(`${st.hits} / ${st.total}  ·  ${seen ? Math.round(100 * st.hits / seen) : 100} %`
+        + `  ·  seuil ${Math.round(st.o.need * 100)} %`, st.w / 2, g.lineY + 74);
+      ctx.textAlign = 'left';
     },
 
     /* ============================================================
@@ -6050,7 +6480,8 @@ body.in-interlude.no-action #btnUlt { display: none; }
       for (let y = 0; y < H; y += 60) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
       ctx.stroke();
 
-      if (st.o.mode === 'invaders') this.drawInvaders(ctx, st, col);
+      if (st.o.mode === 'partition') this.drawChart(ctx, st, col);
+      else if (st.o.mode === 'invaders') this.drawInvaders(ctx, st, col);
       else this.drawConduit(ctx, st, col);
 
       /* particules */
@@ -6090,13 +6521,19 @@ body.in-interlude.no-action #btnUlt { display: none; }
         ctx.fillRect(W * .15, 22, W * .7 * left, 6);
         ctx.fillStyle = '#e8f4ff';
         ctx.font = '800 12px ui-sans-serif,system-ui,sans-serif';
-        ctx.fillText('INTÉGRITÉ ' + '◆'.repeat(Math.max(0, st.hp)), W / 2, 48);
+        if (st.o.mode === 'partition') {
+          ctx.fillText('COMBO ×' + st.combo + '   ·   ×' + st.mult().toFixed(1) + ' DÉGÂTS', W / 2, 48);
+        } else {
+          ctx.fillText('INTÉGRITÉ ' + '◆'.repeat(Math.max(0, st.hp)), W / 2, 48);
+        }
         ctx.font = '600 11px ui-sans-serif,system-ui,sans-serif';
         ctx.fillStyle = '#8fa3bd';
         /* la consigne reste en haut : en bas elle passerait sous le pouce */
-        ctx.fillText(st.o.mode === 'invaders'
-          ? 'Glisse pour viser — le tir est automatique'
-          : 'DASH ou ULT pour sauter (double saut possible)', W / 2, 68);
+        ctx.fillText(st.o.mode === 'partition'
+          ? 'Frappe la piste quand la note touche la ligne'
+          : st.o.mode === 'invaders'
+            ? 'Glisse pour viser — le tir est automatique'
+            : 'DASH ou ULT pour sauter (double saut possible)', W / 2, 68);
       }
       ctx.textAlign = 'left';
     },
@@ -6172,7 +6609,8 @@ body.in-interlude.no-action #btnUlt { display: none; }
 /* ===== js/systems/waves.js ===== */
 /* ============================================================
    waves.js — enchaînement infini des vagues
-   Vague %10 = boss. Difficulté exponentielle bornée par des paliers.
+   Une vague sur cinq est une vague de boss. La courbe de difficulté est
+   polynomiale et se rejoue à l'identique dans chaque secteur.
    ============================================================ */
 (function (w) {
   'use strict';
@@ -6205,25 +6643,28 @@ body.in-interlude.no-action #btnUlt { display: none; }
     /** Multiplicateurs de difficulté.
 
         La courbe est identique dans chaque secteur — elle suit la vague
-        LOCALE (1 à 50), pas la vague absolue. Une partie est donc toujours
+        LOCALE (1 à 25), pas la vague absolue. Une partie est donc toujours
         le même arc : on repart du niveau 1 et on monte en puissance sur
-        50 vagues. Ce qui change d'un secteur à l'autre, c'est un
+        25 vagues. Ce qui change d'un secteur à l'autre, c'est un
         multiplicateur global : le secteur EST le palier de difficulté, et
-        l'arbre de talents est ce qui permet de l'encaisser. */
+        l'arbre de talents est ce qui permet de l'encaisser.
+
+        Les coefficients sont doublés par rapport à un secteur de 50 vagues :
+        le même écart de puissance est franchi, mais deux fois plus vite. */
     scaleFor(n) {
       const info = NF.biomeInfo(n);
       const k = info.local - 1;
       const b = info.biome;
       const sector = info.tier * NF.BIOMES.length + info.index;
       return {
-        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * Math.pow(1.9, sector),
+        hp: (1 + 0.72 * k + 0.058 * k * k) * b.hpMul * Math.pow(1.9, sector),
         /* les dégâts montent bien plus doucement que les PV : sinon deux
            contacts suffisent à tuer et aucune quantité de vie ne suit */
-        dmg: (1 + 0.055 * k + 0.0009 * k * k) * b.dmgMul * Math.pow(1.3, sector),
-        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul * (1 + 0.04 * sector)),
+        dmg: (1 + 0.110 * k + 0.0036 * k * k) * b.dmgMul * Math.pow(1.3, sector),
+        speed: Math.min(1.6, (1 + 0.016 * k) * b.speedMul * (1 + 0.04 * sector)),
         /* le coût d'un niveau croît géométriquement : l'XP doit suivre,
            sinon la montée en puissance décroche en fin de partie */
-        xp: Math.pow(1.055, k)
+        xp: Math.pow(1.125, k)
       };
     }
 
@@ -6264,15 +6705,15 @@ body.in-interlude.no-action #btnUlt { display: none; }
         g.onBossSpawn(boss);
         this.total = 1;
         // quelques sbires d'accompagnement
-        const adds = Math.min(14, 4 + Math.floor(NF.biomeInfo(n).local / 10) * 2);
+        const adds = Math.min(14, 4 + Math.floor(NF.biomeInfo(n).local / NF.WAVES_PER_BOSS) * 2);
         for (let i = 0; i < adds; i++) this.queue.push({ id: this.pickType(n), delay: 1.5 + i * 0.6 });
       } else {
         /* ---------- vague normale ---------- */
         this.state = 'spawning';
-        const count = Math.min(120, Math.round(7 + NF.biomeInfo(n).local * 1.7));
+        const count = Math.min(120, Math.round(7 + NF.biomeInfo(n).local * 3.4));
         this.total = count;
         const loc = NF.biomeInfo(n).local;
-        const eliteChance = loc >= 5 ? Math.min(0.22, (loc - 4) * 0.012) : 0;
+        const eliteChance = loc >= 3 ? Math.min(0.22, (loc - 2) * 0.024) : 0;
         let t = 0;
         for (let i = 0; i < count; i++) {
           // les ennemis arrivent par petits paquets
@@ -6359,7 +6800,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
     finish() {
       const g = this.game;
       this.state = 'cleared';
-      this.breakT = this.wave % 10 === 0 ? 5.0 : 2.6;
+      this.breakT = this.wave % NF.WAVES_PER_BOSS === 0 ? 5.0 : 2.6;
       g.onWaveClear(this.wave);
     }
 
@@ -6704,7 +7145,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
         const b = NF.BIOMES[i % NF.BIOMES.length];
         const first = NF.biomeFirstWave(i);
         html += `<button class="bp-chip ${i === cur ? 'on' : ''}" data-act="setBiome" data-i="${i}"
-                   style="--c:${b.accent}">${b.icon} ${esc(NF.biomeLabel(i))}<em>vagues ${first}–${first + 49}</em></button>`;
+                   style="--c:${b.accent}">${b.icon} ${esc(NF.biomeLabel(i))}<em>vagues ${first}–${first + NF.WAVES_PER_BIOME - 1}</em></button>`;
       }
       box.innerHTML = html + '</div>';
     },
@@ -7084,7 +7525,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
         ? 'SECTEUR NETTOYÉ'
         : (res.quit ? 'PARTIE ABANDONNÉE' : 'SYSTÈME HORS LIGNE');
       $('goStats').innerHTML =
-        (res.victory && res.biome ? `<div class="go-win">${res.biome.icon} ${esc(res.biome.name)} — 50 vagues, 5 boss</div>` : '')
+        (res.victory && res.biome ? `<div class="go-win">${res.biome.icon} ${esc(res.biome.name)} — ${NF.WAVES_PER_BIOME} vagues, 5 boss</div>` : '')
         + statGrid(game);
       $('goRewards').innerHTML = `
         <div>◈ ${U.fmt(res.crystals)} cristaux gagnés${res.victory ? ' <em>(prime de secteur)</em>' : ''}</div>
@@ -7259,8 +7700,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
       NF.HUD.clearToasts();
 
       if (NF.QTE.active) NF.QTE.cancel();
-      this.interlude = null;
-      document.body.classList.remove('in-interlude', 'no-action');
+      NF.Interlude.abort(this);
       this.stats = this.freshStats();
       this.time = 0;
       this.invertT = 0;
@@ -7403,7 +7843,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
       if (this.interlude) {
         NF.Interlude.update(dt, this);
         FX.update(dt);
-        if (!this.player.alive) { this.endRun(false); return; }
+        if (!this.player.alive) { NF.Interlude.abort(this); this.endRun(false); return; }
         NF.HUD.update(this);
         return;
       }
@@ -7795,7 +8235,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
         NF.Quests.notify('boss', 1);
         this.toast('BOSS VAINCU', 'good');
 
-        /* le boss de la 50ᵉ vague d'un secteur ouvre le suivant */
+        /* le boss de la dernière vague d'un secteur ouvre le suivant */
         if (NF.isBiomeFinale(this.waves.wave)) {
           const next = NF.biomeInfo(this.waves.wave).index + 1;
           if (NF.Save.unlockBiome(next)) {
@@ -7930,7 +8370,7 @@ body.in-interlude.no-action #btnUlt { display: none; }
       } else {
         this.toast('VAGUE ' + n);
       }
-      if (n > 1 && (n - 1) % 10 === 0) this.toast('PALIER SUPÉRIEUR', 'warn');
+      if (n > 1 && (n - 1) % NF.WAVES_PER_BOSS === 0) this.toast('PALIER SUPÉRIEUR', 'warn');
       NF.HUD.setBiome(this.biome);
     }
 

@@ -80,8 +80,7 @@
       NF.HUD.clearToasts();
 
       if (NF.QTE.active) NF.QTE.cancel();
-      this.interlude = null;
-      document.body.classList.remove('in-interlude', 'no-action');
+      NF.Interlude.abort(this);
       this.stats = this.freshStats();
       this.time = 0;
       this.invertT = 0;
@@ -224,7 +223,7 @@
       if (this.interlude) {
         NF.Interlude.update(dt, this);
         FX.update(dt);
-        if (!this.player.alive) { this.endRun(false); return; }
+        if (!this.player.alive) { NF.Interlude.abort(this); this.endRun(false); return; }
         NF.HUD.update(this);
         return;
       }
@@ -616,7 +615,7 @@
         NF.Quests.notify('boss', 1);
         this.toast('BOSS VAINCU', 'good');
 
-        /* le boss de la 50ᵉ vague d'un secteur ouvre le suivant */
+        /* le boss de la dernière vague d'un secteur ouvre le suivant */
         if (NF.isBiomeFinale(this.waves.wave)) {
           const next = NF.biomeInfo(this.waves.wave).index + 1;
           if (NF.Save.unlockBiome(next)) {
@@ -751,7 +750,7 @@
       } else {
         this.toast('VAGUE ' + n);
       }
-      if (n > 1 && (n - 1) % 10 === 0) this.toast('PALIER SUPÉRIEUR', 'warn');
+      if (n > 1 && (n - 1) % NF.WAVES_PER_BOSS === 0) this.toast('PALIER SUPÉRIEUR', 'warn');
       NF.HUD.setBiome(this.biome);
     }
 

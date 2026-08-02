@@ -688,7 +688,10 @@ body.in-interlude .hud-top,
 body.in-interlude .hud-wave,
 body.in-interlude #bossBar,
 body.in-interlude #questTracker,
+body.in-interlude #toasts,
 body.in-interlude #weaponStrip { display: none; }
-/* en défense orbitale on ne saute pas : les boutons disparaissent */
+/* hors course d'obstacles on ne saute pas : les boutons disparaissent */
 body.in-interlude.no-action #btnDash,
 body.in-interlude.no-action #btnUlt { display: none; }
+/* en partition, tout l'écran est une piste : pas de joystick fantôme */
+body.in-interlude.rythme #stickBase { display: none; }

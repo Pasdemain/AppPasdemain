@@ -36,20 +36,20 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 
 ## Boucle de jeu
 
-- **Une partie = un secteur de 50 vagues**, terminé par un écran de victoire.
+- **Une partie = un secteur de 25 vagues**, terminé par un écran de victoire.
   Chaque secteur a son décor, son bestiaire et ses cinq boss ; le nettoyer
   débloque le suivant, qu'on choisit ensuite au menu.
 - **Progression sans fin.** La difficulté suit une courbe polynomiale et les
   secteurs reprennent en paliers supérieurs une fois la liste épuisée.
-- **Un boss toutes les 10 vagues**, avec une mécanique propre à chacun. Passé le
+- **Un boss toutes les 5 vagues**, avec une mécanique propre à chacun. Passé le
   dernier secteur, le cycle reprend au palier supérieur (Mk II, Mk III…).
 - **Montée de niveau** : à chaque niveau, 3 cartes au choix (nouvelle arme,
   amélioration d'arme, statistique) + une relance offerte tous les 5 niveaux.
   Au retour dans l'arène, une **demi-seconde d'invincibilité** évite de se faire
   cueillir par ce qui attendait pendant le choix.
-- **Séquences d'action rapide et interludes** : certains boss figent le combat
-  pour un QTE, ou téléportent le joueur dans un mini-jeu le temps d'une phase
-  (défense orbitale, course d'obstacles). Voir *Secteur 3 — Le Noyau*.
+- **Séquences d'action rapide, interludes et partitions** : certains boss figent
+  le combat pour un QTE, ou téléportent le joueur dans un mini-jeu le temps d'une
+  phase (défense orbitale, course d'obstacles, jeu de rythme).
 - **Cristaux ◈** gagnés en fin de partie → arbre de talents (bonus permanents)
   et Arsenal (déblocage d'armes).
 - **Quêtes** à paliers infinis : chaque récompense réclamée relance un objectif
@@ -59,8 +59,8 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 
 ## Secteurs
 
-Un secteur = **50 vagues + 5 boss**, et **une partie couvre exactement un
-secteur**. Nettoyer la 50ᵉ vague termine la partie sur un **écran de victoire**
+Un secteur = **25 vagues + 5 boss**, et **une partie couvre exactement un
+secteur**. Nettoyer la 25ᵉ vague termine la partie sur un **écran de victoire**
 assorti d'une prime de cristaux : le jeu n'enchaîne pas sur le secteur suivant.
 
 Cette victoire débloque définitivement le secteur d'après. On choisit ensuite
@@ -71,17 +71,17 @@ n'a pas de fin.
 
 | Secteur | Vagues | Décor | Particularités |
 |---|---|---|---|
-| **▦ La Grille** | 1 – 50 | réseau cyan, sol quadrillé | bestiaire de base |
-| **⟁ La Faille** | 51 – 100 | violet, fractures pulsantes | éruptions du sol toutes les ~11 s, 5 ennemis inédits, +35 % de PV et +25 % de dégâts |
-| **⬡ Le Noyau** | 101 – 150 | ambre en fusion, bassins de magma et anneaux concentriques | éruptions toutes les ~8 s, 3 ennemis inédits, boss à QTE et **phases jouées hors de l'arène** |
+| **▦ La Grille** | 1 – 25 | réseau cyan, sol quadrillé | bestiaire de base |
+| **⟁ La Faille** | 26 – 50 | violet, fractures pulsantes | éruptions du sol toutes les ~11 s, 5 ennemis inédits, +35 % de PV et +25 % de dégâts |
+| **⬡ Le Noyau** | 51 – 75 | ambre en fusion, bassins de magma et anneaux concentriques | éruptions toutes les ~8 s, 3 ennemis inédits, boss à QTE et **phases jouées hors de l'arène** |
 
 **Le secteur est le palier de difficulté.** On repart toujours du niveau 1 :
 la courbe de difficulté est identique dans chaque secteur (elle suit la vague
-*locale*, de 1 à 50), seul un multiplicateur global change — ×1,9 en vie et
+*locale*, de 1 à 25), seul un multiplicateur global change — ×1,9 en vie et
 ×1,3 en dégâts par secteur franchi. Une partie est donc toujours le même arc,
 et c'est l'arbre de talents qui permet d'encaisser le palier suivant.
 
-Le compteur du HUD affiche la progression dans le secteur (`VAGUE 37 / 50`).
+Le compteur du HUD affiche la progression dans le secteur (`VAGUE 17 / 25`).
 
 ### Ennemis propres à La Faille
 
@@ -107,21 +107,21 @@ Le compteur du HUD affiche la progression dans le secteur (`VAGUE 37 / 50`).
 
 | Vague | Boss | Mécanique |
 |---|---|---|
-| 10 | **NEXUS-01 « Prisme »** | Invulnérable tant que ses 4 nœuds orbitaux vivent. Les détruire ouvre une fenêtre de 9 s ; ils se reforment ensuite. Balaie l'arène de lasers rotatifs. |
-| 20 | **VORTEX-02 « Cyclone »** | Aspire le joueur en continu, tire des spirales de projectiles et projette des anneaux de compression qu'il faut traverser par l'intérieur. |
-| 30 | **HYDRE-03 « Réplicant »** | Se dédouble en leurres identiques et échange sa place avec eux. Seule la copie dont le cœur brille encaisse les dégâts. |
-| 40 | **BASTION-04 « Égide »** | Bouclier frontal en arc qui pivote vers le joueur : il faut le contourner et frapper dans le dos. Déploie des tourelles et charge. |
-| 50 | **OMEGA-05 « Architecte »** | Grille laser alimentée par des piliers (chaque pilier détruit le blesse) et reconfiguration du secteur : trois quadrants sur quatre deviennent mortels. |
+| 5 | **NEXUS-01 « Prisme »** | Invulnérable tant que ses 4 nœuds orbitaux vivent. Chaque nœud détruit **explose en onde de choc** : ne reste pas collé. Une fois à nu il panique et arrose en salves radiales. |
+| 10 | **VORTEX-02 « Cyclone »** | Aspire le joueur — puis, à partir de la phase 2, **inverse son souffle** et le repousse. Spirales de projectiles et anneaux de compression à traverser par l'intérieur. |
+| 15 | **HYDRE-03 « Réplicant »** | Se dédouble en leurres et échange sa place avec eux. Seule la copie au cœur allumé encaisse — mais elle allume parfois un **cœur fantôme** sur un leurre pendant que le vrai s'éteint. |
+| 20 | **BASTION-04 « Égide »** | Bouclier frontal à contourner. Rester dans son axe le **charge** : à saturation il libère une décharge frontale en trois faisceaux. Déploie des tourelles et charge. |
+| 25 | **OMEGA-05 « Architecte »** | Grille laser alimentée par des piliers et reconfiguration du secteur. En phase 2 il **recompile** : partition à jouer en rythme, chaque note l'entame. |
 
 ### Secteur 2 — La Faille
 
 | Vague | Boss | Mécanique |
 |---|---|---|
-| 60 | **SYNTHÈSE-06 « Chimère »** | Rejoue une défense différente à chaque phase : nœuds, puis bouclier frontal, puis leurres. La règle change sous toi. |
-| 70 | **ORACLE-07 « Prédicteur »** | Frappe ta position **anticipée**, pas ta position actuelle : il faut changer de cap après le marquage. Mine aussi le chemin que tu viens de parcourir. |
-| 80 | **ESSAIM-08 « Ruche »** | Coque scellée tant qu'une couveuse vit. Chaque couveuse détruite lui arrache 15 % de sa coque, mais elles crachent des nuées en continu et se reforment. |
-| 90 | **PARADOXE-09 « Miroir »** | Inverse tes commandes par cycles annoncés — et pendant l'inversion il encaisse le **double** de dégâts. C'est ta fenêtre de burst. |
-| 100 | **ABYSSE-10 « Dévoreuse »** | Invoque des sbires puis les **avale pour se soigner** de 3 % chacun : il faut les tuer avant. Aspire en permanence et referme l'arène par un anneau. |
+| 30 | **SYNTHÈSE-06 « Chimère »** | Rejoue les trois défenses — nœuds, bouclier frontal, leurres — mais dans un **ordre tiré au sort à chaque partie** : le combat appris la fois d'avant ne se récite pas. |
+| 35 | **ORACLE-07 « Prédicteur »** | Frappe ta position **anticipée** et mine le chemin parcouru. En phase 2 il cesse d'anticiper et **impose sa mesure** : partition dense à jouer sans faute. |
+| 40 | **ESSAIM-08 « Ruche »** | Coque scellée tant qu'une couveuse vit. Chacune arrache 15 % de sa coque — mais elles **rampent vers la ruche** et chaque retour la ravitaille de 8 %. |
+| 45 | **PARADOXE-09 « Miroir »** | Inverse tes commandes par cycles annoncés, et **les tirs déjà en l'air repartent en arrière**. Pendant l'inversion il encaisse le **double** : c'est ta fenêtre. |
+| 50 | **ABYSSE-10 « Dévoreuse »** | Invoque des sbires reliés par un lien pour les **avaler et se soigner**. Rompre un lien avant le repas lui coûte les 3 % qu'elle comptait gagner. Referme l'arène par un anneau. |
 
 ### Secteur 3 — Le Noyau
 
@@ -132,11 +132,28 @@ arrache une grosse part de vie au boss ; échouer le soigne.
 
 | Vague | Boss | Mécanique |
 |---|---|---|
-| 110 | **FORGE-11 « Creuset »** | Une jauge de surchauffe monte en continu. À 100 % il se verrouille, invulnérable, et lance une **purge en QTE de précision** — autant de passages que sa phase actuelle. Réussie, elle lui coûte 14 % de sa vie ; ratée, il se régénère et l'arène crache du magma. |
-| 120 | **ORBITE-12 « Sentinelle »** | En phase 2 elle t'**expédie en défense orbitale** : un écran type Space Invaders, formation qui descend, tir automatique, on glisse pour viser. Nettoyer la formation (ou tenir jusqu'au bout) lui arrache 30 % de sa vie. |
-| 130 | **CIRCUIT-13 « Traceur »** | À chaque changement de phase il t'**aspire dans un conduit** : course d'obstacles à la Geometry Dash, DASH ou ULT pour sauter, double saut autorisé. Deux traversées, 28 % de sa vie chacune. |
-| 140 | **ÉCHO-14 « Résonance »** | Bouclier invulnérable qui ne cède qu'au **martèlement** : un QTE de matraquage sature son bouclier et ouvre 9 s de frappe. Il se reforme deux fois, de plus en plus exigeant ; au **troisième bris il ne revient plus**. Émet en continu des anneaux à esquiver. |
-| 150 | **NOYAU-15 « Cœur du protocole »** | Le boss final du secteur, qui te teste sur tous les tableaux : salves radiales, triple balayage rotatif, une **épreuve QTE en trois temps** en phase 2, puis une **épreuve orbitale** en phase 3. |
+| 55 | **FORGE-11 « Creuset »** | Une jauge de surchauffe monte en continu, **près de deux fois plus vite au contact** : le combattre au corps à corps veut dire enchaîner les purges. À saturation il se verrouille et lance une **purge en QTE de précision**. Réussie, elle lui coûte 14 % ; ratée, il se régénère et l'arène crache du magma. |
+| 60 | **ORBITE-12 « Sentinelle »** | Elle t'**expédie en défense orbitale** à chaque changement de phase : écran type Space Invaders, formation qui descend, tir automatique, on glisse pour viser. Deux transferts, le second plus serré. |
+| 65 | **CIRCUIT-13 « Traceur »** | Il t'**aspire dans un conduit** : course d'obstacles à la Geometry Dash, DASH ou ULT pour sauter, double saut autorisé. Deux traversées, la seconde **en surrégime**. |
+| 70 | **ÉCHO-14 « Résonance »** | Bouclier invulnérable qui ne cède qu'au **martèlement**. La fenêtre ouverte, elle **décroche et fuit** : il faut la rattraper. Le bouclier se reforme deux fois ; au **troisième bris il ne revient plus**. |
+| 75 | **NOYAU-15 « Cœur du protocole »** | Le boss final, qui te teste sur tous les tableaux : salves radiales, triple balayage rotatif, la **partition la plus dense du jeu** en phase 2, puis une **épreuve orbitale** en phase 3. |
+
+## Partitions
+
+Trois boss remplacent une phase de combat par un **jeu de rythme**. Les notes
+descendent sur quatre pistes vers une ligne de frappe ; on tape la colonne qui
+correspond (au doigt, ou touches `1`–`4` / `D F J K` au clavier).
+
+- Note frappée dans la fenêtre → **le boss encaisse**, et le **combo multiplie
+  les dégâts** (jusqu'à ×3, ×3,6 pour le Cœur du protocole).
+- Note manquée → **le joueur perd de la vie** (3 à 4 % de ses PV max) et le
+  combo retombe à zéro. L'armure, le bouclier et la sauvegarde d'urgence
+  s'appliquent, mais pas les images d'invincibilité : chaque note ratée se paie.
+- En fin de morceau, un **seuil de précision** (50 à 60 % selon le boss) décide
+  du bonus de sortie.
+
+Joué proprement, un passage arrache environ un quart de la vie du boss et ne
+coûte rien. Joué au hasard, il tue.
 
 ## Arbre de talents
 
@@ -312,5 +329,7 @@ jeu/
   `update` ou son `onPhase` (`type: 'timing'` ou `'mash'`, `rounds`, `onWin`,
   `onLose`). Le monde se fige tant que la séquence tourne.
 - **Un interlude** : appelle `NF.Interlude.start(game, {...})` (`mode:
-  'invaders'` ou `'conduit'`, `duration`, `hp`, `onWin`, `onLose`). Le mini-jeu
-  prend la main sur la boucle et sur le rendu, puis rend l'arène.
+  'invaders'`, `'conduit'` ou `'partition'`, `duration`, `hp`, `onWin`,
+  `onLose`). Le mini-jeu prend la main sur la boucle et sur le rendu, puis rend
+  l'arène. La partition accepte en plus `bpm`, `lanes`, `window`, `need`,
+  `comboStep`, `maxBonus`, `onHit(game, combo, mult)` et `onMiss(game)`.

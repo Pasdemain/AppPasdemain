@@ -6,12 +6,15 @@
    principale est mise de côté : c'est ce module qui met à jour et
    dessine, dans son propre repère écran.
 
-   Deux formes :
-     • invaders — le vaisseau glisse en bas, les colonnes descendent
-     • conduit  — course d'obstacles, on saute pour ne pas percuter
+   Trois formes :
+     • invaders  — le vaisseau glisse en bas, les colonnes descendent
+     • conduit   — course d'obstacles, on saute pour ne pas percuter
+     • partition — les notes défilent, on frappe en rythme
 
-   Dans les deux cas l'interlude renvoie « réussi » ou « raté », et le
-   boss décide de la suite.
+   Chaque interlude renvoie « réussi » ou « raté », et le boss décide de
+   la suite. La partition, elle, agit aussi pendant qu'elle se joue :
+   chaque note touchée blesse le boss, chaque note manquée blesse le
+   joueur, et le combo fait monter la mise.
    ============================================================ */
 (function (w) {
   'use strict';
@@ -24,7 +27,11 @@
       if (game.interlude) return;
       const o = Object.assign({
         mode: 'invaders', title: '', subtitle: '',
-        duration: 22, color: '#ffd23e', hp: 3,
+        duration: 22, color: '#ffd23e', hp: 3, rush: false,
+        /* partition */
+        lanes: 4, bpm: 104, window: 0.17, need: 0.6,
+        comboStep: 0.08, maxBonus: 2.0,
+        onHit: null, onMiss: null,
         onWin: null, onLose: null
       }, opt);
 
@@ -41,7 +48,9 @@
         onGround: true, jumps: 0
       };
 
-      if (o.mode === 'invaders') {
+      if (o.mode === 'partition') {
+        this.buildChart(st);
+      } else if (o.mode === 'invaders') {
         st.py = st.h - 110;
         this.buildFormation(st);
       } else {
@@ -49,14 +58,17 @@
            doit jamais masquer le vaisseau ni les obstacles */
         st.groundY = st.h - 250;
         st.py = st.groundY;
-        st.speed = 320;
+        st.speed = o.rush ? 400 : 320;
       }
 
       game.interlude = st;
+      this.gameRef = game;
       /* l'écran appartient au mini-jeu : on efface le HUD d'arène, et les
          boutons d'action avec lui quand ils ne servent à rien */
       document.body.classList.add('in-interlude');
-      document.body.classList.toggle('no-action', o.mode === 'invaders');
+      document.body.classList.toggle('no-action', o.mode !== 'conduit');
+      document.body.classList.toggle('rythme', o.mode === 'partition');
+      if (o.mode === 'partition') this.listenLanes(st);
       NF.Input.reset();
       FX.screenFlash('#fff', .8);
       U.buzz([50, 40, 80]);
@@ -103,7 +115,8 @@
       }
 
       const mv = NF.Input.read();
-      if (st.o.mode === 'invaders') this.updateInvaders(dt, game, st, mv);
+      if (st.o.mode === 'partition') this.updateChart(dt, game, st);
+      else if (st.o.mode === 'invaders') this.updateInvaders(dt, game, st, mv);
       else this.updateConduit(dt, game, st, mv);
 
       /* particules locales */
@@ -148,10 +161,22 @@
       FX.screenFlash('#ff4d5e', .6);
     },
 
+    /** Démontage sans verdict : mort du joueur, abandon, nouvelle partie.
+        Sans ça les écouteurs de piste survivent à l'interlude et avalent
+        les touchers des menus. */
+    abort(game) {
+      if (!game.interlude) { this.stopLanes(); return; }
+      game.interlude = null;
+      this.stopLanes();
+      document.body.classList.remove('in-interlude', 'no-action', 'rythme');
+      NF.Input.reset();
+    },
+
     finish(game) {
       const st = game.interlude;
       game.interlude = null;
-      document.body.classList.remove('in-interlude', 'no-action');
+      this.stopLanes();
+      document.body.classList.remove('in-interlude', 'no-action', 'rythme');
       game._last = performance.now();
       NF.Input.reset();
       game.player.invuln = Math.max(game.player.invuln, 1.2);
@@ -195,7 +220,7 @@
         /* tir ennemi */
         f.fireT -= dt;
         if (f.fireT <= 0) {
-          f.fireT = U.rand(2.2, 6);
+          f.fireT = U.rand(2.8, 7);
           st.bullets.push({ x: f.x, y: f.y + 16, vy: 300, own: 0 });
         }
         /* la formation atteint le sol : c'est perdu */
@@ -229,7 +254,7 @@
        ============================================================ */
     updateConduit(dt, game, st, mv) {
       if (st.invuln > 0) st.invuln -= dt;
-      st.speed = 320 + st.t * 9;
+      st.speed = (st.o.rush ? 400 : 320) + st.t * (st.o.rush ? 13 : 9);
       st.scrollX += st.speed * dt;
 
       /* saut : le bouton DASH ou un appui sur la moitié droite */
@@ -250,7 +275,7 @@
       st.spawnT -= dt;
       if (st.spawnT <= 0) {
         st.spawnT = U.rand(0.75, 1.25) * (340 / st.speed) * 1.6;
-        const kind = U.chance(.28) ? 'haut' : 'bas';
+        const kind = U.chance(st.o.rush ? .45 : .28) ? 'haut' : 'bas';
         st.obstacles.push({
           x: st.w + 40,
           h: kind === 'bas' ? U.rand(38, 76) : 52,
@@ -272,6 +297,238 @@
         }
       }
       U.prune(st.obstacles);
+    },
+
+    /* ============================================================
+       Mode 3 — PARTITION (jeu de rythme)
+
+       Les notes descendent vers une ligne de frappe. Frappée dans la
+       fenêtre, une note arrache de la vie au boss ; laissée passer, elle
+       en coûte au joueur. Le combo multiplie les dégâts, et le rater
+       remet le multiplicateur à plat : c'est là qu'est la tension.
+       ============================================================ */
+
+    /** Géométrie de la piste, recalculée à la volée (rotation, resize) */
+    lanesGeom(st) {
+      const n = st.o.lanes;
+      const pad = 14;
+      const wLane = (st.w - pad * 2) / n;
+      return { n, pad, wLane, topY: 104, lineY: st.h - 190 };
+    },
+
+    laneX(st, i) {
+      const g = this.lanesGeom(st);
+      return g.pad + g.wLane * (i + 0.5);
+    },
+
+    /** Compose la partition : densité croissante, jamais deux notes
+        simultanées sur la même piste. */
+    buildChart(st) {
+      const o = st.o;
+      st.notes = [];
+      st.combo = 0; st.bestCombo = 0;
+      st.hits = 0; st.misses = 0;
+      st.flash = new Array(o.lanes).fill(0);
+      st.judge = null;
+      st.approach = 1.75;                        // temps de descente d'une note
+      st.mult = () => 1 + Math.min(o.maxBonus, st.combo * o.comboStep);
+
+      const beat = 60 / o.bpm;
+      const step = beat / 2;                     // croches
+      let t = 2.0, last = -1;
+      while (t < o.duration - 0.6) {
+        /* la densité monte au fil du morceau */
+        const k = t / o.duration;
+        if (U.chance(0.42 + k * 0.34)) {
+          let lane = U.randInt(0, o.lanes - 1);
+          if (lane === last && U.chance(.7)) lane = (lane + 1 + U.randInt(0, o.lanes - 2)) % o.lanes;
+          st.notes.push({ lane, t, done: false, ok: false });
+          last = lane;
+          /* rafale : une deuxième note sur une autre piste */
+          if (k > .45 && U.chance(.18)) {
+            const other = (lane + 1 + U.randInt(0, o.lanes - 2)) % o.lanes;
+            st.notes.push({ lane: other, t, done: false, ok: false });
+          }
+        }
+        t += step;
+      }
+      st.total = st.notes.length;
+    },
+
+    /** Écoute des frappes : tout l'écran est jouable, la colonne décide
+        de la piste. Le clavier reste dispo pour tester au bureau. */
+    listenLanes(st) {
+      this.stopLanes();
+      const hit = (clientX) => {
+        const g = this.lanesGeom(st);
+        const i = U.clamp(Math.floor((clientX - g.pad) / g.wLane), 0, g.n - 1);
+        this.strike(st, i);
+      };
+      this._onTouch = (e) => {
+        if (!this.gameRef || !this.gameRef.interlude) return;
+        e.preventDefault();
+        for (const t of e.changedTouches) hit(t.clientX);
+      };
+      this._onMouse = (e) => { if (this.gameRef && this.gameRef.interlude) hit(e.clientX); };
+      this._onKey = (e) => {
+        const map = { '1': 0, '2': 1, '3': 2, '4': 3, d: 0, f: 1, j: 2, k: 3 };
+        const i = map[e.key.toLowerCase()];
+        if (i !== undefined && i < st.o.lanes) { e.preventDefault(); this.strike(st, i); }
+      };
+      document.addEventListener('touchstart', this._onTouch, { passive: false });
+      document.addEventListener('mousedown', this._onMouse);
+      w.addEventListener('keydown', this._onKey);
+    },
+
+    stopLanes() {
+      if (this._onTouch) document.removeEventListener('touchstart', this._onTouch, { passive: false });
+      if (this._onMouse) document.removeEventListener('mousedown', this._onMouse);
+      if (this._onKey) w.removeEventListener('keydown', this._onKey);
+      this._onTouch = this._onMouse = this._onKey = null;
+    },
+
+    /** Coût d'une note manquée.
+
+        On passe par player.hurt pour que l'armure, le bouclier et la
+        sauvegarde d'urgence s'appliquent, mais on neutralise les images
+        d'invincibilité : sinon deux notes ratées coup sur coup n'en
+        coûteraient qu'une, et le rythme n'aurait plus d'enjeu. */
+    noteCost(game, frac) {
+      const p = game.player;
+      if (!p.alive) return;
+      const revives = p.revives;
+      p.invuln = 0;
+      p.hurt(p.stats.maxHp * frac, game);
+      if (p.revives === revives) p.invuln = 0;
+    },
+
+    /** Frappe du joueur sur une piste */
+    strike(st, lane) {
+      if (st.done || st.intro > 0) return;
+      st.flash[lane] = .18;
+      const now = st.songT;
+      const o = st.o;
+      /* la note la plus proche de la ligne, sur cette piste */
+      let best = null, bestD = 1e9;
+      for (const n of st.notes) {
+        if (n.done || n.lane !== lane) continue;
+        const d = Math.abs(n.t - now);
+        if (d < bestD) { bestD = d; best = n; }
+      }
+      if (!best || bestD > o.window) { this.breakCombo(st, false); return; }
+      best.done = true; best.ok = true;
+      st.hits++;
+      st.combo++;
+      st.bestCombo = Math.max(st.bestCombo, st.combo);
+      const mult = st.mult();
+      const g = this.lanesGeom(st);
+      this.burst(st, this.laneX(st, lane), g.lineY, 12, o.color);
+      st.judge = { text: bestD < o.window * .4 ? 'PARFAIT' : 'BIEN', col: '#9dff4d', t: .5 };
+      U.buzz(bestD < o.window * .4 ? 12 : 8);
+      if (o.onHit) o.onHit(this.gameRef, st.combo, mult);
+    },
+
+    /** Note manquée, ou frappe dans le vide */
+    breakCombo(st, real) {
+      const o = st.o;
+      st.combo = 0;
+      if (!real) { st.judge = { text: 'À CÔTÉ', col: '#ffb43e', t: .4 }; return; }
+      st.misses++;
+      st.judge = { text: 'RATÉ', col: '#ff4d5e', t: .5 };
+      st.shake = 12;
+      FX.screenFlash('#ff4d5e', .28);
+      U.buzz(45);
+      if (o.onMiss) o.onMiss(this.gameRef);
+    },
+
+    updateChart(dt, game, st) {
+      this.gameRef = game;
+      st.songT = st.t - 1.6;                     // l'intro ne compte pas
+      const o = st.o;
+
+      for (let i = 0; i < st.flash.length; i++) if (st.flash[i] > 0) st.flash[i] -= dt;
+      if (st.judge && (st.judge.t -= dt) <= 0) st.judge = null;
+
+      /* notes dépassées */
+      for (const n of st.notes) {
+        if (n.done || n.t > st.songT - o.window) continue;
+        n.done = true; n.ok = false;
+        this.breakCombo(st, true);
+      }
+
+      /* fin du morceau : le verdict tient à la précision */
+      if (st.songT > o.duration) {
+        const ratio = st.total ? st.hits / st.total : 1;
+        if (ratio >= o.need) this.win(game, st); else this.lose(game, st);
+      }
+    },
+
+    drawChart(ctx, st, col) {
+      const g = this.lanesGeom(st);
+      const now = st.songT;
+
+      /* pistes */
+      for (let i = 0; i < g.n; i++) {
+        const x = g.pad + g.wLane * i;
+        ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.025)' : 'rgba(255,255,255,.05)';
+        ctx.fillRect(x, g.topY, g.wLane - 3, g.lineY - g.topY + 60);
+      }
+
+      /* ligne de frappe */
+      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = .85;
+      ctx.beginPath(); ctx.moveTo(g.pad, g.lineY); ctx.lineTo(st.w - g.pad, g.lineY); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      /* pastilles de frappe */
+      for (let i = 0; i < g.n; i++) {
+        const x = this.laneX(st, i);
+        const lit = st.flash[i] > 0;
+        ctx.globalAlpha = lit ? .9 : .3;
+        ctx.fillStyle = lit ? col : 'rgba(255,255,255,.10)';
+        ctx.beginPath(); ctx.arc(x, g.lineY, 26, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = col; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, g.lineY, 26, 0, U.TAU); ctx.stroke();
+      }
+
+      /* notes */
+      for (const n of st.notes) {
+        if (n.done) continue;
+        const dt2 = n.t - now;
+        if (dt2 > st.approach || dt2 < -st.o.window) continue;
+        const y = g.lineY - (dt2 / st.approach) * (g.lineY - g.topY);
+        const x = this.laneX(st, n.lane);
+        const close = 1 - U.clamp(Math.abs(dt2) / st.approach, 0, 1);
+        ctx.globalAlpha = .2 + .3 * close;
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(x, y, 30, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#0a1024';
+        ctx.strokeStyle = col; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, 21, 0, U.TAU); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(x, y, 6, 0, U.TAU); ctx.fill();
+      }
+
+      /* verdict de la dernière frappe */
+      if (st.judge) {
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = U.clamp(st.judge.t * 2.5, 0, 1);
+        ctx.fillStyle = st.judge.col;
+        ctx.font = '900 22px ui-sans-serif,system-ui,sans-serif';
+        ctx.fillText(st.judge.text, st.w / 2, g.lineY - 70);
+        ctx.globalAlpha = 1;
+        ctx.textAlign = 'left';
+      }
+
+      /* précision courante */
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#8fa3bd';
+      ctx.font = '700 12px ui-sans-serif,system-ui,sans-serif';
+      const seen = st.hits + st.misses;
+      ctx.fillText(`${st.hits} / ${st.total}  ·  ${seen ? Math.round(100 * st.hits / seen) : 100} %`
+        + `  ·  seuil ${Math.round(st.o.need * 100)} %`, st.w / 2, g.lineY + 74);
+      ctx.textAlign = 'left';
     },
 
     /* ============================================================
@@ -299,7 +556,8 @@
       for (let y = 0; y < H; y += 60) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
       ctx.stroke();
 
-      if (st.o.mode === 'invaders') this.drawInvaders(ctx, st, col);
+      if (st.o.mode === 'partition') this.drawChart(ctx, st, col);
+      else if (st.o.mode === 'invaders') this.drawInvaders(ctx, st, col);
       else this.drawConduit(ctx, st, col);
 
       /* particules */
@@ -339,13 +597,19 @@
         ctx.fillRect(W * .15, 22, W * .7 * left, 6);
         ctx.fillStyle = '#e8f4ff';
         ctx.font = '800 12px ui-sans-serif,system-ui,sans-serif';
-        ctx.fillText('INTÉGRITÉ ' + '◆'.repeat(Math.max(0, st.hp)), W / 2, 48);
+        if (st.o.mode === 'partition') {
+          ctx.fillText('COMBO ×' + st.combo + '   ·   ×' + st.mult().toFixed(1) + ' DÉGÂTS', W / 2, 48);
+        } else {
+          ctx.fillText('INTÉGRITÉ ' + '◆'.repeat(Math.max(0, st.hp)), W / 2, 48);
+        }
         ctx.font = '600 11px ui-sans-serif,system-ui,sans-serif';
         ctx.fillStyle = '#8fa3bd';
         /* la consigne reste en haut : en bas elle passerait sous le pouce */
-        ctx.fillText(st.o.mode === 'invaders'
-          ? 'Glisse pour viser — le tir est automatique'
-          : 'DASH ou ULT pour sauter (double saut possible)', W / 2, 68);
+        ctx.fillText(st.o.mode === 'partition'
+          ? 'Frappe la piste quand la note touche la ligne'
+          : st.o.mode === 'invaders'
+            ? 'Glisse pour viser — le tir est automatique'
+            : 'DASH ou ULT pour sauter (double saut possible)', W / 2, 68);
       }
       ctx.textAlign = 'left';
     },

@@ -205,7 +205,7 @@
         const b = NF.BIOMES[i % NF.BIOMES.length];
         const first = NF.biomeFirstWave(i);
         html += `<button class="bp-chip ${i === cur ? 'on' : ''}" data-act="setBiome" data-i="${i}"
-                   style="--c:${b.accent}">${b.icon} ${esc(NF.biomeLabel(i))}<em>vagues ${first}–${first + 49}</em></button>`;
+                   style="--c:${b.accent}">${b.icon} ${esc(NF.biomeLabel(i))}<em>vagues ${first}–${first + NF.WAVES_PER_BIOME - 1}</em></button>`;
       }
       box.innerHTML = html + '</div>';
     },
@@ -585,7 +585,7 @@
         ? 'SECTEUR NETTOYÉ'
         : (res.quit ? 'PARTIE ABANDONNÉE' : 'SYSTÈME HORS LIGNE');
       $('goStats').innerHTML =
-        (res.victory && res.biome ? `<div class="go-win">${res.biome.icon} ${esc(res.biome.name)} — 50 vagues, 5 boss</div>` : '')
+        (res.victory && res.biome ? `<div class="go-win">${res.biome.icon} ${esc(res.biome.name)} — ${NF.WAVES_PER_BIOME} vagues, 5 boss</div>` : '')
         + statGrid(game);
       $('goRewards').innerHTML = `
         <div>◈ ${U.fmt(res.crystals)} cristaux gagnés${res.victory ? ' <em>(prime de secteur)</em>' : ''}</div>

@@ -1,7 +1,7 @@
 /* ============================================================
-   bosses.js — boss toutes les 10 vagues
-   Cinq archétypes avec des mécaniques propres, rejoués en boucle
-   avec un palier (Mk II, Mk III…) pour des vagues illimitées.
+   bosses.js — un boss toutes les 5 vagues, cinq par secteur
+   Chacun a sa mécanique propre ; passé le dernier secteur la liste
+   reprend au palier supérieur (Mk II, Mk III…) sans fin.
    ============================================================ */
 (function (w) {
   'use strict';
@@ -47,6 +47,15 @@
         if (!b.invuln) {
           b.vulnT -= dt;
           b.hint = 'NOYAU EXPOSÉ — frappe maintenant !';
+          /* à découvert il panique et arrose autour de lui */
+          b.panicT = (b.panicT || 0) - dt;
+          if (b.panicT <= 0) {
+            b.panicT = 1.1;
+            const off = U.rand(0, U.TAU);
+            for (let i = 0; i < 12; i++) {
+              game.enemyShoot(b, off + i * U.TAU / 12, { speed: 210, dmg: b.dmg * .4, r: 6, color: '#ffd23e' });
+            }
+          }
           if (b.vulnT <= 0) {                       // les nœuds se reforment
             b.spawnNodes(game);
             game.toast('LES NŒUDS SE REFORMENT', 'warn');
@@ -104,13 +113,25 @@
       },
       update(b, dt, game) {
         const p = game.player;
-        b.hint = 'Traverse l\'anneau par l\'intérieur';
 
-        /* aspiration */
+        /* à partir de la phase 2 il inverse son souffle : on ne peut plus
+           se contenter de lutter toujours dans le même sens */
+        b.blowT = (b.blowT || 6) - dt;
+        if (b.blowT <= 0 && b.phase >= 2) {
+          b.blowT = 7;
+          b.blow = 2.6;
+          game.toast('INVERSION DU SOUFFLE', 'warn');
+          FX.screenFlash('#7dd3ff', .3);
+        }
+        if (b.blow > 0) b.blow -= dt;
+        b.hint = b.blow > 0 ? 'SOUFFLE INVERSÉ — il te repousse'
+                            : 'Traverse l\'anneau par l\'intérieur';
+
+        /* aspiration (ou expulsion) */
         const d = U.dist(b.x, b.y, p.x, p.y);
         if (d > 30) {
           const a = U.angle(p.x, p.y, b.x, b.y);
-          const pull = (b.phase >= 3 ? 160 : 110) * U.clamp(d / 500, .35, 1);
+          const pull = (b.phase >= 3 ? 160 : 110) * U.clamp(d / 500, .35, 1) * (b.blow > 0 ? -1 : 1);
           p.x += Math.cos(a) * pull * dt;
           p.y += Math.sin(a) * pull * dt;
         }
@@ -182,6 +203,22 @@
         }
         if (b.coreOff > 0) b.coreOff -= dt;
 
+        /* un leurre allume parfois un faux cœur pendant que le vrai
+           s'éteint : la lecture ne suffit plus, il faut vérifier */
+        b.fakeT = (b.fakeT || 9) - dt;
+        if (b.fakeT <= 0 && b.phase >= 2 && b.decoys.length) {
+          b.fakeT = 11;
+          b.fake = U.pick(b.decoys);
+          b.fakeLeft = 3;
+          b.coreOff = 3;
+          game.toast('CŒUR FANTÔME', 'bad');
+        }
+        if (b.fakeLeft > 0) {
+          b.fakeLeft -= dt;
+          if (b.fakeLeft <= 0) b.fake = null;
+        }
+        if (b.fake && b.fake.dead) b.fake = null;
+
         /* faisceaux croisés depuis chaque copie */
         b.beamT -= dt;
         if (b.beamT <= 0) {
@@ -211,14 +248,18 @@
         game.toast('L\'HYDRE SE DÉDOUBLE', 'bad');
       },
       draw(b, ctx) {
+        const glow = (x, y) => {
+          const pulse = .55 + .45 * Math.sin(performance.now() / 140);
+          ctx.globalAlpha = pulse;
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(x, y, 11, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = pulse * .5;
+          ctx.beginPath(); ctx.arc(x, y, 20, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = 1;
+        };
+        if (b.fake && !b.fake.dead) glow(b.fake.x, b.fake.y);
         if (b.coreOff > 0) return;
-        const pulse = .55 + .45 * Math.sin(performance.now() / 140);
-        ctx.globalAlpha = pulse;
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, U.TAU); ctx.fill();
-        ctx.globalAlpha = pulse * .5;
-        ctx.beginPath(); ctx.arc(b.x, b.y, 20, 0, U.TAU); ctx.fill();
-        ctx.globalAlpha = 1;
+        glow(b.x, b.y);
       }
     },
 
@@ -235,13 +276,31 @@
       },
       update(b, dt, game) {
         const p = game.player;
-        b.hint = 'Contourne le bouclier';
 
         /* le bouclier suit le joueur, avec un temps de retard */
         b.snapT -= dt;
         const want = U.angle(b.x, b.y, p.x, p.y);
         const rate = b.phase >= 3 ? 1.5 : (b.phase >= 2 ? 1.1 : .8);
         b.shieldA = U.turnTo(b.shieldA, want, rate * dt);
+
+        /* rester dans son axe le charge : le bouclier n'est plus seulement
+           une gêne, il devient une menace si on ne le contourne pas */
+        const inFront = Math.abs(U.angleDiff(b.shieldA, want)) < b.shieldArc / 2;
+        b.overload = U.clamp((b.overload || 0) + (inFront ? dt * 24 : -dt * 32), 0, 100);
+        b.hint = b.overload > 45
+          ? `Bouclier en surcharge ${Math.round(b.overload)} % — sors de son axe`
+          : 'Contourne le bouclier';
+        if (b.overload >= 100) {
+          b.overload = 0;
+          for (let i = -1; i <= 1; i++) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: b.shieldA + i * .3,
+              len: 950, width: 32, telegraph: .65, duration: .5,
+              dmg: b.dmg * 1.3, color: '#3ef2ff', owner: b, followOwner: true
+            }));
+          }
+          game.toast('DÉCHARGE FRONTALE', 'bad');
+        }
 
         /* charge télégraphiée */
         b.chargeT -= dt;
@@ -291,6 +350,17 @@
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r + 14, b.shieldA - b.shieldArc / 2, b.shieldA + b.shieldArc / 2);
         ctx.stroke();
+        /* la charge se lit sur le bouclier lui-même */
+        const k = (b.overload || 0) / 100;
+        if (k > 0) {
+          ctx.globalAlpha = .35 + .5 * k;
+          ctx.strokeStyle = k > .8 ? '#ff4d5e' : '#ffd23e';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 22, b.shieldA - b.shieldArc / 2,
+            b.shieldA - b.shieldArc / 2 + b.shieldArc * k);
+          ctx.stroke();
+        }
         ctx.restore();
         ctx.globalAlpha = 1;
       },
@@ -372,6 +442,24 @@
       onPhase(b, game) {
         b.spawnPillars(game, 2);
         game.toast('NOUVEAUX PILIERS', 'bad');
+        /* phase 2 : il recompile le secteur et t'impose son tempo */
+        if (b.phase === 2 && !b.scored) {
+          b.scored = true;
+          NF.Interlude.start(game, {
+            mode: 'partition',
+            title: 'RECOMPILATION',
+            subtitle: 'Frappe la piste en rythme — chaque note l\'entame',
+            duration: 26, bpm: 100, lanes: 4, need: 0.5, color: '#c58bff',
+            onHit: (g, combo, mult) =>
+              g.damageEnemy(b, b.maxHp * 0.0022 * mult, { silent: true, source: 'rythme' }),
+            onMiss: (g) => NF.Interlude.noteCost(g, 0.032),
+            onWin: (g) => {
+              g.damageEnemy(b, b.maxHp * 0.08, { silent: true, source: 'rythme' });
+              g.toast('SÉQUENCE COMPILÉE', 'good');
+            },
+            onLose: (g) => g.toast('COMPILATION ÉCHOUÉE', 'bad')
+          });
+        }
       }
     },
 
@@ -392,29 +480,37 @@
         b.decoys = [];
         b.shieldA = 0; b.shieldArc = Math.PI * .8;
         b.salvoT = 3;
-        b.spawnNodes(game);
-        b.hint = 'Phase 1 — détruis les nœuds';
+        /* l'ordre des trois défenses est tiré au sort : impossible de
+           réciter le combat appris la partie d'avant */
+        b.order = [1, 2, 3];
+        for (let i = 2; i > 0; i--) {
+          const j = U.randInt(0, i);
+          const t = b.order[i]; b.order[i] = b.order[j]; b.order[j] = t;
+        }
+        b.mode = b.order[0];
+        if (b.mode === 1) b.spawnNodes(game);
+        if (b.mode === 3) b.spawnDecoys(game, 2);
       },
       update(b, dt, game) {
         const p = game.player;
 
-        if (b.phase === 1) {
+        if (b.mode === 1) {
           b.nodes = b.nodes.filter(n => !n.dead);
           b.invuln = b.nodes.length > 0;
-          b.hint = b.invuln ? `Phase 1 — nœuds restants : ${b.nodes.length}` : 'Noyau exposé !';
+          b.hint = b.invuln ? `Nœuds restants : ${b.nodes.length}` : 'Noyau exposé !';
           if (!b.invuln) {
             b.vulnT -= dt;
             if (b.vulnT <= 0) b.spawnNodes(game);
           }
-        } else if (b.phase === 2) {
+        } else if (b.mode === 2) {
           /* bouclier frontal : il faut la contourner */
           b.invuln = false;
-          b.hint = 'Phase 2 — frappe-la dans le dos';
+          b.hint = 'Frappe-la dans le dos';
           b.shieldA = U.turnTo(b.shieldA, U.angle(b.x, b.y, p.x, p.y), 1.15 * dt);
         } else {
           /* leurres : seule celle au cœur allumé encaisse */
           b.invuln = false;
-          b.hint = 'Phase 3 — vise le cœur allumé';
+          b.hint = 'Vise le cœur allumé';
           b.decoys = b.decoys.filter(d => !d.dead);
           b.swapT = (b.swapT || 4) - dt;
           if (b.swapT <= 0) {
@@ -445,12 +541,15 @@
         for (const n of b.nodes) if (!n.dead) n.dead = true;
         b.nodes = [];
         b.invuln = false;
-        if (b.phase === 3) b.spawnDecoys(game, 2);
-        game.toast('LA CHIMÈRE CHANGE DE DÉFENSE', 'bad');
+        b.mode = b.order[b.phase - 1];
+        if (b.mode === 1) b.spawnNodes(game);
+        if (b.mode === 3 && !b.decoys.filter(d => !d.dead).length) b.spawnDecoys(game, 2);
+        const nom = { 1: 'NŒUDS', 2: 'BOUCLIER', 3: 'LEURRES' }[b.mode];
+        game.toast('LA CHIMÈRE PASSE EN ' + nom, 'bad');
         FX.screenFlash(b.color, .4);
       },
       draw(b, ctx) {
-        if (b.phase === 2) {
+        if (b.mode === 2) {
           ctx.save();
           ctx.strokeStyle = b.color; ctx.lineCap = 'round';
           ctx.globalAlpha = .8; ctx.lineWidth = 7;
@@ -459,7 +558,7 @@
           ctx.stroke();
           ctx.restore(); ctx.globalAlpha = 1;
         }
-        if (b.phase === 3 && !(b.coreOff > 0)) {
+        if (b.mode === 3 && !(b.coreOff > 0)) {
           const pulse = .5 + .5 * Math.sin(performance.now() / 140);
           ctx.globalAlpha = pulse; ctx.fillStyle = '#fff';
           ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, U.TAU); ctx.fill();
@@ -467,7 +566,7 @@
         }
       },
       block(b, x, y) {
-        if (b.phase !== 2) return false;
+        if (b.mode !== 2) return false;
         return Math.abs(U.angleDiff(b.shieldA, U.angle(b.x, b.y, x, y))) < b.shieldArc / 2;
       }
     },
@@ -534,6 +633,24 @@
       onPhase(b, game) {
         game.toast('PRÉDICTION AFFINÉE', 'bad');
         b.trail.length = 0;
+        /* il ne se contente plus d'anticiper : il impose la mesure */
+        if (b.phase === 2 && !b.scored) {
+          b.scored = true;
+          NF.Interlude.start(game, {
+            mode: 'partition',
+            title: 'TEMPO IMPOSÉ',
+            subtitle: 'Il a déjà écrit la suite — joue-la sans faute',
+            duration: 28, bpm: 112, lanes: 4, need: 0.55, color: '#7dd3ff',
+            onHit: (g, combo, mult) =>
+              g.damageEnemy(b, b.maxHp * 0.0022 * mult, { silent: true, source: 'rythme' }),
+            onMiss: (g) => NF.Interlude.noteCost(g, 0.035),
+            onWin: (g) => {
+              g.damageEnemy(b, b.maxHp * 0.1, { silent: true, source: 'rythme' });
+              g.toast('PRÉDICTION DÉJOUÉE', 'good');
+            },
+            onLose: (g) => g.toast('IL AVAIT VU JUSTE', 'bad')
+          });
+        }
       },
       draw(b, ctx) {
         /* fil reliant les positions mémorisées */
@@ -563,10 +680,11 @@
         b.pods = b.pods.filter(p => !p.dead);
         b.invuln = b.pods.length > 0;
         b.hint = b.invuln
-          ? `Couveuses actives : ${b.pods.length} — la coque est scellée`
+          ? `Couveuses : ${b.pods.length} — elles rampent vers la ruche`
           : 'Coque ouverte — frappe !';
 
-        /* les couveuses recrachent des nuées */
+        /* les couveuses recrachent des nuées — et rampent vers la ruche :
+           laissée tranquille, chacune la ravitaille de 8 % */
         for (const pod of b.pods) {
           pod.broodT = (pod.broodT || U.rand(1, 3)) - dt;
           if (pod.broodT <= 0) {
@@ -575,6 +693,17 @@
               const pt = U.ringPoint(pod.x, pod.y, 28, 50);
               game.spawnAdd('swarm', pt.x, pt.y, b.tierScale);
             }
+          }
+          const a = U.angle(pod.x, pod.y, b.x, b.y);
+          const sp = 13 + b.phase * 7;
+          pod.x += Math.cos(a) * sp * dt;
+          pod.y += Math.sin(a) * sp * dt;
+          if (U.dist(pod.x, pod.y, b.x, b.y) < b.r + 30) {
+            pod.dead = true;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.08);
+            game.toast('COUVEUSE RÉABSORBÉE (+8 %)', 'bad');
+            FX.screenFlash('#ffb43e', .3);
+            FX.burst(b.x, b.y, 16, '#ffb43e', { speed: 240, life: .5, glow: true });
           }
         }
 
@@ -639,6 +768,11 @@
           b.invT = b.phase >= 3 ? 9 : 12;
           b.warned = false;
           game.invertT = b.phase >= 3 ? 6 : 4.5;
+          /* le miroir ne retourne pas que tes commandes : les tirs déjà
+             en l'air repartent d'où ils venaient */
+          let n = 0;
+          for (const bl of game.ebullets) { bl.vx = -bl.vx; bl.vy = -bl.vy; n++; }
+          if (n) game.toast('LES TIRS REPARTENT EN ARRIÈRE', 'warn');
           U.buzz([30, 50, 30]);
         }
 
@@ -689,7 +823,7 @@
         const p = game.player;
         b.brood = b.brood.filter(e => !e.dead);
         b.hint = b.brood.length
-          ? `Elle va avaler ${b.brood.length} sbire${b.brood.length > 1 ? 's' : ''}`
+          ? `${b.brood.length} lien${b.brood.length > 1 ? 's' : ''} à rompre — chacun lui coûte 3 %`
           : 'Reste hors de son puits';
 
         /* aspiration permanente */
@@ -726,6 +860,14 @@
               const pt = U.ringPoint(b.x, b.y, 180, 300);
               const e = game.spawnAdd(U.pick(['phantom', 'harrier', 'warden']), pt.x, pt.y, b.tierScale);
               e.devoured = true;
+              /* tuer un sbire relié ne fait plus que la priver du repas :
+                 le lien se retourne contre elle */
+              e.onDeath = () => {
+                if (b.dead) return;
+                game.damageEnemy(b, b.maxHp * 0.03, { silent: true, source: 'lien' });
+                game.zaps.push(new NF.Zap(e.x, e.y, b.x, b.y, C.lime));
+                FX.text(b.x, b.y - 60, 'LIEN RETOURNÉ', C.lime, true);
+              };
               b.brood.push(e);
             }
             game.toast('ELLE INVOQUE — TUE-LES VITE', 'warn');
@@ -788,8 +930,12 @@
       update(b, dt, game) {
         /* la chaleur monte ; à saturation, il se verrouille et lance le QTE */
         if (!b.venting) {
-          b.heat += dt * (7 + b.phase * 2.5);
-          b.hint = `Surchauffe ${Math.min(100, Math.round(b.heat))} % — purges réussies : ${b.purges}/3`;
+          /* rester au contact le fait chauffer bien plus vite : combattre
+             au corps à corps veut dire enchaîner les purges */
+          const close = U.dist(b.x, b.y, game.player.x, game.player.y) < 260;
+          b.heat += dt * (7 + b.phase * 2.5) * (close ? 1.9 : 1);
+          b.hint = `Surchauffe ${Math.min(100, Math.round(b.heat))} %`
+            + (close ? ' (au contact : ×1,9)' : '') + ` — purges : ${b.purges}`;
           if (b.heat >= 100) {
             b.venting = true;
             b.invuln = true;
@@ -869,10 +1015,11 @@
       hint: 'Elle finira par t\'expédier en orbite : tiens la ligne',
       init(b) {
         b.beamT = 3;
-        b.sent = false;
+        b.sent = 0;
       },
       update(b, dt, game) {
-        b.hint = b.sent ? 'Retour en arène — finis-la' : 'Elle prépare un transfert orbital';
+        b.hint = b.sent >= 2 ? 'Plus de relais — finis-la'
+          : `Transferts orbitaux subis : ${b.sent}/2`;
 
         b.beamT -= dt;
         if (b.beamT <= 0) {
@@ -890,24 +1037,27 @@
         b.driftTo(dt, game, 280, .6);
       },
       onPhase(b, game) {
-        /* au passage en phase 2 : transfert dans la défense orbitale */
-        if (b.phase !== 2 || b.sent) { game.toast('SENTINELLE RECONFIGURÉE', 'bad'); return; }
-        b.sent = true;
+        /* elle expédie en orbite à chaque changement de phase, la seconde
+           fois sur un relais plus serré */
+        if (b.sent >= 2) { game.toast('SENTINELLE RECONFIGURÉE', 'bad'); return; }
+        b.sent++;
+        const second = b.sent === 2;
         b.invuln = true;
         NF.Interlude.start(game, {
           mode: 'invaders',
-          title: 'TRANSFERT ORBITAL',
-          subtitle: 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
-          duration: 20, hp: 3, color: '#7dd3ff',
+          title: second ? 'SECOND TRANSFERT' : 'TRANSFERT ORBITAL',
+          subtitle: second ? 'Relais renforcé — moins de marge'
+                           : 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
+          duration: second ? 18 : 20, hp: 3, color: '#7dd3ff',
           onWin: (g) => {
             b.invuln = false;
-            g.damageEnemy(b, b.maxHp * 0.3, { silent: true, source: 'interlude' });
+            g.damageEnemy(b, b.maxHp * (second ? 0.24 : 0.28), { silent: true, source: 'interlude' });
             FX.text(b.x, b.y - 60, 'RELAIS DÉTRUIT', C.lime, true);
             g.toast('ORBITE NETTOYÉE — ELLE ENCAISSE', 'good');
           },
           onLose: (g) => {
             b.invuln = false;
-            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.1);
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.09);
             g.toast('LA SENTINELLE SE RECHARGE', 'bad');
           }
         });
@@ -949,9 +1099,11 @@
         b.invuln = true;
         NF.Interlude.start(game, {
           mode: 'conduit',
-          title: 'CONDUIT DE DONNÉES',
-          subtitle: 'DASH ou ULT pour sauter — double saut autorisé',
+          title: b.runs === 2 ? 'CONDUIT EN SURRÉGIME' : 'CONDUIT DE DONNÉES',
+          subtitle: b.runs === 2 ? 'Ça va plus vite, et ça vient aussi du plafond'
+                                 : 'DASH ou ULT pour sauter — double saut autorisé',
           duration: 14 + b.runs * 3, hp: 3, color: '#9dff4d',
+          rush: b.runs === 2,
           onWin: (g) => {
             b.invuln = false;
             g.damageEnemy(b, b.maxHp * 0.28, { silent: true, source: 'interlude' });
@@ -985,7 +1137,7 @@
           ? 'Bouclier hors service — achève-la'
           : (b.invuln
             ? 'Bouclier actif — attends la fenêtre de résonance'
-            : `Bouclier brisé (${b.breaks}/3) — frappe !`);
+            : `Bouclier brisé (${b.breaks}/3) — rattrape-la et frappe !`);
 
         /* anneaux concentriques à esquiver */
         b.ringT -= dt;
@@ -1013,7 +1165,7 @@
               color: '#c58bff',
               onWin: (g) => {
                 b.invuln = false; b.breaks++;
-                b.openT = 9;
+                b.openT = 11;
                 FX.shockwave(b.x, b.y, 260, '#c58bff', .6);
                 g.toast(b.breaks >= 3 ? 'BOUCLIER HORS SERVICE' : 'BOUCLIER SATURÉ', 'good');
               },
@@ -1031,7 +1183,10 @@
           if (b.openT <= 0) { b.invuln = true; b.qteT = 4; game.toast('LE BOUCLIER SE REFORME', 'warn'); }
         }
 
-        b.driftTo(dt, game, 260, .45);
+        /* à découvert elle décroche : la fenêtre ne se joue pas sur place,
+           il faut la poursuivre */
+        if (!b.invuln && b.breaks < 3) b.driftTo(dt, game, 400, .95);
+        else b.driftTo(dt, game, 260, .45);
       },
       onPhase(b, game) {
         game.toast('FRÉQUENCE MODIFIÉE', 'bad');
@@ -1087,22 +1242,24 @@
       onPhase(b, game) {
         b.invuln = true;
         if (b.phase === 2) {
-          /* première épreuve : purge en trois temps */
-          NF.QTE.start(game, {
-            type: 'timing',
+          /* première épreuve : la partition du protocole, la plus dense
+             du jeu — il n'est pas invulnérable, chaque note l'entame */
+          b.invuln = false;
+          NF.Interlude.start(game, {
+            mode: 'partition',
             title: 'PROTOCOLE — ÉPREUVE 1',
-            hint: 'Trois synchronisations d\'affilée',
-            rounds: 3, speed: 1.7, width: 0.2, color: '#ffd23e',
+            subtitle: 'Sa cadence, ta main. Ne romps pas le combo.',
+            duration: 30, bpm: 124, lanes: 4, need: 0.6, color: '#ffd23e',
+            comboStep: 0.09, maxBonus: 2.6,
+            onHit: (g, combo, mult) =>
+              g.damageEnemy(b, b.maxHp * 0.0018 * mult, { silent: true, source: 'rythme' }),
+            onMiss: (g) => NF.Interlude.noteCost(g, 0.04),
             onWin: (g) => {
-              b.invuln = false; b.trialsDone++;
-              g.damageEnemy(b, b.maxHp * 0.12, { silent: true, source: 'qte' });
+              b.trialsDone++;
+              g.damageEnemy(b, b.maxHp * 0.1, { silent: true, source: 'rythme' });
               g.toast('ÉPREUVE FRANCHIE', 'good');
             },
-            onLose: (g) => {
-              b.invuln = false;
-              g.hurtPlayer(b.dmg * 1.6, b);
-              g.toast('ÉPREUVE ÉCHOUÉE', 'bad');
-            }
+            onLose: (g) => g.toast('ÉPREUVE ÉCHOUÉE', 'bad')
           });
         } else {
           /* seconde épreuve : défense orbitale */
@@ -1110,7 +1267,7 @@
             mode: 'invaders',
             title: 'PROTOCOLE — ÉPREUVE 2',
             subtitle: 'Le cœur t\'expulse : tiens la ligne orbitale',
-            duration: 22, hp: 2, color: '#ffd23e',
+            duration: 22, hp: 3, color: '#ffd23e',
             onWin: (g) => {
               b.invuln = false; b.trialsDone++;
               g.damageEnemy(b, b.maxHp * 0.2, { silent: true, source: 'interlude' });
@@ -1202,6 +1359,14 @@
         const e = game.spawnAdd('node', this.x, this.y, this.tierScale);
         e.anchor = { boss: this, ang: i * U.TAU / this.nodeCount, rad: 165, spd: .55 };
         e.maxHp *= 1.6; e.hp = e.maxHp;
+        /* un nœud qui saute relâche sa charge : ne reste pas collé */
+        e.onDeath = () => {
+          game.hazards.push(new NF.Hazard({
+            kind: 'ring', x: e.x, y: e.y, r: 40, rInner: 0,
+            telegraph: .35, duration: .9, grow: 240,
+            dmg: this.dmg * .8, color: '#ffd23e', tickRate: .5
+          }));
+        };
         this.nodes.push(e);
       }
       this.vulnT = 9;

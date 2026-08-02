@@ -13,11 +13,26 @@ dossier `jeu/` sur le site du gîte et ouvre l'adresse depuis le mobile
 
 | Action | Mobile | Clavier |
 |---|---|---|
-| Déplacement | joystick virtuel (pouce sur la moitié gauche) | ZQSD / WASD / flèches |
+| Déplacement | joystick virtuel : il apparaît là où le pouce se pose | ZQSD / WASD / flèches |
 | Tir | **automatique**, vise l'ennemi le plus proche | — |
 | Dash | bouton `DASH` | Espace |
 | Ultime | bouton `ULT` | E |
 | Pause | bouton `❚❚` | Échap / P |
+
+### Main directrice
+
+**Paramètres → Main directrice** inverse les commandes tactiles :
+
+| | Joystick | Boutons d'action |
+|---|---|---|
+| Droitier *(défaut)* | moitié gauche | en bas à droite |
+| Gaucher | moitié droite | en bas à gauche |
+
+Le bandeau d'armes et le suivi de quête suivent le mouvement pour ne jamais se
+retrouver sous les boutons. Le réglage est accessible depuis le menu et depuis
+l'écran de pause, il s'applique immédiatement et est conservé.
+
+Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 
 ## Boucle de jeu
 

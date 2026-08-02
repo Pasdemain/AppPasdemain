@@ -495,3 +495,86 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 .go-board{margin:2px 0}
 .go-board .pseudo-row{margin:8px 0 0}
+
+/* ============================================================
+   MAIN DIRECTRICE — miroir des commandes tactiles
+   Par défaut : joystick à gauche, actions à droite.
+   #app.lefty inverse les deux côtés.
+   ============================================================ */
+#app.lefty .action-btn.dash{right:auto;left:calc(var(--safe-l) + 108px)}
+#app.lefty .action-btn.ult{right:auto;left:calc(var(--safe-l) + 18px)}
+#app.lefty .weapon-strip{
+  left:auto;right:calc(var(--safe-r) + 10px);justify-content:flex-end;
+}
+#app.lefty .quest-tracker{
+  left:auto;right:calc(var(--safe-r) + 10px);align-items:flex-end;text-align:right;
+}
+#app.lefty .quest-tracker div{
+  border-left:0;border-right:2px solid var(--violet);border-radius:6px 0 0 6px;
+}
+@media (max-height:420px){
+  #app.lefty .action-btn.dash{right:auto;left:calc(var(--safe-l) + 88px)}
+  #app.lefty .action-btn.ult{right:auto;left:calc(var(--safe-l) + 18px)}
+}
+
+/* ============================================================
+   ÉCRAN PARAMÈTRES
+   ============================================================ */
+.set-title{font-size:12px;color:var(--cyan);letter-spacing:.14em;margin:14px 0 4px}
+.set-title:first-of-type{margin-top:6px}
+
+.hand-choice{display:flex;gap:10px}
+.hand-card{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:13px 10px;border-radius:15px;text-align:center;
+  background:rgba(10,16,34,.65);border:1px solid var(--line);
+  transition:transform .08s,border-color .15s,background .15s;
+}
+.hand-card:active{transform:scale(.97)}
+.hand-card b{font-size:12px;font-weight:900;letter-spacing:.1em}
+.hand-card em{font-style:normal;font-size:10.5px;color:var(--txt-dim);line-height:1.35}
+.hand-card.on{
+  border-color:var(--cyan);background:rgba(62,242,255,.12);
+  box-shadow:0 0 20px rgba(62,242,255,.18);
+}
+
+/* aperçu : un écran miniature avec le stick d'un côté, les boutons de l'autre */
+.hand-vis{
+  position:relative;display:block;width:100%;max-width:120px;aspect-ratio:9/16;
+  border-radius:9px;border:1px solid rgba(120,150,190,.35);
+  background:rgba(4,8,20,.7);overflow:hidden;
+}
+.hand-vis.flip{transform:scaleX(-1)}
+.hand-vis i{position:absolute;display:block;border-radius:50%}
+.hand-vis .hv-stick{
+  left:10%;bottom:11%;width:30%;aspect-ratio:1;
+  background:rgba(62,242,255,.3);border:1px solid var(--cyan);
+}
+.hand-vis .hv-dash{
+  right:34%;bottom:12%;width:22%;aspect-ratio:1;
+  background:rgba(62,242,255,.18);border:1px solid rgba(62,242,255,.6);
+}
+.hand-vis .hv-ult{
+  right:8%;bottom:12%;width:22%;aspect-ratio:1;
+  background:rgba(255,62,165,.24);border:1px solid var(--magenta);
+}
+.hand-card.on .hand-vis{border-color:var(--cyan)}
+
+.set-list{display:flex;flex-direction:column;gap:8px;padding-bottom:24px}
+.set-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px;border-radius:13px;
+  background:rgba(10,16,34,.65);border:1px solid var(--line);
+  font-size:13px;
+}
+.set-row .sw{
+  flex:none;width:46px;height:26px;border-radius:14px;position:relative;
+  background:rgba(255,255,255,.1);border:1px solid rgba(120,150,190,.3);
+  transition:background .18s,border-color .18s;
+}
+.set-row .sw::after{
+  content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+  background:#6d7f96;transition:transform .18s,background .18s;
+}
+.set-row.on .sw{background:rgba(62,242,255,.28);border-color:var(--cyan)}
+.set-row.on .sw::after{transform:translateX(20px);background:var(--cyan)}

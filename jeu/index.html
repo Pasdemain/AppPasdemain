@@ -71,6 +71,7 @@
       <button class="btn" data-act="daily">🎁 RÉCOMPENSE DU JOUR <em id="dailyBadge" class="badge hidden">!</em></button>
       <button class="btn" data-act="board">🏆 CLASSEMENT</button>
       <button class="btn" data-act="quests">✔ QUÊTES <em id="questBadge" class="badge hidden">0</em></button>
+      <button class="btn" data-act="settings">⚙ PARAMÈTRES</button>
       <button class="btn ghost" data-act="help">? COMMENT JOUER</button>
     </div>
     <div class="save-row">
@@ -170,6 +171,39 @@
     <div id="boardList" class="board-list"></div>
   </div>
 
+  <!-- ============ PARAMÈTRES ============ -->
+  <div id="settings" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="backFromSettings">←</button>
+      <h2>PARAMÈTRES</h2>
+    </header>
+
+    <h3 class="set-title">Main directrice</h3>
+    <p class="panel-sub">Le joystick se place sous ton pouce de déplacement, les boutons d'action de l'autre côté.</p>
+    <div class="hand-choice">
+      <button class="hand-card" data-act="setHand" data-hand="right">
+        <span class="hand-vis"><i class="hv-stick"></i><i class="hv-dash"></i><i class="hv-ult"></i></span>
+        <b>DROITIER</b>
+        <em>Joystick à gauche · actions à droite</em>
+      </button>
+      <button class="hand-card" data-act="setHand" data-hand="left">
+        <span class="hand-vis flip"><i class="hv-stick"></i><i class="hv-dash"></i><i class="hv-ult"></i></span>
+        <b>GAUCHER</b>
+        <em>Joystick à droite · actions à gauche</em>
+      </button>
+    </div>
+
+    <h3 class="set-title">Retours</h3>
+    <div class="set-list">
+      <button class="set-row" data-act="toggle" data-key="haptics">
+        <span>📳 Vibrations</span><em class="sw"></em>
+      </button>
+      <button class="set-row" data-act="toggle" data-key="shake">
+        <span>💥 Secousse de l'écran</span><em class="sw"></em>
+      </button>
+    </div>
+  </div>
+
   <!-- ============ AIDE ============ -->
   <div id="help" class="screen panel hidden">
     <header class="panel-head">
@@ -178,8 +212,9 @@
     </header>
     <div class="help-body">
       <h3>Déplacement</h3>
-      <p><b>Mobile :</b> pose et glisse ton pouce sur la moitié gauche de l'écran (joystick virtuel).<br>
+      <p><b>Mobile :</b> pose et glisse ton pouce sur la moitié de l'écran côté joystick (virtuel, il apparaît où tu poses le doigt).<br>
       <b>Clavier :</b> ZQSD / WASD / flèches.</p>
+      <p>Gaucher ? Va dans <b>Paramètres → Main directrice</b> : le joystick passe à droite et les boutons d'action à gauche.</p>
       <h3>Tir</h3>
       <p>Le tir est <b>automatique</b> et vise l'ennemi le plus proche. Concentre-toi sur l'esquive.</p>
       <h3>Dash &amp; Ultime</h3>
@@ -210,6 +245,7 @@
       <h2>PAUSE</h2>
       <div id="pauseStats" class="stat-grid"></div>
       <button class="btn primary" data-act="resume">REPRENDRE</button>
+      <button class="btn ghost small" data-act="settings">⚙ PARAMÈTRES</button>
       <button class="btn ghost" data-act="quit">ABANDONNER</button>
     </div>
   </div>

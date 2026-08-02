@@ -70,7 +70,10 @@
       });
     },
 
-    kick(amount) { this.shake = Math.min(26, this.shake + amount); },
+    kick(amount) {
+      if (NF.settings && NF.settings.shake === false) return;
+      this.shake = Math.min(26, this.shake + amount);
+    },
 
     screenFlash(color, amount) { this.flash = Math.max(this.flash, amount || .35); this.flashColor = color || '#fff'; },
 

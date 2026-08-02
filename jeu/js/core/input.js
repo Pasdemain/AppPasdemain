@@ -15,6 +15,15 @@
 
     _stickId: null,
     _ox: 0, _oy: 0,
+
+    /** Le point touché est-il dans la moitié réservée au joystick ? */
+    inStickZone(x) {
+      const w2 = window.innerWidth;
+      return (NF.settings && NF.settings.handed === 'left')
+        ? x > w2 * 0.42          // gaucher : joystick à droite
+        : x < w2 * 0.58;         // droitier : joystick à gauche
+    },
+
     _base: null, _knob: null,
     MAX: 52,               // rayon max du joystick en px
 
@@ -50,7 +59,7 @@
         if (blocked(e.target)) return;
         for (const t of e.changedTouches) {
           if (this._stickId !== null) break;
-          if (t.clientX > w.innerWidth * 0.58) continue;    // droite réservée aux boutons
+          if (!this.inStickZone(t.clientX)) continue;        // l'autre moitié est aux boutons
           this._grab(t);
           e.preventDefault();
         }
@@ -75,7 +84,7 @@
       /* ---------- Souris (test sur ordinateur) ---------- */
       document.addEventListener('mousedown', (e) => {
         if (blocked(e.target)) return;
-        if (e.clientX > w.innerWidth * 0.58) return;
+        if (!this.inStickZone(e.clientX)) return;
         this._grab({ identifier: 'mouse', clientX: e.clientX, clientY: e.clientY });
       });
       w.addEventListener('mousemove', (e) => {

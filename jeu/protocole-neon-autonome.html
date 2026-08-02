@@ -507,6 +507,89 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .go-board{margin:2px 0}
 .go-board .pseudo-row{margin:8px 0 0}
 
+/* ============================================================
+   MAIN DIRECTRICE — miroir des commandes tactiles
+   Par défaut : joystick à gauche, actions à droite.
+   #app.lefty inverse les deux côtés.
+   ============================================================ */
+#app.lefty .action-btn.dash{right:auto;left:calc(var(--safe-l) + 108px)}
+#app.lefty .action-btn.ult{right:auto;left:calc(var(--safe-l) + 18px)}
+#app.lefty .weapon-strip{
+  left:auto;right:calc(var(--safe-r) + 10px);justify-content:flex-end;
+}
+#app.lefty .quest-tracker{
+  left:auto;right:calc(var(--safe-r) + 10px);align-items:flex-end;text-align:right;
+}
+#app.lefty .quest-tracker div{
+  border-left:0;border-right:2px solid var(--violet);border-radius:6px 0 0 6px;
+}
+@media (max-height:420px){
+  #app.lefty .action-btn.dash{right:auto;left:calc(var(--safe-l) + 88px)}
+  #app.lefty .action-btn.ult{right:auto;left:calc(var(--safe-l) + 18px)}
+}
+
+/* ============================================================
+   ÉCRAN PARAMÈTRES
+   ============================================================ */
+.set-title{font-size:12px;color:var(--cyan);letter-spacing:.14em;margin:14px 0 4px}
+.set-title:first-of-type{margin-top:6px}
+
+.hand-choice{display:flex;gap:10px}
+.hand-card{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:13px 10px;border-radius:15px;text-align:center;
+  background:rgba(10,16,34,.65);border:1px solid var(--line);
+  transition:transform .08s,border-color .15s,background .15s;
+}
+.hand-card:active{transform:scale(.97)}
+.hand-card b{font-size:12px;font-weight:900;letter-spacing:.1em}
+.hand-card em{font-style:normal;font-size:10.5px;color:var(--txt-dim);line-height:1.35}
+.hand-card.on{
+  border-color:var(--cyan);background:rgba(62,242,255,.12);
+  box-shadow:0 0 20px rgba(62,242,255,.18);
+}
+
+/* aperçu : un écran miniature avec le stick d'un côté, les boutons de l'autre */
+.hand-vis{
+  position:relative;display:block;width:100%;max-width:120px;aspect-ratio:9/16;
+  border-radius:9px;border:1px solid rgba(120,150,190,.35);
+  background:rgba(4,8,20,.7);overflow:hidden;
+}
+.hand-vis.flip{transform:scaleX(-1)}
+.hand-vis i{position:absolute;display:block;border-radius:50%}
+.hand-vis .hv-stick{
+  left:10%;bottom:11%;width:30%;aspect-ratio:1;
+  background:rgba(62,242,255,.3);border:1px solid var(--cyan);
+}
+.hand-vis .hv-dash{
+  right:34%;bottom:12%;width:22%;aspect-ratio:1;
+  background:rgba(62,242,255,.18);border:1px solid rgba(62,242,255,.6);
+}
+.hand-vis .hv-ult{
+  right:8%;bottom:12%;width:22%;aspect-ratio:1;
+  background:rgba(255,62,165,.24);border:1px solid var(--magenta);
+}
+.hand-card.on .hand-vis{border-color:var(--cyan)}
+
+.set-list{display:flex;flex-direction:column;gap:8px;padding-bottom:24px}
+.set-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px;border-radius:13px;
+  background:rgba(10,16,34,.65);border:1px solid var(--line);
+  font-size:13px;
+}
+.set-row .sw{
+  flex:none;width:46px;height:26px;border-radius:14px;position:relative;
+  background:rgba(255,255,255,.1);border:1px solid rgba(120,150,190,.3);
+  transition:background .18s,border-color .18s;
+}
+.set-row .sw::after{
+  content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+  background:#6d7f96;transition:transform .18s,background .18s;
+}
+.set-row.on .sw{background:rgba(62,242,255,.28);border-color:var(--cyan)}
+.set-row.on .sw::after{transform:translateX(20px);background:var(--cyan)}
+
 </style>
 </head>
 <body>
@@ -569,6 +652,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <button class="btn" data-act="daily">🎁 RÉCOMPENSE DU JOUR <em id="dailyBadge" class="badge hidden">!</em></button>
       <button class="btn" data-act="board">🏆 CLASSEMENT</button>
       <button class="btn" data-act="quests">✔ QUÊTES <em id="questBadge" class="badge hidden">0</em></button>
+      <button class="btn" data-act="settings">⚙ PARAMÈTRES</button>
       <button class="btn ghost" data-act="help">? COMMENT JOUER</button>
     </div>
     <div class="save-row">
@@ -668,6 +752,39 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     <div id="boardList" class="board-list"></div>
   </div>
 
+  <!-- ============ PARAMÈTRES ============ -->
+  <div id="settings" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="backFromSettings">←</button>
+      <h2>PARAMÈTRES</h2>
+    </header>
+
+    <h3 class="set-title">Main directrice</h3>
+    <p class="panel-sub">Le joystick se place sous ton pouce de déplacement, les boutons d'action de l'autre côté.</p>
+    <div class="hand-choice">
+      <button class="hand-card" data-act="setHand" data-hand="right">
+        <span class="hand-vis"><i class="hv-stick"></i><i class="hv-dash"></i><i class="hv-ult"></i></span>
+        <b>DROITIER</b>
+        <em>Joystick à gauche · actions à droite</em>
+      </button>
+      <button class="hand-card" data-act="setHand" data-hand="left">
+        <span class="hand-vis flip"><i class="hv-stick"></i><i class="hv-dash"></i><i class="hv-ult"></i></span>
+        <b>GAUCHER</b>
+        <em>Joystick à droite · actions à gauche</em>
+      </button>
+    </div>
+
+    <h3 class="set-title">Retours</h3>
+    <div class="set-list">
+      <button class="set-row" data-act="toggle" data-key="haptics">
+        <span>📳 Vibrations</span><em class="sw"></em>
+      </button>
+      <button class="set-row" data-act="toggle" data-key="shake">
+        <span>💥 Secousse de l'écran</span><em class="sw"></em>
+      </button>
+    </div>
+  </div>
+
   <!-- ============ AIDE ============ -->
   <div id="help" class="screen panel hidden">
     <header class="panel-head">
@@ -676,8 +793,9 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     </header>
     <div class="help-body">
       <h3>Déplacement</h3>
-      <p><b>Mobile :</b> pose et glisse ton pouce sur la moitié gauche de l'écran (joystick virtuel).<br>
+      <p><b>Mobile :</b> pose et glisse ton pouce sur la moitié de l'écran côté joystick (virtuel, il apparaît où tu poses le doigt).<br>
       <b>Clavier :</b> ZQSD / WASD / flèches.</p>
+      <p>Gaucher ? Va dans <b>Paramètres → Main directrice</b> : le joystick passe à droite et les boutons d'action à gauche.</p>
       <h3>Tir</h3>
       <p>Le tir est <b>automatique</b> et vise l'ennemi le plus proche. Concentre-toi sur l'esquive.</p>
       <h3>Dash &amp; Ultime</h3>
@@ -708,6 +826,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <h2>PAUSE</h2>
       <div id="pauseStats" class="stat-grid"></div>
       <button class="btn primary" data-act="resume">REPRENDRE</button>
+      <button class="btn ghost small" data-act="settings">⚙ PARAMÈTRES</button>
       <button class="btn ghost" data-act="quit">ABANDONNER</button>
     </div>
   </div>
@@ -917,6 +1036,15 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
     _stickId: null,
     _ox: 0, _oy: 0,
+
+    /** Le point touché est-il dans la moitié réservée au joystick ? */
+    inStickZone(x) {
+      const w2 = window.innerWidth;
+      return (NF.settings && NF.settings.handed === 'left')
+        ? x > w2 * 0.42          // gaucher : joystick à droite
+        : x < w2 * 0.58;         // droitier : joystick à gauche
+    },
+
     _base: null, _knob: null,
     MAX: 52,               // rayon max du joystick en px
 
@@ -952,7 +1080,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         if (blocked(e.target)) return;
         for (const t of e.changedTouches) {
           if (this._stickId !== null) break;
-          if (t.clientX > w.innerWidth * 0.58) continue;    // droite réservée aux boutons
+          if (!this.inStickZone(t.clientX)) continue;        // l'autre moitié est aux boutons
           this._grab(t);
           e.preventDefault();
         }
@@ -977,7 +1105,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       /* ---------- Souris (test sur ordinateur) ---------- */
       document.addEventListener('mousedown', (e) => {
         if (blocked(e.target)) return;
-        if (e.clientX > w.innerWidth * 0.58) return;
+        if (!this.inStickZone(e.clientX)) return;
         this._grab({ identifier: 'mouse', clientX: e.clientX, clientY: e.clientY });
       });
       w.addEventListener('mousemove', (e) => {
@@ -1133,7 +1261,10 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       });
     },
 
-    kick(amount) { this.shake = Math.min(26, this.shake + amount); },
+    kick(amount) {
+      if (NF.settings && NF.settings.shake === false) return;
+      this.shake = Math.min(26, this.shake + amount);
+    },
 
     screenFlash(color, amount) { this.flash = Math.max(this.flash, amount || .35); this.flashColor = color || '#fff'; },
 
@@ -3679,7 +3810,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       localScores: [],                // classement hors ligne (parties locales)
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
-      settings: { haptics: true, shake: true },
+      settings: { haptics: true, shake: true, handed: 'right' },
       updated: 0
     };
   }
@@ -3752,6 +3883,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (!Array.isArray(d.localScores)) d.localScores = [];
       if (!d.playerId) d.playerId = newId();
       d.settings = Object.assign(base.settings, obj.settings || {});
+      if (d.settings.handed !== 'left') d.settings.handed = 'right';
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
       if (d.weapons.indexOf('blaster') < 0) d.weapons.push('blaster');
 
@@ -4457,7 +4589,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   const NF = w.NF, U = NF.U;
   const $ = id => document.getElementById(id);
 
-  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'daily', 'board', 'help', 'pause', 'levelup', 'gameover'];
+  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'daily', 'board', 'settings', 'help', 'pause', 'levelup', 'gameover'];
 
   const M = NF.Menus = {
     current: null,
@@ -4520,6 +4652,31 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
           break;
         }
         case 'refreshBoard': this.renderBoard(true); break;
+        case 'settings':
+          /* depuis la pause, on y revient après réglage */
+          this._settingsFrom = (this.current === 'pause') ? 'pause' : 'menu';
+          this.renderSettings();
+          this.show('settings');
+          break;
+        case 'backFromSettings':
+          if (this._settingsFrom === 'pause') { this.showPause(NF.game); }
+          else { this.renderMenu(); this.show('menu'); }
+          break;
+        case 'setHand':
+          NF.settings.handed = el.dataset.hand === 'left' ? 'left' : 'right';
+          NF.Save.save();
+          this.applyHand();
+          this.renderSettings();
+          U.buzz(14);
+          break;
+        case 'toggle': {
+          const k = el.dataset.key;
+          NF.settings[k] = !NF.settings[k];
+          NF.Save.save();
+          this.renderSettings();
+          if (k === 'haptics' && NF.settings[k]) U.buzz(18);
+          break;
+        }
         case 'help': this.show('help'); break;
         case 'back': this.renderMenu(); this.show('menu'); break;
         case 'resume': NF.game.togglePause(); break;
@@ -4575,6 +4732,26 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     },
 
     hideAll() { this.show(null); },
+
+    /* ============================================================
+       Paramètres
+       ============================================================ */
+
+    /** Applique la main directrice au HUD (miroir des commandes) */
+    applyHand() {
+      document.getElementById('app')
+        .classList.toggle('lefty', NF.settings.handed === 'left');
+    },
+
+    renderSettings() {
+      const st = NF.settings;
+      for (const el of document.querySelectorAll('.hand-card')) {
+        el.classList.toggle('on', el.dataset.hand === st.handed);
+      }
+      for (const el of document.querySelectorAll('.set-row')) {
+        el.classList.toggle('on', st[el.dataset.key] !== false);
+      }
+    },
 
     /* ============================================================
        Menu principal
@@ -5824,6 +6001,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     const canvas = document.getElementById('game');
     NF.game = new NF.Game(canvas);
 
+    NF.Menus.applyHand();
     NF.Menus.renderMenu();
     NF.Menus.show('menu');
 

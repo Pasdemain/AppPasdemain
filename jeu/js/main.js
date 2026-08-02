@@ -15,6 +15,7 @@
     const canvas = document.getElementById('game');
     NF.game = new NF.Game(canvas);
 
+    NF.Menus.applyHand();
     NF.Menus.renderMenu();
     NF.Menus.show('menu');
 

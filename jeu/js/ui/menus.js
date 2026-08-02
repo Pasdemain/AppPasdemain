@@ -7,7 +7,7 @@
   const NF = w.NF, U = NF.U;
   const $ = id => document.getElementById(id);
 
-  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'daily', 'board', 'help', 'pause', 'levelup', 'gameover'];
+  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'daily', 'board', 'settings', 'help', 'pause', 'levelup', 'gameover'];
 
   const M = NF.Menus = {
     current: null,
@@ -70,6 +70,31 @@
           break;
         }
         case 'refreshBoard': this.renderBoard(true); break;
+        case 'settings':
+          /* depuis la pause, on y revient après réglage */
+          this._settingsFrom = (this.current === 'pause') ? 'pause' : 'menu';
+          this.renderSettings();
+          this.show('settings');
+          break;
+        case 'backFromSettings':
+          if (this._settingsFrom === 'pause') { this.showPause(NF.game); }
+          else { this.renderMenu(); this.show('menu'); }
+          break;
+        case 'setHand':
+          NF.settings.handed = el.dataset.hand === 'left' ? 'left' : 'right';
+          NF.Save.save();
+          this.applyHand();
+          this.renderSettings();
+          U.buzz(14);
+          break;
+        case 'toggle': {
+          const k = el.dataset.key;
+          NF.settings[k] = !NF.settings[k];
+          NF.Save.save();
+          this.renderSettings();
+          if (k === 'haptics' && NF.settings[k]) U.buzz(18);
+          break;
+        }
         case 'help': this.show('help'); break;
         case 'back': this.renderMenu(); this.show('menu'); break;
         case 'resume': NF.game.togglePause(); break;
@@ -125,6 +150,26 @@
     },
 
     hideAll() { this.show(null); },
+
+    /* ============================================================
+       Paramètres
+       ============================================================ */
+
+    /** Applique la main directrice au HUD (miroir des commandes) */
+    applyHand() {
+      document.getElementById('app')
+        .classList.toggle('lefty', NF.settings.handed === 'left');
+    },
+
+    renderSettings() {
+      const st = NF.settings;
+      for (const el of document.querySelectorAll('.hand-card')) {
+        el.classList.toggle('on', el.dataset.hand === st.handed);
+      }
+      for (const el of document.querySelectorAll('.set-row')) {
+        el.classList.toggle('on', st[el.dataset.key] !== false);
+      }
+    },
 
     /* ============================================================
        Menu principal

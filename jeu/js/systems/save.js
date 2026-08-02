@@ -27,7 +27,7 @@
       localScores: [],                // classement hors ligne (parties locales)
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
-      settings: { haptics: true, shake: true },
+      settings: { haptics: true, shake: true, handed: 'right' },
       updated: 0
     };
   }
@@ -100,6 +100,7 @@
       if (!Array.isArray(d.localScores)) d.localScores = [];
       if (!d.playerId) d.playerId = newId();
       d.settings = Object.assign(base.settings, obj.settings || {});
+      if (d.settings.handed !== 'left') d.settings.handed = 'right';
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
       if (d.weapons.indexOf('blaster') < 0) d.weapons.push('blaster');
 

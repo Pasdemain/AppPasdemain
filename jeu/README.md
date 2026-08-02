@@ -31,6 +31,8 @@ dossier `jeu/` sur le site du gîte et ouvre l'adresse depuis le mobile
   et Arsenal (déblocage d'armes).
 - **Quêtes** à paliers infinis : chaque récompense réclamée relance un objectif
   plus ambitieux.
+- **Récompense quotidienne** : un cycle de 7 jours, une série à entretenir.
+- **Classement** : pseudo au choix, tri sur la vague atteinte puis sur le temps.
 
 ## Les cinq boss
 
@@ -72,11 +74,65 @@ pour les réattribuer autrement. Les points achetés ne sont jamais perdus.
 Le bouton **⤢** bascule entre la vue détaillée (déplaçable au doigt) et une vue
 d'ensemble de tout l'arbre.
 
+## Récompense quotidienne
+
+Une récompense par jour, sur un cycle de 7 jours qui se répète :
+
+| Jour | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|
+| Gain | 80 ◈ | 130 ◈ | 1 point | 220 ◈ | 320 ◈ | 1 point | 550 ◈ + 1 point |
+
+La **série** avance d'un cran par jour consécutif et repart à un jour dès qu'une
+journée est sautée. Les gains en cristaux suivent la progression du joueur
+(×1 au départ, jusqu'à ×3 vers la vague 40) pour rester utiles en fin de partie.
+
+Tout est local : la date de l'appareil suffit, aucune connexion n'est requise.
+Une horloge reculée est détectée et suspend la récompense plutôt que d'en
+distribuer plusieurs.
+
+## Classement
+
+Le joueur choisit un **pseudo** (2 à 16 caractères) dans l'écran Classement.
+À chaque fin de partie, la meilleure performance est enregistrée : un seul score
+par joueur, trié sur la **vague atteinte**, puis sur le **temps** mis pour y
+arriver.
+
+Le jeu fonctionne dans deux modes, choisis automatiquement au démarrage :
+
+- **En ligne** — si `api/scores.php` répond, les scores sont partagés entre tous
+  les joueurs du site.
+- **Local** — sinon (pas de PHP, ouverture en `file://`, page isolée), le
+  classement ne contient que les parties de l'appareil. L'écran fonctionne
+  normalement, il annonce simplement le mode utilisé.
+
+### Activer le classement partagé
+
+Il suffit que le dossier `jeu/api/` soit présent sur un hébergement qui exécute
+PHP — ce qui est le cas de la quasi-totalité des hébergements mutualisés. Aucune
+base de données : les scores tiennent dans un `scores.json` créé automatiquement
+à côté du script. Vérifie simplement que le dossier `api/` est **inscriptible**
+par le serveur web.
+
+Pour tester l'endpoint :
+
+```bash
+curl 'https://tonsite.fr/jeu/api/scores.php?ping=1'      # → {"ok":true,"version":1}
+curl 'https://tonsite.fr/jeu/api/scores.php?top=10'      # → les dix meilleurs
+```
+
+Le script valide les envois (bornes de vague, de temps, cohérence
+vague/durée), nettoie les pseudos, limite les envois à un toutes les 5 s par IP
+et ne conserve que le meilleur score de chaque joueur. **Ce n'est pas
+infalsifiable** : le score est calculé par le navigateur, donc quelqu'un de
+motivé peut en fabriquer un faux. Les contrôles arrêtent les valeurs absurdes et
+le spam, pas une triche déterminée — largement suffisant pour un classement
+entre vacanciers, à ne pas confondre avec un classement compétitif.
+
 ## Sauvegarde
 
 La progression est stockée en **JSON dans le `localStorage`** du téléphone
-(clé `protocole-neon.save.v1`) : cristaux, améliorations, armes débloquées,
-quêtes et records. L'écriture est différée et forcée quand l'application passe
+(clé `protocole-neon.save.v1`) : cristaux, talents, armes débloquées, quêtes,
+records, pseudo et série quotidienne. L'écriture est différée et forcée quand l'application passe
 en arrière-plan.
 
 Depuis le menu :
@@ -95,6 +151,7 @@ sont intégralement remboursés.
 ```
 jeu/
 ├── index.html            structure des écrans + HUD
+├── api/scores.php        classement partagé (optionnel, PHP)
 ├── css/style.css         thème néon, mobile-first (safe-area, tactile)
 └── js/
     ├── core/
@@ -113,6 +170,8 @@ jeu/
     │   └── bosses.js      les 5 archétypes de boss + cycle des paliers
     ├── systems/
     │   ├── save.js       sauvegarde JSON, export/import
+    │   ├── daily.js      récompense quotidienne et série
+    │   ├── scores.js     classement (en ligne ou local)
     │   └── waves.js      enchaînement et difficulté des vagues
     ├── ui/
     │   ├── hud.js        interface en jeu

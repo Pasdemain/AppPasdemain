@@ -68,6 +68,8 @@
       <button class="btn primary big" data-act="play">LANCER LA PARTIE</button>
       <button class="btn" data-act="lab">⚛ ARBRE DE TALENTS</button>
       <button class="btn" data-act="arsenal">⚔ ARSENAL</button>
+      <button class="btn" data-act="daily">🎁 RÉCOMPENSE DU JOUR <em id="dailyBadge" class="badge hidden">!</em></button>
+      <button class="btn" data-act="board">🏆 CLASSEMENT</button>
       <button class="btn" data-act="quests">✔ QUÊTES <em id="questBadge" class="badge hidden">0</em></button>
       <button class="btn ghost" data-act="help">? COMMENT JOUER</button>
     </div>
@@ -130,6 +132,44 @@
     <div id="questList" class="quest-list"></div>
   </div>
 
+  <!-- ============ RÉCOMPENSE QUOTIDIENNE ============ -->
+  <div id="daily" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>RÉCOMPENSE DU JOUR</h2>
+      <div class="crystals">◈ <b id="dailyCrystals">0</b></div>
+    </header>
+    <p class="panel-sub">Reviens chaque jour : la série avance, les récompenses grimpent. Un jour manqué la remet à zéro.</p>
+
+    <div class="streak-line">
+      <div><b id="streakNow">0</b><span>jours d'affilée</span></div>
+      <div><b id="streakBest">0</b><span>meilleure série</span></div>
+    </div>
+
+    <div id="dailyGrid" class="daily-grid"></div>
+
+    <div id="dailyFoot" class="daily-foot"></div>
+  </div>
+
+  <!-- ============ CLASSEMENT ============ -->
+  <div id="board" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>CLASSEMENT</h2>
+      <button class="icon-btn" data-act="refreshBoard" aria-label="Rafraîchir">↻</button>
+    </header>
+
+    <div class="pseudo-row">
+      <label for="pseudoInput">Pseudo</label>
+      <input id="pseudoInput" type="text" maxlength="16" placeholder="ton nom" autocomplete="off"
+             autocapitalize="words" spellcheck="false">
+      <button class="btn small" data-act="savePseudo">OK</button>
+    </div>
+
+    <p id="boardMode" class="board-mode"></p>
+    <div id="boardList" class="board-list"></div>
+  </div>
+
   <!-- ============ AIDE ============ -->
   <div id="help" class="screen panel hidden">
     <header class="panel-head">
@@ -151,6 +191,12 @@
       <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
       <h3>Après la partie</h3>
       <p>Tu gagnes des <b>cristaux ◈</b> selon ta vague atteinte. Dépense-les dans l'Arsenal (nouvelles armes) et dans l'<b>arbre de talents</b>.</p>
+      <h3>Récompense du jour</h3>
+      <p>Une récompense par jour, sur un cycle de 7 jours de plus en plus généreux.
+      Reviens chaque jour pour garder la série : un jour sauté la remet au premier.</p>
+      <h3>Classement</h3>
+      <p>Choisis un pseudo dans l'écran Classement : ta meilleure partie y est enregistrée.
+      Le tri se fait sur la vague atteinte, puis sur le temps mis pour y arriver.</p>
       <h3>Arbre de talents</h3>
       <p>Les cristaux achètent des <b>points de talent</b> ; chaque point coûte un peu plus cher que le précédent.
       Tu places ensuite ces points où tu veux dans l'arbre, en partant du noyau central et en progressant de proche
@@ -184,6 +230,7 @@
       <h2 id="goTitle">SYSTÈME HORS LIGNE</h2>
       <div id="goStats" class="stat-grid"></div>
       <div id="goRewards" class="rewards"></div>
+      <div id="goBoard" class="go-board"></div>
       <button class="btn primary" data-act="again">REJOUER</button>
       <button class="btn ghost" data-act="menu">MENU</button>
     </div>
@@ -203,6 +250,8 @@
 <script src="js/entities/enemies.js"></script>
 <script src="js/entities/bosses.js"></script>
 <script src="js/systems/save.js"></script>
+<script src="js/systems/daily.js"></script>
+<script src="js/systems/scores.js"></script>
 <script src="js/systems/waves.js"></script>
 <script src="js/ui/hud.js"></script>
 <script src="js/ui/menus.js"></script>

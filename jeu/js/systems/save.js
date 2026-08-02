@@ -7,7 +7,7 @@
   const NF = w.NF;
 
   const KEY = 'protocole-neon.save.v1';
-  const VERSION = 2;
+  const VERSION = 3;
 
   function fresh() {
     return {
@@ -21,12 +21,33 @@
       playTime: 0,
       talentPoints: 0,                // points achetés (placés ou non)
       talents: {},                    // { idNœud: rang }
+      pseudo: '',                     // nom affiché au classement
+      playerId: '',                   // identifiant stable de l'appareil
+      daily: { lastDay: '', lastTs: 0, streak: 0, bestStreak: 0, claimed: 0 },
+      localScores: [],                // classement hors ligne (parties locales)
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
       settings: { haptics: true, shake: true },
       updated: 0
     };
   }
+
+  /** Identifiant aléatoire de l'appareil (sert de clé au classement) */
+  function newId() {
+    const c = w.crypto;
+    if (c && c.randomUUID) return c.randomUUID();
+    return 'p-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  /** Pseudo sûr : lettres, chiffres, espaces et quelques signes, 16 max */
+  function cleanPseudo(v) {
+    return String(v || '')
+      .replace(/[<>&"'\\/]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 16);
+  }
+  NF.cleanPseudo = cleanPseudo;
 
   /* Anciens tarifs du Laboratoire, conservés pour rembourser les
      sauvegardes créées avant l'arbre de talents. */
@@ -74,6 +95,10 @@
       d.v = VERSION;
       d.quests = Object.assign({}, obj.quests || {});
       d.talents = Object.assign({}, obj.talents || {});
+      d.daily = Object.assign(base.daily, obj.daily || {});
+      d.pseudo = cleanPseudo(obj.pseudo || '');
+      if (!Array.isArray(d.localScores)) d.localScores = [];
+      if (!d.playerId) d.playerId = newId();
       d.settings = Object.assign(base.settings, obj.settings || {});
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
       if (d.weapons.indexOf('blaster') < 0) d.weapons.push('blaster');
@@ -237,6 +262,16 @@
       };
       rd.onerror = () => cb(new Error('lecture impossible'));
       rd.readAsText(file);
+    },
+
+    /* ---------- Identité du joueur ---------- */
+    setPseudo(v) {
+      const p = cleanPseudo(v);
+      if (p.length < 2) return false;
+      this.data.pseudo = p;
+      if (!this.data.playerId) this.data.playerId = newId();
+      this.save();
+      return true;
     },
 
     /** Chaîne JSON brute (copier/coller manuel) */

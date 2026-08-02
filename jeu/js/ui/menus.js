@@ -7,7 +7,7 @@
   const NF = w.NF, U = NF.U;
   const $ = id => document.getElementById(id);
 
-  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'help', 'pause', 'levelup', 'gameover'];
+  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'daily', 'board', 'help', 'pause', 'levelup', 'gameover'];
 
   const M = NF.Menus = {
     current: null,
@@ -46,6 +46,30 @@
         case 'lab': this._treeCentered = false; this.renderLab(); this.show('lab'); break;
         case 'arsenal': this.renderArsenal(); this.show('arsenal'); break;
         case 'quests': this.renderQuests(); this.show('quests'); break;
+        case 'daily': this.renderDaily(); this.show('daily'); break;
+        case 'board': this.show('board'); this.renderBoard(); break;
+        case 'claimDaily': {
+          const r = NF.Daily.claim();
+          if (r) {
+            U.buzz([16, 40, 16]);
+            this.renderDaily();
+            this.renderMenu();
+          }
+          break;
+        }
+        case 'goSavePseudo': {
+          const v = $('goPseudo').value;
+          if (NF.Save.setPseudo(v)) { U.buzz(12); this.renderGameOverBoard(this._lastRes); }
+          else alert('Choisis un pseudo d\'au moins 2 caractères.');
+          break;
+        }
+        case 'savePseudo': {
+          const v = $('pseudoInput').value;
+          if (NF.Save.setPseudo(v)) { U.buzz(12); this.renderBoard(); }
+          else alert('Choisis un pseudo d\'au moins 2 caractères.');
+          break;
+        }
+        case 'refreshBoard': this.renderBoard(true); break;
         case 'help': this.show('help'); break;
         case 'back': this.renderMenu(); this.show('menu'); break;
         case 'resume': NF.game.togglePause(); break;
@@ -114,6 +138,87 @@
       const badge = $('questBadge');
       badge.textContent = n;
       badge.classList.toggle('hidden', n === 0);
+      $('dailyBadge').classList.toggle('hidden', !NF.Daily.state().available);
+    },
+
+    /* ============================================================
+       Récompense quotidienne
+       ============================================================ */
+    renderDaily() {
+      const s = NF.Daily.state();
+      $('dailyCrystals').textContent = U.fmt(NF.Save.data.crystals);
+      $('streakNow').textContent = s.claimedToday ? s.streak : Math.max(0, s.streak - 1);
+      $('streakBest').textContent = s.bestStreak;
+
+      const scale = NF.Daily.scale();
+      $('dailyGrid').innerHTML = s.cycle.map((r, i) => {
+        const done = i < s.doneCount;
+        const today = i === s.index && !s.claimedToday;
+        const cry = Math.round(r.crystals * scale / 5) * 5;
+        const txt = r.points
+          ? (cry ? `◈ ${U.fmt(cry)}<br>+${r.points} pt` : `+${r.points} pt`)
+          : `◈ ${U.fmt(cry)}`;
+        return `<div class="dcell ${done ? 'done' : ''} ${today ? 'today' : ''} ${r.day === 7 ? 'gift' : ''}">
+          <span class="dday">J${r.day}</span>
+          <span class="dico">${done ? '✓' : r.icon}</span>
+          <span class="dval">${txt}</span>
+        </div>`;
+      }).join('');
+
+      if (s.clockBack) {
+        $('dailyFoot').innerHTML = '<p class="dhint warn">L\'horloge de l\'appareil a reculé. ' +
+          'Remets-la à l\'heure pour reprendre la série.</p>';
+      } else if (s.available) {
+        $('dailyFoot').innerHTML =
+          `<button class="btn primary" data-act="claimDaily">RÉCLAMER — ${s.points
+            ? (s.crystals ? '◈ ' + U.fmt(s.crystals) + ' + ' + s.points + ' PT' : s.points + ' POINT DE TALENT')
+            : '◈ ' + U.fmt(s.crystals)}</button>`;
+      } else {
+        $('dailyFoot').innerHTML =
+          `<p class="dhint">Déjà réclamé aujourd'hui. Prochaine récompense dans <b>${hms(s.msToNext)}</b>.</p>`;
+      }
+    },
+
+    /* ============================================================
+       Classement
+       ============================================================ */
+    renderBoard(force) {
+      const d = NF.Save.data;
+      $('pseudoInput').value = d.pseudo;
+      const list = $('boardList');
+      const mode = $('boardMode');
+
+      mode.textContent = NF.Scores.mode === 'online'
+        ? 'Classement en ligne — tous les joueurs du site.'
+        : 'Classement local — seules les parties de cet appareil (aucun serveur détecté).';
+      mode.className = 'board-mode ' + NF.Scores.mode;
+
+      if (!force && this._boardCache && Date.now() - this._boardAt < 20000) {
+        this.paintBoard(this._boardCache);
+        return;
+      }
+      list.innerHTML = '<p class="dhint">Chargement…</p>';
+      NF.Scores.top(50).then(rows => {
+        this._boardCache = rows;
+        this._boardAt = Date.now();
+        this.paintBoard(rows);
+      });
+    },
+
+    paintBoard(rows) {
+      const me = NF.Save.data.playerId;
+      const list = $('boardList');
+      if (!rows.length) {
+        list.innerHTML = '<p class="dhint">Aucun score pour l\'instant. Lance une partie !</p>';
+        return;
+      }
+      list.innerHTML = rows.map((r, i) => `
+        <div class="brow ${r.id === me ? 'me' : ''} ${i < 3 ? 'top' + (i + 1) : ''}">
+          <span class="brank">${i + 1}</span>
+          <span class="bname">${esc(r.pseudo)}</span>
+          <span class="bwave">vague <b>${r.wave}</b></span>
+          <span class="btime">${U.time(r.time)}</span>
+        </div>`).join('');
     },
 
     /* ============================================================
@@ -364,12 +469,33 @@
       this.show('pause');
     },
 
+    /** Bloc classement de l'écran de fin : pseudo à saisir, ou rang obtenu */
+    renderGameOverBoard(res) {
+      const box = $('goBoard');
+      const d = NF.Save.data;
+      if (!d.pseudo) {
+        box.innerHTML = `
+          <p class="dhint">Choisis un pseudo pour apparaître au classement :</p>
+          <div class="pseudo-row">
+            <input id="goPseudo" type="text" maxlength="16" placeholder="ton nom" autocomplete="off" spellcheck="false">
+            <button class="btn small" data-act="goSavePseudo">OK</button>
+          </div>`;
+        return;
+      }
+      box.innerHTML = `<p class="dhint">Score envoyé au classement sous <b>${esc(d.pseudo)}</b>.</p>`;
+      NF.Scores.submit(res.run).then(r => {
+        if (r && r.rank) box.innerHTML = `<p class="dhint">Classement : <b>${esc(d.pseudo)}</b> — ${r.rank}<sup>e</sup> place.</p>`;
+      });
+    },
+
     showGameOver(game, res) {
+      this._lastRes = res;
       $('goTitle').textContent = res.quit ? 'PARTIE ABANDONNÉE' : 'SYSTÈME HORS LIGNE';
       $('goStats').innerHTML = statGrid(game);
       $('goRewards').innerHTML = `
         <div>◈ ${U.fmt(res.crystals)} cristaux gagnés</div>
         ${res.best ? '<div style="color:var(--lime)">NOUVEAU RECORD !</div>' : ''}`;
+      this.renderGameOverBoard(res);
       this.show('gameover');
     }
   };
@@ -419,6 +545,19 @@
       out.push(typeof after[k] === 'boolean' ? lbl[0]() : lbl[0](after[k] - before[k]));
     }
     return out.length ? out.join(', ') : '—';
+  }
+
+  /** Échappe le texte venu d'ailleurs (pseudo d'un autre joueur) */
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /** Durée « 7 h 12 min » pour le compte à rebours quotidien */
+  function hms(ms) {
+    const m = Math.max(0, Math.round(ms / 60000));
+    const h = Math.floor(m / 60);
+    return h > 0 ? h + ' h ' + (m % 60) + ' min' : m + ' min';
   }
 
   function statGrid(game) {

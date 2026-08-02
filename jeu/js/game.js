@@ -111,7 +111,11 @@
       NF.Quests.notify('level', this.player.level);
       NF.Save.save();
 
-      NF.Menus.showGameOver(this, { crystals, best, quit: !!quit, wave });
+      const run = {
+        wave: this.waves.wave, time: this.time,
+        kills: this.stats.kills, level: this.player.level
+      };
+      NF.Menus.showGameOver(this, { crystals, best, quit: !!quit, wave, run });
     }
 
     togglePause() {

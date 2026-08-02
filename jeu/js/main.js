@@ -18,6 +18,9 @@
     NF.Menus.renderMenu();
     NF.Menus.show('menu');
 
+    /* cherche un serveur de classement ; sans réponse, le mode local suffit */
+    NF.Scores.detect().catch(() => {});
+
     /* mise en pause automatique quand l'écran s'éteint / l'onglet part en fond */
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && NF.game.running && !NF.game.paused && !NF.game.levelling) {

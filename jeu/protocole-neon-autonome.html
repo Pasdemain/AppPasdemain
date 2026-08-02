@@ -429,6 +429,84 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   .stick-base{width:104px;height:104px}
 }
 
+/* ============================================================
+   RÉCOMPENSE QUOTIDIENNE
+   ============================================================ */
+.streak-line{display:flex;gap:9px;margin-bottom:12px}
+.streak-line div{
+  flex:1;background:rgba(10,16,34,.65);border:1px solid var(--line);
+  border-radius:12px;padding:9px 12px;
+}
+.streak-line b{display:block;font-size:22px;color:var(--amber);line-height:1.1}
+.streak-line span{font-size:10px;color:var(--txt-dim);letter-spacing:.08em;text-transform:uppercase}
+
+.daily-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dcell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:10px 4px;border-radius:13px;text-align:center;
+  background:rgba(10,16,34,.6);border:1px solid rgba(120,150,190,.2);
+}
+.dday{font-size:9px;color:var(--txt-dim);letter-spacing:.1em;font-weight:800}
+.dico{font-size:20px;line-height:1}
+.dval{font-size:10px;color:#b9c9de;line-height:1.25}
+.dcell.done{border-color:rgba(157,255,77,.45);background:rgba(157,255,77,.08)}
+.dcell.done .dico{color:var(--lime)}
+.dcell.today{
+  border-color:var(--amber);background:rgba(255,180,62,.12);
+  box-shadow:0 0 20px rgba(255,180,62,.22);
+  animation:dpulse 1.8s ease-in-out infinite;
+}
+.dcell.gift{grid-column:span 3;flex-direction:row;gap:10px;padding:12px}
+.dcell.gift .dico{font-size:24px}
+.dcell.gift .dval{font-size:12px}
+@keyframes dpulse{0%,100%{transform:none}50%{transform:scale(1.03)}}
+@media (prefers-reduced-motion:reduce){.dcell.today{animation:none}}
+
+.daily-foot{margin-top:14px;padding-bottom:20px}
+.dhint{font-size:12px;color:var(--txt-dim);text-align:center;line-height:1.5}
+.dhint b{color:var(--txt)}
+.dhint.warn{color:var(--amber)}
+
+/* ============================================================
+   CLASSEMENT
+   ============================================================ */
+.pseudo-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.pseudo-row label{font-size:11px;color:var(--txt-dim);letter-spacing:.1em;text-transform:uppercase}
+.pseudo-row input{
+  flex:1;min-width:0;padding:10px 12px;border-radius:11px;
+  background:rgba(4,8,20,.8);border:1px solid var(--line);color:var(--txt);
+  font:inherit;font-size:14px;letter-spacing:.02em;
+  user-select:text;-webkit-user-select:text;touch-action:auto;
+}
+.pseudo-row input:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:transparent}
+.pseudo-row .btn{width:auto;flex:none;padding:10px 16px}
+
+.board-mode{font-size:11px;margin-bottom:10px;letter-spacing:.03em}
+.board-mode.online{color:var(--lime)}
+.board-mode.local{color:var(--amber)}
+
+.board-list{display:flex;flex-direction:column;gap:5px;padding-bottom:24px}
+.brow{
+  display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;
+  background:rgba(10,16,34,.6);border:1px solid rgba(120,150,190,.16);
+  font-variant-numeric:tabular-nums;
+}
+.brank{
+  flex:none;width:26px;text-align:center;font-size:13px;font-weight:900;color:var(--txt-dim);
+}
+.bname{flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bwave{font-size:11px;color:var(--txt-dim)}
+.bwave b{color:var(--cyan);font-size:14px}
+.btime{font-size:11px;color:var(--txt-dim);min-width:42px;text-align:right}
+.brow.me{border-color:var(--cyan);background:rgba(62,242,255,.1)}
+.brow.me .bname{color:var(--cyan)}
+.brow.top1 .brank{color:#ffd23e}
+.brow.top2 .brank{color:#d8e4f0}
+.brow.top3 .brank{color:#e0955a}
+
+.go-board{margin:2px 0}
+.go-board .pseudo-row{margin:8px 0 0}
+
 </style>
 </head>
 <body>
@@ -488,6 +566,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <button class="btn primary big" data-act="play">LANCER LA PARTIE</button>
       <button class="btn" data-act="lab">⚛ ARBRE DE TALENTS</button>
       <button class="btn" data-act="arsenal">⚔ ARSENAL</button>
+      <button class="btn" data-act="daily">🎁 RÉCOMPENSE DU JOUR <em id="dailyBadge" class="badge hidden">!</em></button>
+      <button class="btn" data-act="board">🏆 CLASSEMENT</button>
       <button class="btn" data-act="quests">✔ QUÊTES <em id="questBadge" class="badge hidden">0</em></button>
       <button class="btn ghost" data-act="help">? COMMENT JOUER</button>
     </div>
@@ -550,6 +630,44 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     <div id="questList" class="quest-list"></div>
   </div>
 
+  <!-- ============ RÉCOMPENSE QUOTIDIENNE ============ -->
+  <div id="daily" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>RÉCOMPENSE DU JOUR</h2>
+      <div class="crystals">◈ <b id="dailyCrystals">0</b></div>
+    </header>
+    <p class="panel-sub">Reviens chaque jour : la série avance, les récompenses grimpent. Un jour manqué la remet à zéro.</p>
+
+    <div class="streak-line">
+      <div><b id="streakNow">0</b><span>jours d'affilée</span></div>
+      <div><b id="streakBest">0</b><span>meilleure série</span></div>
+    </div>
+
+    <div id="dailyGrid" class="daily-grid"></div>
+
+    <div id="dailyFoot" class="daily-foot"></div>
+  </div>
+
+  <!-- ============ CLASSEMENT ============ -->
+  <div id="board" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>CLASSEMENT</h2>
+      <button class="icon-btn" data-act="refreshBoard" aria-label="Rafraîchir">↻</button>
+    </header>
+
+    <div class="pseudo-row">
+      <label for="pseudoInput">Pseudo</label>
+      <input id="pseudoInput" type="text" maxlength="16" placeholder="ton nom" autocomplete="off"
+             autocapitalize="words" spellcheck="false">
+      <button class="btn small" data-act="savePseudo">OK</button>
+    </div>
+
+    <p id="boardMode" class="board-mode"></p>
+    <div id="boardList" class="board-list"></div>
+  </div>
+
   <!-- ============ AIDE ============ -->
   <div id="help" class="screen panel hidden">
     <header class="panel-head">
@@ -571,6 +689,12 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
       <h3>Après la partie</h3>
       <p>Tu gagnes des <b>cristaux ◈</b> selon ta vague atteinte. Dépense-les dans l'Arsenal (nouvelles armes) et dans l'<b>arbre de talents</b>.</p>
+      <h3>Récompense du jour</h3>
+      <p>Une récompense par jour, sur un cycle de 7 jours de plus en plus généreux.
+      Reviens chaque jour pour garder la série : un jour sauté la remet au premier.</p>
+      <h3>Classement</h3>
+      <p>Choisis un pseudo dans l'écran Classement : ta meilleure partie y est enregistrée.
+      Le tri se fait sur la vague atteinte, puis sur le temps mis pour y arriver.</p>
       <h3>Arbre de talents</h3>
       <p>Les cristaux achètent des <b>points de talent</b> ; chaque point coûte un peu plus cher que le précédent.
       Tu places ensuite ces points où tu veux dans l'arbre, en partant du noyau central et en progressant de proche
@@ -604,6 +728,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <h2 id="goTitle">SYSTÈME HORS LIGNE</h2>
       <div id="goStats" class="stat-grid"></div>
       <div id="goRewards" class="rewards"></div>
+      <div id="goBoard" class="go-board"></div>
       <button class="btn primary" data-act="again">REJOUER</button>
       <button class="btn ghost" data-act="menu">MENU</button>
     </div>
@@ -3534,7 +3659,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   const NF = w.NF;
 
   const KEY = 'protocole-neon.save.v1';
-  const VERSION = 2;
+  const VERSION = 3;
 
   function fresh() {
     return {
@@ -3548,12 +3673,33 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       playTime: 0,
       talentPoints: 0,                // points achetés (placés ou non)
       talents: {},                    // { idNœud: rang }
+      pseudo: '',                     // nom affiché au classement
+      playerId: '',                   // identifiant stable de l'appareil
+      daily: { lastDay: '', lastTs: 0, streak: 0, bestStreak: 0, claimed: 0 },
+      localScores: [],                // classement hors ligne (parties locales)
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
       settings: { haptics: true, shake: true },
       updated: 0
     };
   }
+
+  /** Identifiant aléatoire de l'appareil (sert de clé au classement) */
+  function newId() {
+    const c = w.crypto;
+    if (c && c.randomUUID) return c.randomUUID();
+    return 'p-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  /** Pseudo sûr : lettres, chiffres, espaces et quelques signes, 16 max */
+  function cleanPseudo(v) {
+    return String(v || '')
+      .replace(/[<>&"'\\/]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 16);
+  }
+  NF.cleanPseudo = cleanPseudo;
 
   /* Anciens tarifs du Laboratoire, conservés pour rembourser les
      sauvegardes créées avant l'arbre de talents. */
@@ -3601,6 +3747,10 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       d.v = VERSION;
       d.quests = Object.assign({}, obj.quests || {});
       d.talents = Object.assign({}, obj.talents || {});
+      d.daily = Object.assign(base.daily, obj.daily || {});
+      d.pseudo = cleanPseudo(obj.pseudo || '');
+      if (!Array.isArray(d.localScores)) d.localScores = [];
+      if (!d.playerId) d.playerId = newId();
       d.settings = Object.assign(base.settings, obj.settings || {});
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
       if (d.weapons.indexOf('blaster') < 0) d.weapons.push('blaster');
@@ -3766,6 +3916,16 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       rd.readAsText(file);
     },
 
+    /* ---------- Identité du joueur ---------- */
+    setPseudo(v) {
+      const p = cleanPseudo(v);
+      if (p.length < 2) return false;
+      this.data.pseudo = p;
+      if (!this.data.playerId) this.data.playerId = newId();
+      this.save();
+      return true;
+    },
+
     /** Chaîne JSON brute (copier/coller manuel) */
     toJSON() { return JSON.stringify(this.data); }
   };
@@ -3773,6 +3933,222 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   /* Sauvegarde de sûreté quand l'onglet passe en arrière-plan (mobile) */
   w.addEventListener('visibilitychange', () => { if (document.hidden) Save.save(); });
   w.addEventListener('pagehide', () => Save.save());
+
+})(window);
+
+/* ===== js/systems/daily.js ===== */
+/* ============================================================
+   daily.js — récompense quotidienne et série de connexions
+   Cycle de 7 jours qui se répète ; la série se casse si un jour
+   est sauté. Tout est local, aucune connexion nécessaire.
+   ============================================================ */
+(function (w) {
+  'use strict';
+  const NF = w.NF;
+
+  /* Récompenses du cycle. `crystals` est mis à l'échelle de la
+     progression pour rester utile en fin de partie. */
+  const CYCLE = NF.DAILY_CYCLE = [
+    { day: 1, icon: '◈', crystals: 80, points: 0, label: '80 cristaux' },
+    { day: 2, icon: '◈', crystals: 130, points: 0, label: '130 cristaux' },
+    { day: 3, icon: '✦', crystals: 0, points: 1, label: '1 point de talent' },
+    { day: 4, icon: '◈', crystals: 220, points: 0, label: '220 cristaux' },
+    { day: 5, icon: '◈', crystals: 320, points: 0, label: '320 cristaux' },
+    { day: 6, icon: '✦', crystals: 0, points: 1, label: '1 point de talent' },
+    { day: 7, icon: '🎁', crystals: 550, points: 1, label: '550 cristaux + 1 point' }
+  ];
+
+  /** Clé de jour locale « AAAA-MM-JJ » */
+  function dayKey(d) {
+    d = d || new Date();
+    const p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function shiftDay(n) {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return dayKey(d);
+  }
+
+  const Daily = NF.Daily = {
+    dayKey,
+
+    /** Facteur d'échelle des cristaux, selon la meilleure vague atteinte */
+    scale() {
+      return 1 + Math.min(3, NF.Save.data.bestWave * 0.05);
+    },
+
+    /** État courant : ce qui est réclamable et ce qui vient ensuite */
+    state() {
+      const d = NF.Save.data.daily;
+      const today = dayKey();
+      const claimedToday = d.lastDay === today;
+      /* série que donnerait une réclamation maintenant */
+      const nextStreak = d.lastDay === shiftDay(-1) ? d.streak + 1 : 1;
+      const streak = claimedToday ? d.streak : nextStreak;
+      const index = ((streak - 1) % CYCLE.length);
+      const reward = CYCLE[index];
+
+      /* horloge reculée : on refuse plutôt que d'offrir des récompenses */
+      const clockBack = d.lastTs > 0 && Date.now() < d.lastTs - 6 * 3600e3;
+
+      return {
+        available: !claimedToday && !clockBack,
+        clockBack,
+        claimedToday,
+        streak,
+        bestStreak: d.bestStreak,
+        index,
+        reward,
+        crystals: Math.round(reward.crystals * this.scale() / 5) * 5,
+        points: reward.points,
+        cycle: CYCLE,
+        /* jours du cycle déjà obtenus dans la série en cours */
+        doneCount: claimedToday ? index + 1 : index,
+        msToNext: msUntilTomorrow()
+      };
+    },
+
+    /** Réclame la récompense du jour. Renvoie le détail, ou null. */
+    claim() {
+      const s = this.state();
+      if (!s.available) return null;
+      const d = NF.Save.data.daily;
+
+      if (s.crystals > 0) NF.Save.addCrystals(s.crystals);
+      if (s.points > 0) NF.Save.data.talentPoints += s.points;
+
+      d.lastDay = dayKey();
+      d.lastTs = Date.now();
+      d.streak = s.streak;
+      d.bestStreak = Math.max(d.bestStreak, s.streak);
+      d.claimed++;
+      NF.Save.save();
+
+      return { crystals: s.crystals, points: s.points, streak: s.streak, day: s.index + 1 };
+    }
+  };
+
+  function msUntilTomorrow() {
+    const now = new Date();
+    const t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+    return t - now;
+  }
+
+})(window);
+
+/* ===== js/systems/scores.js ===== */
+/* ============================================================
+   scores.js — classement des joueurs
+
+   Deux modes, choisis automatiquement au démarrage :
+   • en ligne  — si `api/scores.php` répond, les scores sont partagés
+                 entre tous les joueurs du site ;
+   • local     — sinon, le classement ne contient que les parties de
+                 l'appareil. L'écran fonctionne dans les deux cas.
+   ============================================================ */
+(function (w) {
+  'use strict';
+  const NF = w.NF;
+
+  const ENDPOINT = 'api/scores.php';
+  const TIMEOUT = 5000;
+  const MAX_LOCAL = 50;
+
+  /** fetch avec délai maximum */
+  function ask(url, opts) {
+    opts = opts || {};
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), TIMEOUT);
+    return fetch(url, Object.assign({ signal: ctl.signal, cache: 'no-store' }, opts))
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .finally(() => clearTimeout(t));
+  }
+
+  const Scores = NF.Scores = {
+    mode: 'local',            // 'local' | 'online'
+    ready: false,
+    lastError: null,
+
+    /** Cherche un serveur de classement ; sans réponse, on reste local. */
+    detect() {
+      if (location.protocol === 'file:') {          // pas de serveur possible
+        this.mode = 'local'; this.ready = true;
+        return Promise.resolve('local');
+      }
+      return ask(ENDPOINT + '?ping=1')
+        .then(r => {
+          this.mode = (r && r.ok) ? 'online' : 'local';
+          return this.mode;
+        })
+        .catch(() => 'local')
+        .then(m => { this.mode = m; this.ready = true; return m; });
+    },
+
+    /** Meilleurs scores, triés vague ↓ puis temps ↑ */
+    top(limit) {
+      limit = limit || 50;
+      if (this.mode === 'online') {
+        return ask(ENDPOINT + '?top=' + limit)
+          .then(r => (r && Array.isArray(r.scores)) ? r.scores : [])
+          .catch(e => { this.lastError = e.message; this.mode = 'local'; return this.localTop(limit); });
+      }
+      return Promise.resolve(this.localTop(limit));
+    },
+
+    localTop(limit) {
+      return NF.Save.data.localScores.slice(0, limit || MAX_LOCAL);
+    },
+
+    /** Enregistre une partie terminée. Toujours conservée en local. */
+    submit(run) {
+      const d = NF.Save.data;
+      const entry = {
+        id: d.playerId,
+        pseudo: d.pseudo || 'Anonyme',
+        wave: Math.max(1, Math.round(run.wave)),
+        time: Math.max(0, Math.round(run.time)),
+        kills: Math.max(0, Math.round(run.kills)),
+        level: Math.max(1, Math.round(run.level)),
+        ts: Date.now()
+      };
+
+      this.pushLocal(entry);
+
+      if (this.mode !== 'online' || !d.pseudo) return Promise.resolve(null);
+      return ask(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+      }).catch(e => { this.lastError = e.message; return null; });
+    },
+
+    /** Classement local : un seul meilleur score conservé par partie */
+    pushLocal(entry) {
+      const list = NF.Save.data.localScores;
+      list.push(entry);
+      list.sort(cmp);
+      if (list.length > MAX_LOCAL) list.length = MAX_LOCAL;
+      NF.Save.queueSave();
+    },
+
+    /** Rang du joueur dans une liste (1-indexé), ou 0 */
+    rankOf(list, id) {
+      for (let i = 0; i < list.length; i++) if (list[i].id === id) return i + 1;
+      return 0;
+    }
+  };
+
+  /** Vague décroissante, puis temps croissant (atteindre la vague plus vite) */
+  function cmp(a, b) {
+    if (b.wave !== a.wave) return b.wave - a.wave;
+    return a.time - b.time;
+  }
+  NF.scoreCmp = cmp;
 
 })(window);
 
@@ -4081,7 +4457,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   const NF = w.NF, U = NF.U;
   const $ = id => document.getElementById(id);
 
-  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'help', 'pause', 'levelup', 'gameover'];
+  const SCREENS = ['menu', 'lab', 'arsenal', 'quests', 'daily', 'board', 'help', 'pause', 'levelup', 'gameover'];
 
   const M = NF.Menus = {
     current: null,
@@ -4120,6 +4496,30 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         case 'lab': this._treeCentered = false; this.renderLab(); this.show('lab'); break;
         case 'arsenal': this.renderArsenal(); this.show('arsenal'); break;
         case 'quests': this.renderQuests(); this.show('quests'); break;
+        case 'daily': this.renderDaily(); this.show('daily'); break;
+        case 'board': this.show('board'); this.renderBoard(); break;
+        case 'claimDaily': {
+          const r = NF.Daily.claim();
+          if (r) {
+            U.buzz([16, 40, 16]);
+            this.renderDaily();
+            this.renderMenu();
+          }
+          break;
+        }
+        case 'goSavePseudo': {
+          const v = $('goPseudo').value;
+          if (NF.Save.setPseudo(v)) { U.buzz(12); this.renderGameOverBoard(this._lastRes); }
+          else alert('Choisis un pseudo d\'au moins 2 caractères.');
+          break;
+        }
+        case 'savePseudo': {
+          const v = $('pseudoInput').value;
+          if (NF.Save.setPseudo(v)) { U.buzz(12); this.renderBoard(); }
+          else alert('Choisis un pseudo d\'au moins 2 caractères.');
+          break;
+        }
+        case 'refreshBoard': this.renderBoard(true); break;
         case 'help': this.show('help'); break;
         case 'back': this.renderMenu(); this.show('menu'); break;
         case 'resume': NF.game.togglePause(); break;
@@ -4188,6 +4588,87 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       const badge = $('questBadge');
       badge.textContent = n;
       badge.classList.toggle('hidden', n === 0);
+      $('dailyBadge').classList.toggle('hidden', !NF.Daily.state().available);
+    },
+
+    /* ============================================================
+       Récompense quotidienne
+       ============================================================ */
+    renderDaily() {
+      const s = NF.Daily.state();
+      $('dailyCrystals').textContent = U.fmt(NF.Save.data.crystals);
+      $('streakNow').textContent = s.claimedToday ? s.streak : Math.max(0, s.streak - 1);
+      $('streakBest').textContent = s.bestStreak;
+
+      const scale = NF.Daily.scale();
+      $('dailyGrid').innerHTML = s.cycle.map((r, i) => {
+        const done = i < s.doneCount;
+        const today = i === s.index && !s.claimedToday;
+        const cry = Math.round(r.crystals * scale / 5) * 5;
+        const txt = r.points
+          ? (cry ? `◈ ${U.fmt(cry)}<br>+${r.points} pt` : `+${r.points} pt`)
+          : `◈ ${U.fmt(cry)}`;
+        return `<div class="dcell ${done ? 'done' : ''} ${today ? 'today' : ''} ${r.day === 7 ? 'gift' : ''}">
+          <span class="dday">J${r.day}</span>
+          <span class="dico">${done ? '✓' : r.icon}</span>
+          <span class="dval">${txt}</span>
+        </div>`;
+      }).join('');
+
+      if (s.clockBack) {
+        $('dailyFoot').innerHTML = '<p class="dhint warn">L\'horloge de l\'appareil a reculé. ' +
+          'Remets-la à l\'heure pour reprendre la série.</p>';
+      } else if (s.available) {
+        $('dailyFoot').innerHTML =
+          `<button class="btn primary" data-act="claimDaily">RÉCLAMER — ${s.points
+            ? (s.crystals ? '◈ ' + U.fmt(s.crystals) + ' + ' + s.points + ' PT' : s.points + ' POINT DE TALENT')
+            : '◈ ' + U.fmt(s.crystals)}</button>`;
+      } else {
+        $('dailyFoot').innerHTML =
+          `<p class="dhint">Déjà réclamé aujourd'hui. Prochaine récompense dans <b>${hms(s.msToNext)}</b>.</p>`;
+      }
+    },
+
+    /* ============================================================
+       Classement
+       ============================================================ */
+    renderBoard(force) {
+      const d = NF.Save.data;
+      $('pseudoInput').value = d.pseudo;
+      const list = $('boardList');
+      const mode = $('boardMode');
+
+      mode.textContent = NF.Scores.mode === 'online'
+        ? 'Classement en ligne — tous les joueurs du site.'
+        : 'Classement local — seules les parties de cet appareil (aucun serveur détecté).';
+      mode.className = 'board-mode ' + NF.Scores.mode;
+
+      if (!force && this._boardCache && Date.now() - this._boardAt < 20000) {
+        this.paintBoard(this._boardCache);
+        return;
+      }
+      list.innerHTML = '<p class="dhint">Chargement…</p>';
+      NF.Scores.top(50).then(rows => {
+        this._boardCache = rows;
+        this._boardAt = Date.now();
+        this.paintBoard(rows);
+      });
+    },
+
+    paintBoard(rows) {
+      const me = NF.Save.data.playerId;
+      const list = $('boardList');
+      if (!rows.length) {
+        list.innerHTML = '<p class="dhint">Aucun score pour l\'instant. Lance une partie !</p>';
+        return;
+      }
+      list.innerHTML = rows.map((r, i) => `
+        <div class="brow ${r.id === me ? 'me' : ''} ${i < 3 ? 'top' + (i + 1) : ''}">
+          <span class="brank">${i + 1}</span>
+          <span class="bname">${esc(r.pseudo)}</span>
+          <span class="bwave">vague <b>${r.wave}</b></span>
+          <span class="btime">${U.time(r.time)}</span>
+        </div>`).join('');
     },
 
     /* ============================================================
@@ -4438,12 +4919,33 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.show('pause');
     },
 
+    /** Bloc classement de l'écran de fin : pseudo à saisir, ou rang obtenu */
+    renderGameOverBoard(res) {
+      const box = $('goBoard');
+      const d = NF.Save.data;
+      if (!d.pseudo) {
+        box.innerHTML = `
+          <p class="dhint">Choisis un pseudo pour apparaître au classement :</p>
+          <div class="pseudo-row">
+            <input id="goPseudo" type="text" maxlength="16" placeholder="ton nom" autocomplete="off" spellcheck="false">
+            <button class="btn small" data-act="goSavePseudo">OK</button>
+          </div>`;
+        return;
+      }
+      box.innerHTML = `<p class="dhint">Score envoyé au classement sous <b>${esc(d.pseudo)}</b>.</p>`;
+      NF.Scores.submit(res.run).then(r => {
+        if (r && r.rank) box.innerHTML = `<p class="dhint">Classement : <b>${esc(d.pseudo)}</b> — ${r.rank}<sup>e</sup> place.</p>`;
+      });
+    },
+
     showGameOver(game, res) {
+      this._lastRes = res;
       $('goTitle').textContent = res.quit ? 'PARTIE ABANDONNÉE' : 'SYSTÈME HORS LIGNE';
       $('goStats').innerHTML = statGrid(game);
       $('goRewards').innerHTML = `
         <div>◈ ${U.fmt(res.crystals)} cristaux gagnés</div>
         ${res.best ? '<div style="color:var(--lime)">NOUVEAU RECORD !</div>' : ''}`;
+      this.renderGameOverBoard(res);
       this.show('gameover');
     }
   };
@@ -4493,6 +4995,19 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       out.push(typeof after[k] === 'boolean' ? lbl[0]() : lbl[0](after[k] - before[k]));
     }
     return out.length ? out.join(', ') : '—';
+  }
+
+  /** Échappe le texte venu d'ailleurs (pseudo d'un autre joueur) */
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /** Durée « 7 h 12 min » pour le compte à rebours quotidien */
+  function hms(ms) {
+    const m = Math.max(0, Math.round(ms / 60000));
+    const h = Math.floor(m / 60);
+    return h > 0 ? h + ' h ' + (m % 60) + ' min' : m + ' min';
   }
 
   function statGrid(game) {
@@ -4622,7 +5137,11 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       NF.Quests.notify('level', this.player.level);
       NF.Save.save();
 
-      NF.Menus.showGameOver(this, { crystals, best, quit: !!quit, wave });
+      const run = {
+        wave: this.waves.wave, time: this.time,
+        kills: this.stats.kills, level: this.player.level
+      };
+      NF.Menus.showGameOver(this, { crystals, best, quit: !!quit, wave, run });
     }
 
     togglePause() {
@@ -5307,6 +5826,9 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
     NF.Menus.renderMenu();
     NF.Menus.show('menu');
+
+    /* cherche un serveur de classement ; sans réponse, le mode local suffit */
+    NF.Scores.detect().catch(() => {});
 
     /* mise en pause automatique quand l'écran s'éteint / l'onglet part en fond */
     document.addEventListener('visibilitychange', () => {

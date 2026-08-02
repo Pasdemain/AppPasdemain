@@ -14,7 +14,8 @@
       this.reset();
     }
 
-    reset() {
+    reset(startWave) {
+      this.startWave = startWave || 1;
       this.wave = 0;
       this.state = 'idle';       // idle | spawning | fighting | cleared | boss
       this.queue = [];           // ennemis restant à faire apparaître
@@ -27,27 +28,38 @@
 
     /** Multiplicateurs de difficulté de la vague n
         Courbe polynomiale : elle grimpe sans fin mais reste rattrapable
-        par la montée en puissance du joueur (additive). */
+        par la montée en puissance du joueur (additive). Chaque secteur
+        applique en plus son propre coefficient. */
     scaleFor(n) {
       const k = n - 1;
+      const info = NF.biomeInfo(n);
+      const b = info.biome;
+      const tierMul = 1 + info.tier * 0.6;          // au-delà du dernier secteur
       return {
-        hp: 1 + 0.34 * k + 0.020 * k * k,
-        dmg: 1 + 0.09 * k + 0.0025 * k * k,
-        speed: Math.min(1.5, 1 + 0.008 * k),
-        xp: 1 + 0.08 * k
+        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * tierMul,
+        dmg: (1 + 0.09 * k + 0.0025 * k * k) * b.dmgMul,
+        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul),
+        /* le coût d'un niveau croît géométriquement : l'XP doit suivre,
+           sinon la montée en puissance décroche en fin de partie */
+        xp: Math.pow(1.055, k)
       };
     }
 
-    /** Types disponibles à cette vague, pondérés */
+    /** Types disponibles à cette vague du secteur courant, pondérés */
     pool(n) {
+      const info = NF.biomeInfo(n);
       const out = [];
       for (const id in NF.ENEMY_TYPES) {
         const t = NF.ENEMY_TYPES[id];
-        if (t.weight <= 0 || n < t.minWave) continue;
+        if (t.weight <= 0 || !t.mw) continue;
+        const first = t.mw[info.index];
+        if (first === undefined || info.local < first) continue;
         // les types récents deviennent plus fréquents avec le temps
-        const age = n - t.minWave;
+        const age = info.local - first;
         out.push({ id, w: t.weight * (1 + Math.min(1.2, age * 0.05)) });
       }
+      /* filet de sécurité : un secteur ne peut pas être vide */
+      if (!out.length) out.push({ id: 'drone', w: 1 });
       return out;
     }
 
@@ -60,11 +72,11 @@
       const scale = this.scaleFor(n);
       this.scale = scale;
 
-      if (n % 10 === 0) {
+      const bossInfo = NF.bossForWave(n);
+      if (bossInfo) {
         /* ---------- vague de boss ---------- */
         this.state = 'boss';
-        const { index, tier } = NF.bossForWave(n);
-        const boss = new NF.Boss(index, tier, n, scale, g);
+        const boss = new NF.Boss(bossInfo.id, bossInfo.tier, n, scale, g);
         g.enemies.push(boss);
         this.boss = boss;
         g.onBossSpawn(boss);
@@ -90,7 +102,8 @@
         }
       }
       this.timer = 0;
-      g.onWaveStart(n);
+      this.info = NF.biomeInfo(n);
+      g.onWaveStart(n, this.info);
     }
 
     pickType(n) {

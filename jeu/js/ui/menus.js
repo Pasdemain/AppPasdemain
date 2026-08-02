@@ -38,11 +38,18 @@
 
       $('btnPause').addEventListener('click', () => NF.game.togglePause());
       $('btnReroll').addEventListener('click', () => this.reroll());
+      $('btnQuickPick').addEventListener('click', () => this.quickPick());
     },
 
     act(a, el) {
       switch (a) {
-        case 'play': NF.game.start(); break;
+        case 'play': NF.game.start(NF.Save.startWave()); break;
+        case 'again': NF.game.start(NF.Save.startWave()); break;
+        case 'setBiome':
+          NF.Save.setStartBiome(+el.dataset.i);
+          U.buzz(12);
+          this.renderMenu();
+          break;
         case 'lab': this._treeCentered = false; this.renderLab(); this.show('lab'); break;
         case 'arsenal': this.renderArsenal(); this.show('arsenal'); break;
         case 'quests': this.renderQuests(); this.show('quests'); break;
@@ -99,7 +106,6 @@
         case 'back': this.renderMenu(); this.show('menu'); break;
         case 'resume': NF.game.togglePause(); break;
         case 'quit': NF.game.endRun(true); break;
-        case 'again': NF.game.start(); break;
         case 'menu': this.renderMenu(); this.show('menu'); break;
         case 'export': NF.Save.exportFile(); break;
         case 'import': this.fileInput.click(); break;
@@ -184,6 +190,24 @@
       badge.textContent = n;
       badge.classList.toggle('hidden', n === 0);
       $('dailyBadge').classList.toggle('hidden', !NF.Daily.state().available);
+      this.renderBiomePick();
+    },
+
+    /** Choix du secteur de départ (visible dès qu'un second est ouvert) */
+    renderBiomePick() {
+      const box = $('biomePick');
+      const d = NF.Save.data;
+      if (d.maxBiome <= 0) { box.classList.add('hidden'); return; }
+      box.classList.remove('hidden');
+      const cur = Math.min(d.startBiome, d.maxBiome);
+      let html = '<span class="bp-label">Secteur de départ</span><div class="bp-row">';
+      for (let i = 0; i <= d.maxBiome; i++) {
+        const b = NF.BIOMES[i % NF.BIOMES.length];
+        const wave = NF.biomeFirstWave(i);
+        html += `<button class="bp-chip ${i === cur ? 'on' : ''}" data-act="setBiome" data-i="${i}"
+                   style="--c:${b.accent}">${b.icon} ${b.name}<em>vague ${wave}</em></button>`;
+      }
+      box.innerHTML = html + '</div>';
     },
 
     /* ============================================================
@@ -469,6 +493,9 @@
       this.drawCards();
       $('rerollCount').textContent = this.rerolls;
       $('btnReroll').classList.toggle('hidden', this.rerolls <= 0);
+      const many = game.player.pendingLevels > 3;
+      $('btnQuickPick').classList.toggle('hidden', !many);
+      if (many) $('quickCount').textContent = game.player.pendingLevels;
       this.show('levelup');
     },
 
@@ -487,6 +514,18 @@
       for (const el of $('cards').children) {
         el.addEventListener('click', () => this.pickCard(+el.dataset.i));
       }
+    },
+
+    /** Enchaîne les niveaux en attente en tirant au sort à chaque fois */
+    quickPick() {
+      const g = this._game;
+      let guard = 0;
+      g._quiet = true;                       // évite un mur de notifications
+      while (g.player.pendingLevels > 0 && guard++ < 80) {
+        this.pickCard((Math.random() * this.cards.length) | 0);
+      }
+      g._quiet = false;
+      g.toast('AMÉLIORATIONS APPLIQUÉES', 'good');
     },
 
     reroll() {

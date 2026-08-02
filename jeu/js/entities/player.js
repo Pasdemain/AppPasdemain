@@ -93,6 +93,7 @@
 
       /* --- déplacement --- */
       const mv = NF.Input.read();
+      if (game.invertT > 0) { mv.x = -mv.x; mv.y = -mv.y; }   // PARADOXE
       if (mv.x || mv.y) this.facing = Math.atan2(mv.y, mv.x);
 
       if (this.dashT > 0) {

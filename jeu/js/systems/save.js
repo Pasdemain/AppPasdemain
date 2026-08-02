@@ -7,7 +7,7 @@
   const NF = w.NF;
 
   const KEY = 'protocole-neon.save.v1';
-  const VERSION = 3;
+  const VERSION = 4;
 
   function fresh() {
     return {
@@ -25,6 +25,8 @@
       playerId: '',                   // identifiant stable de l'appareil
       daily: { lastDay: '', lastTs: 0, streak: 0, bestStreak: 0, claimed: 0 },
       localScores: [],                // classement hors ligne (parties locales)
+      maxBiome: 0,                    // index du secteur le plus avancé débloqué
+      startBiome: 0,                  // secteur choisi au lancement
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
       settings: { haptics: true, shake: true, handed: 'right' },
@@ -99,6 +101,8 @@
       d.pseudo = cleanPseudo(obj.pseudo || '');
       if (!Array.isArray(d.localScores)) d.localScores = [];
       if (!d.playerId) d.playerId = newId();
+      d.maxBiome = Math.max(0, Math.min(20, Math.round(Number(d.maxBiome) || 0)));
+      d.startBiome = Math.max(0, Math.min(d.maxBiome, Math.round(Number(d.startBiome) || 0)));
       d.settings = Object.assign(base.settings, obj.settings || {});
       if (d.settings.handed !== 'left') d.settings.handed = 'right';
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
@@ -263,6 +267,26 @@
       };
       rd.onerror = () => cb(new Error('lecture impossible'));
       rd.readAsText(file);
+    },
+
+    /* ---------- Secteurs ---------- */
+    /** Débloque un secteur. Renvoie true si c'est une découverte. */
+    unlockBiome(index) {
+      if (index <= this.data.maxBiome) return false;
+      this.data.maxBiome = index;
+      this.save();
+      return true;
+    },
+
+    /** Secteur de départ choisi, borné à ce qui est débloqué */
+    startWave() {
+      const i = Math.min(this.data.startBiome, this.data.maxBiome);
+      return NF.biomeFirstWave(i);
+    },
+
+    setStartBiome(i) {
+      this.data.startBiome = Math.max(0, Math.min(i, this.data.maxBiome));
+      this.save();
     },
 
     /* ---------- Identité du joueur ---------- */

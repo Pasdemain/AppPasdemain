@@ -65,6 +65,7 @@
       <div><b id="statRuns">0</b><span>Parties</span></div>
     </div>
     <div class="menu-actions">
+      <div id="biomePick" class="biome-pick hidden"></div>
       <button class="btn primary big" data-act="play">LANCER LA PARTIE</button>
       <button class="btn" data-act="lab">⚛ ARBRE DE TALENTS</button>
       <button class="btn" data-act="arsenal">⚔ ARSENAL</button>
@@ -222,6 +223,11 @@
       <b>ULT</b> (E) : onde de choc qui détruit les projectiles et repousse tout. Se recharge en tuant.</p>
       <h3>Progression</h3>
       <p>Les ennemis lâchent des <b>éclats d'XP</b>. À chaque niveau, choisis une carte parmi trois : nouvelle arme, amélioration d'arme ou statistique.</p>
+      <h3>Secteurs</h3>
+      <p>Chaque secteur compte <b>50 vagues</b> et cinq boss. Vaincre le boss de la vague 50
+      ouvre le secteur suivant : décor, bestiaire et boss changent, et la difficulté fait un bond.
+      Une fois découvert, un secteur peut être choisi comme point de départ depuis le menu —
+      tu commences alors avec l'avance de niveaux correspondante.</p>
       <h3>Boss</h3>
       <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
       <h3>Après la partie</h3>
@@ -256,7 +262,10 @@
       <h2>NIVEAU <span id="luLevel">2</span></h2>
       <p class="panel-sub">Choisis une amélioration</p>
       <div id="cards" class="cards"></div>
-      <button id="btnReroll" class="btn ghost small">↻ RELANCER <em id="rerollCount">1</em></button>
+      <div class="lu-actions">
+        <button id="btnReroll" class="btn ghost small">↻ RELANCER <em id="rerollCount">1</em></button>
+        <button id="btnQuickPick" class="btn ghost small hidden">⚡ TOUT TIRER (<em id="quickCount">0</em>)</button>
+      </div>
     </div>
   </div>
 
@@ -279,6 +288,7 @@
 <script src="js/core/fx.js"></script>
 <script src="js/data/weapons.js"></script>
 <script src="js/data/upgrades.js"></script>
+<script src="js/data/biomes.js"></script>
 <script src="js/data/talents.js"></script>
 <script src="js/data/quests.js"></script>
 <script src="js/entities/projectiles.js"></script>

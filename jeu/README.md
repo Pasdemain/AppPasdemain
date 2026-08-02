@@ -36,10 +36,12 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 
 ## Boucle de jeu
 
+- **Deux secteurs de 50 vagues**, chacun avec son décor, son bestiaire et ses
+  cinq boss. Vaincre le boss de la vague 50 ouvre le suivant.
 - **Vagues infinies.** La difficulté suit une courbe polynomiale : elle monte
   sans fin mais reste rattrapable par la montée en puissance du joueur.
-- **Un boss toutes les 10 vagues**, avec une mécanique propre à chacun. Après le
-  cinquième, le cycle reprend au palier supérieur (Mk II, Mk III…), sans limite.
+- **Un boss toutes les 10 vagues**, avec une mécanique propre à chacun. Passé le
+  dernier secteur, le cycle reprend au palier supérieur (Mk II, Mk III…).
 - **Montée de niveau** : à chaque niveau, 3 cartes au choix (nouvelle arme,
   amélioration d'arme, statistique) + une relance offerte tous les 5 niveaux.
 - **Cristaux ◈** gagnés en fin de partie → arbre de talents (bonus permanents)
@@ -49,7 +51,35 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 - **Récompense quotidienne** : un cycle de 7 jours, une série à entretenir.
 - **Classement** : pseudo au choix, tri sur la vague atteinte puis sur le temps.
 
-## Les cinq boss
+## Secteurs
+
+Un secteur = **50 vagues + 5 boss**. Battre le boss de la vague 50 débloque
+définitivement le secteur suivant, qui devient alors sélectionnable comme point
+de départ depuis le menu. Au-delà du dernier secteur, le cycle reprend au palier
+supérieur : mêmes boss en Mk II, statistiques relevées, sans limite.
+
+| Secteur | Vagues | Décor | Particularités |
+|---|---|---|---|
+| **▦ La Grille** | 1 – 50 | réseau cyan, sol quadrillé | bestiaire de base |
+| **⟁ La Faille** | 51 – 100 | violet, fractures pulsantes | éruptions du sol toutes les ~11 s, 5 ennemis inédits, +35 % de PV et +25 % de dégâts |
+
+Démarrer dans un secteur avancé accorde l'avance de niveaux correspondante
+(45 par secteur), distribuée en cartes à choisir — le bouton **⚡ Tout tirer**
+les résout d'un coup quand il y en a beaucoup.
+
+### Ennemis propres à La Faille
+
+| Ennemi | Comportement |
+|---|---|
+| **Spectre** | Se dématérialise, devient inciblable, et réapparaît sur toi. |
+| **Couveuse** | Reste à distance et lâche des nuées en continu. |
+| **Gardien** | Bouclier qui absorbe une part des dégâts et se reforme après 4 s. |
+| **Sangsue** | Dévore tes éclats d'XP au sol — elle les relâche en mourant. |
+| **Faucheur** | Tourne autour de toi, tire en rafales, puis traverse en ligne droite. |
+
+## Les dix boss
+
+### Secteur 1 — La Grille
 
 | Vague | Boss | Mécanique |
 |---|---|---|
@@ -58,6 +88,16 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 | 30 | **HYDRE-03 « Réplicant »** | Se dédouble en leurres identiques et échange sa place avec eux. Seule la copie dont le cœur brille encaisse les dégâts. |
 | 40 | **BASTION-04 « Égide »** | Bouclier frontal en arc qui pivote vers le joueur : il faut le contourner et frapper dans le dos. Déploie des tourelles et charge. |
 | 50 | **OMEGA-05 « Architecte »** | Grille laser alimentée par des piliers (chaque pilier détruit le blesse) et reconfiguration du secteur : trois quadrants sur quatre deviennent mortels. |
+
+### Secteur 2 — La Faille
+
+| Vague | Boss | Mécanique |
+|---|---|---|
+| 60 | **SYNTHÈSE-06 « Chimère »** | Rejoue une défense différente à chaque phase : nœuds, puis bouclier frontal, puis leurres. La règle change sous toi. |
+| 70 | **ORACLE-07 « Prédicteur »** | Frappe ta position **anticipée**, pas ta position actuelle : il faut changer de cap après le marquage. Mine aussi le chemin que tu viens de parcourir. |
+| 80 | **ESSAIM-08 « Ruche »** | Coque scellée tant qu'une couveuse vit. Chaque couveuse détruite lui arrache 15 % de sa coque, mais elles crachent des nuées en continu et se reforment. |
+| 90 | **PARADOXE-09 « Miroir »** | Inverse tes commandes par cycles annoncés — et pendant l'inversion il encaisse le **double** de dégâts. C'est ta fenêtre de burst. |
+| 100 | **ABYSSE-10 « Dévoreuse »** | Invoque des sbires puis les **avale pour se soigner** de 3 % chacun : il faut les tuer avant. Aspire en permanence et referme l'arène par un anneau. |
 
 ## Arbre de talents
 
@@ -174,6 +214,7 @@ jeu/
     │   ├── input.js      clavier + joystick virtuel
     │   └── fx.js         particules, textes flottants, secousse de caméra
     ├── data/
+    │   ├── biomes.js     secteurs : palette, décor, bestiaire, boss
     │   ├── weapons.js    10 armes (tir, montée en niveau, coût)
     │   ├── upgrades.js   cartes de niveau + tirage pondéré
     │   ├── talents.js    arbre de talents permanent
@@ -181,7 +222,7 @@ jeu/
     ├── entities/
     │   ├── projectiles.js projectiles, dangers, ramassables, éclairs
     │   ├── player.js      statistiques, dash, ultime, progression
-    │   ├── enemies.js     12 types d'ennemis et leurs comportements
+    │   ├── enemies.js     17 types d'ennemis et leurs comportements
     │   └── bosses.js      les 5 archétypes de boss + cycle des paliers
     ├── systems/
     │   ├── save.js       sauvegarde JSON, export/import
@@ -207,5 +248,9 @@ jeu/
   `max`, `cost`, `apply(base, rang)`). Sa position, ses liaisons et le texte de
   son effet sont calculés automatiquement.
 - **Un boss** : ajoute un objet au tableau `NF.BOSSES` (`js/entities/bosses.js`)
-  avec `init`, `update`, éventuellement `onPhase`, `draw` et `block`. Le cycle
-  des vagues l'intègre sans autre modification.
+  avec `init`, `update`, éventuellement `onPhase`, `draw` et `block`, puis cite
+  son `id` dans la liste `bosses` d'un secteur.
+- **Un secteur** : ajoute une entrée à `NF.BIOMES` (`js/data/biomes.js`) avec sa
+  palette, ses coefficients et ses cinq boss, puis déclare la vague d'apparition
+  de chaque ennemi pour ce secteur via son champ `mw`. Le découpage des vagues,
+  le déblocage et le sélecteur du menu suivent automatiquement.

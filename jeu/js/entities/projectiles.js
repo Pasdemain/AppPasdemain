@@ -242,6 +242,8 @@
       this.r = o.r || 90;
       this.rInner = o.rInner || 0;    // pour "ring" : zone sûre à l'intérieur
       this.grow = o.grow || 0;
+      this.shrink = o.shrink || 0;    // l'anneau se referme sur le joueur
+      this.rMin = o.rMin || 120;
     }
 
     get active() { return this.t >= this.telegraph; }
@@ -252,6 +254,7 @@
       if (this.followOwner && this.owner && !this.owner.dead) { this.x = this.owner.x; this.y = this.owner.y; }
       if (this.rotSpeed) this.angle += this.rotSpeed * dt;
       if (this.grow) this.r += this.grow * dt;
+      if (this.shrink) this.rInner = Math.max(this.rMin, this.rInner - this.shrink * dt);
       if (this.tick > 0) this.tick -= dt;
 
       if (!this.active) return;

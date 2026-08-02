@@ -578,3 +578,20 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 }
 .set-row.on .sw{background:rgba(62,242,255,.28);border-color:var(--cyan)}
 .set-row.on .sw::after{transform:translateX(20px);background:var(--cyan)}
+
+/* ---------- Choix du secteur de départ ---------- */
+.biome-pick{display:flex;flex-direction:column;gap:6px;margin-bottom:2px}
+.bp-label{font-size:9px;color:var(--txt-dim);letter-spacing:.14em;text-transform:uppercase}
+.bp-row{display:flex;gap:7px}
+.bp-chip{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:8px 6px;border-radius:11px;
+  background:rgba(10,16,34,.7);border:1px solid rgba(120,150,190,.25);
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;
+}
+.bp-chip em{font-style:normal;font-size:9px;color:var(--txt-dim);letter-spacing:.04em}
+.bp-chip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,rgba(10,16,34,.7));color:#fff}
+.bp-chip.on em{color:var(--c)}
+
+.lu-actions{display:flex;gap:8px;justify-content:center}
+.lu-actions .btn{margin:0}

@@ -590,6 +590,23 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .set-row.on .sw{background:rgba(62,242,255,.28);border-color:var(--cyan)}
 .set-row.on .sw::after{transform:translateX(20px);background:var(--cyan)}
 
+/* ---------- Choix du secteur de départ ---------- */
+.biome-pick{display:flex;flex-direction:column;gap:6px;margin-bottom:2px}
+.bp-label{font-size:9px;color:var(--txt-dim);letter-spacing:.14em;text-transform:uppercase}
+.bp-row{display:flex;gap:7px}
+.bp-chip{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:8px 6px;border-radius:11px;
+  background:rgba(10,16,34,.7);border:1px solid rgba(120,150,190,.25);
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;
+}
+.bp-chip em{font-style:normal;font-size:9px;color:var(--txt-dim);letter-spacing:.04em}
+.bp-chip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,rgba(10,16,34,.7));color:#fff}
+.bp-chip.on em{color:var(--c)}
+
+.lu-actions{display:flex;gap:8px;justify-content:center}
+.lu-actions .btn{margin:0}
+
 </style>
 </head>
 <body>
@@ -646,6 +663,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <div><b id="statRuns">0</b><span>Parties</span></div>
     </div>
     <div class="menu-actions">
+      <div id="biomePick" class="biome-pick hidden"></div>
       <button class="btn primary big" data-act="play">LANCER LA PARTIE</button>
       <button class="btn" data-act="lab">⚛ ARBRE DE TALENTS</button>
       <button class="btn" data-act="arsenal">⚔ ARSENAL</button>
@@ -803,6 +821,11 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <b>ULT</b> (E) : onde de choc qui détruit les projectiles et repousse tout. Se recharge en tuant.</p>
       <h3>Progression</h3>
       <p>Les ennemis lâchent des <b>éclats d'XP</b>. À chaque niveau, choisis une carte parmi trois : nouvelle arme, amélioration d'arme ou statistique.</p>
+      <h3>Secteurs</h3>
+      <p>Chaque secteur compte <b>50 vagues</b> et cinq boss. Vaincre le boss de la vague 50
+      ouvre le secteur suivant : décor, bestiaire et boss changent, et la difficulté fait un bond.
+      Une fois découvert, un secteur peut être choisi comme point de départ depuis le menu —
+      tu commences alors avec l'avance de niveaux correspondante.</p>
       <h3>Boss</h3>
       <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
       <h3>Après la partie</h3>
@@ -837,7 +860,10 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <h2>NIVEAU <span id="luLevel">2</span></h2>
       <p class="panel-sub">Choisis une amélioration</p>
       <div id="cards" class="cards"></div>
-      <button id="btnReroll" class="btn ghost small">↻ RELANCER <em id="rerollCount">1</em></button>
+      <div class="lu-actions">
+        <button id="btnReroll" class="btn ghost small">↻ RELANCER <em id="rerollCount">1</em></button>
+        <button id="btnQuickPick" class="btn ghost small hidden">⚡ TOUT TIRER (<em id="quickCount">0</em>)</button>
+      </div>
     </div>
   </div>
 
@@ -1809,6 +1835,88 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 })(window);
 
+/* ===== js/data/biomes.js ===== */
+/* ============================================================
+   biomes.js — secteurs de 50 vagues
+
+   Chaque biome a sa palette, son décor, son bestiaire et ses cinq
+   boss. Vaincre le boss de la 50ᵉ vague d'un secteur débloque le
+   suivant, qu'on peut alors choisir comme point de départ.
+   Au-delà du dernier secteur, le cycle reprend au palier supérieur.
+   ============================================================ */
+(function (w) {
+  'use strict';
+  const NF = w.NF;
+
+  const WAVES_PER_BIOME = NF.WAVES_PER_BIOME = 50;
+
+  const BIOMES = NF.BIOMES = [
+    {
+      id: 'grille',
+      name: 'LA GRILLE',
+      tagline: 'Secteur d\'entraînement — réseau de défense automatisé',
+      icon: '▦',
+      accent: '#3ef2ff',
+      accent2: '#8b5cff',
+      bg: '#05060f',
+      grid: 'rgba(62,242,255,.07)',
+      border: 'rgba(62,242,255,.35)',
+      decor: 'grid',
+      hpMul: 1, dmgMul: 1, speedMul: 1,
+      eruptions: 0,
+      bosses: ['prisme', 'vortex', 'hydre', 'bastion', 'architecte']
+    },
+    {
+      id: 'faille',
+      name: 'LA FAILLE',
+      tagline: 'Le réseau s\'est déchiré — ici les machines ont muté',
+      icon: '⟁',
+      accent: '#ff3ea5',
+      accent2: '#ff6b4d',
+      bg: '#0b0413',
+      grid: 'rgba(255,62,165,.06)',
+      border: 'rgba(255,62,165,.4)',
+      decor: 'rift',
+      hpMul: 1.35, dmgMul: 1.25, speedMul: 1.08,
+      eruptions: 11,                 // secondes entre deux éruptions du sol
+      bosses: ['chimere', 'oracle', 'ruche', 'paradoxe', 'abysse']
+    }
+  ];
+
+  NF.biomeById = id => BIOMES.find(b => b.id === id);
+
+  /** Index de biome et palier pour une vague donnée */
+  NF.biomeInfo = function (wave) {
+    const n = Math.max(0, Math.floor((wave - 1) / WAVES_PER_BIOME));
+    const index = n % BIOMES.length;
+    return {
+      index,
+      tier: Math.floor(n / BIOMES.length),
+      biome: BIOMES[index],
+      /** vague relative au secteur, de 1 à 50 */
+      local: ((wave - 1) % WAVES_PER_BIOME) + 1
+    };
+  };
+
+  /** Première vague d'un secteur (index 0 → 1, index 1 → 51…) */
+  NF.biomeFirstWave = index => index * WAVES_PER_BIOME + 1;
+
+  /** Le boss de cette vague, s'il y en a un */
+  NF.bossForWave = function (wave) {
+    const info = NF.biomeInfo(wave);
+    if (info.local % 10 !== 0) return null;
+    return {
+      id: info.biome.bosses[(info.local / 10) - 1],
+      tier: info.tier,
+      biome: info.biome
+    };
+  };
+
+  /** Le boss final d'un secteur ferme le secteur et ouvre le suivant */
+  NF.isBiomeFinale = wave => NF.biomeInfo(wave).local === WAVES_PER_BIOME;
+
+})(window);
+
 /* ===== js/data/talents.js ===== */
 /* ============================================================
    talents.js — arbre de talents permanent
@@ -2377,6 +2485,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.r = o.r || 90;
       this.rInner = o.rInner || 0;    // pour "ring" : zone sûre à l'intérieur
       this.grow = o.grow || 0;
+      this.shrink = o.shrink || 0;    // l'anneau se referme sur le joueur
+      this.rMin = o.rMin || 120;
     }
 
     get active() { return this.t >= this.telegraph; }
@@ -2387,6 +2497,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (this.followOwner && this.owner && !this.owner.dead) { this.x = this.owner.x; this.y = this.owner.y; }
       if (this.rotSpeed) this.angle += this.rotSpeed * dt;
       if (this.grow) this.r += this.grow * dt;
+      if (this.shrink) this.rInner = Math.max(this.rMin, this.rInner - this.shrink * dt);
       if (this.tick > 0) this.tick -= dt;
 
       if (!this.active) return;
@@ -2667,6 +2778,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       /* --- déplacement --- */
       const mv = NF.Input.read();
+      if (game.invertT > 0) { mv.x = -mv.x; mv.y = -mv.y; }   // PARADOXE
       if (mv.x || mv.y) this.facing = Math.atan2(mv.y, mv.x);
 
       if (this.dashT > 0) {
@@ -2909,56 +3021,81 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
   /* ------------------------------------------------------------
      Catalogue
+     `mw` donne la vague d'apparition PAR SECTEUR (clé = index de biome) :
+     un type absent de la table n'apparaît pas dans ce secteur.
      hp / dmg / speed sont des valeurs de base, multipliées par la vague.
      ------------------------------------------------------------ */
   const TYPES = NF.ENEMY_TYPES = {
+    /* ---------------- Secteur 1 — LA GRILLE ---------------- */
     drone: {
       name: 'Drone', ai: 'chase', hp: 22, dmg: 9, speed: 96, r: 14, xp: 2,
-      color: '#5be8ff', sides: 3, minWave: 1, weight: 100
+      color: '#5be8ff', sides: 3, mw: { 0: 1 }, weight: 100
     },
     rusher: {
       name: 'Éclaireur', ai: 'rush', hp: 15, dmg: 12, speed: 178, r: 11, xp: 3,
-      color: '#9dff4d', sides: 3, minWave: 2, weight: 70
+      color: '#9dff4d', sides: 3, mw: { 0: 2, 1: 1 }, weight: 70
     },
     turret: {
       name: 'Sentinelle', ai: 'kite', hp: 34, dmg: 8, speed: 62, r: 15, xp: 4,
-      color: '#ff8a3e', sides: 4, minWave: 3, weight: 55, range: 330, fireCd: 1.7
+      color: '#ff8a3e', sides: 4, mw: { 0: 3, 1: 1 }, weight: 55, range: 330, fireCd: 1.7
     },
     tank: {
       name: 'Blindé', ai: 'chase', hp: 130, dmg: 18, speed: 52, r: 24, xp: 8,
-      color: '#8b5cff', sides: 6, minWave: 5, weight: 40, knockRes: .75
+      color: '#8b5cff', sides: 6, mw: { 0: 5, 1: 2 }, weight: 40, knockRes: .75
     },
     splitter: {
       name: 'Réplicant', ai: 'chase', hp: 46, dmg: 10, speed: 84, r: 18, xp: 5,
-      color: '#ff3ea5', sides: 5, minWave: 6, weight: 45, split: 3
+      color: '#ff3ea5', sides: 5, mw: { 0: 6, 1: 3 }, weight: 45, split: 3
     },
     mini: {
       name: 'Fragment', ai: 'rush', hp: 12, dmg: 7, speed: 150, r: 9, xp: 1,
-      color: '#ff7ec8', sides: 4, minWave: 99, weight: 0
+      color: '#ff7ec8', sides: 4, mw: {}, weight: 0
     },
     orbiter: {
       name: 'Rôdeur', ai: 'orbit', hp: 40, dmg: 10, speed: 130, r: 13, xp: 5,
-      color: '#7dd3ff', sides: 4, minWave: 8, weight: 45, orbitR: 220, fireCd: 1.3
+      color: '#7dd3ff', sides: 4, mw: { 0: 8, 1: 3 }, weight: 45, orbitR: 220, fireCd: 1.3
     },
     healer: {
       name: 'Réparateur', ai: 'flee', hp: 58, dmg: 6, speed: 78, r: 15, xp: 7,
-      color: '#9dff4d', sides: 6, minWave: 10, weight: 28, healR: 200, healCd: 1.6
+      color: '#9dff4d', sides: 6, mw: { 0: 10, 1: 5 }, weight: 28, healR: 200, healCd: 1.6
     },
     shielder: {
       name: 'Égide', ai: 'chase', hp: 76, dmg: 10, speed: 70, r: 17, xp: 8,
-      color: '#3ef2ff', sides: 8, minWave: 12, weight: 26, auraR: 190
+      color: '#3ef2ff', sides: 8, mw: { 0: 12, 1: 6 }, weight: 26, auraR: 190
     },
     bomber: {
       name: 'Charge Vive', ai: 'rush', hp: 30, dmg: 26, speed: 132, r: 15, xp: 5,
-      color: '#ffb43e', sides: 5, minWave: 9, weight: 34, boom: 110
+      color: '#ffb43e', sides: 5, mw: { 0: 9, 1: 4 }, weight: 34, boom: 110
     },
     sniper: {
       name: 'Perce-Ciel', ai: 'snipe', hp: 44, dmg: 22, speed: 58, r: 14, xp: 8,
-      color: '#ff4d5e', sides: 3, minWave: 14, weight: 26, range: 620, fireCd: 3.0
+      color: '#ff4d5e', sides: 3, mw: { 0: 14, 1: 7 }, weight: 26, range: 620, fireCd: 3.0
     },
     swarm: {
       name: 'Nuée', ai: 'swarm', hp: 9, dmg: 6, speed: 168, r: 7, xp: 1,
-      color: '#c58bff', sides: 3, minWave: 7, weight: 50, packed: true
+      color: '#c58bff', sides: 3, mw: { 0: 7, 1: 2 }, weight: 50, packed: true
+    },
+
+    /* ---------------- Secteur 2 — LA FAILLE ---------------- */
+    phantom: {
+      name: 'Spectre', ai: 'blink', hp: 52, dmg: 15, speed: 66, r: 14, xp: 7,
+      color: '#b57bff', sides: 3, mw: { 1: 1 }, weight: 60, blinkCd: 3.2
+    },
+    spawner: {
+      name: 'Couveuse', ai: 'spawner', hp: 120, dmg: 10, speed: 34, r: 20, xp: 12,
+      color: '#ff6b4d', sides: 6, mw: { 1: 4 }, weight: 30, knockRes: .6, broodCd: 5.5
+    },
+    warden: {
+      name: 'Gardien', ai: 'chase', hp: 90, dmg: 20, speed: 66, r: 19, xp: 12,
+      color: '#ffd23e', sides: 5, mw: { 1: 8 }, weight: 28, knockRes: .5, ward: 0.45
+    },
+    leech: {
+      name: 'Sangsue', ai: 'leech', hp: 46, dmg: 8, speed: 142, r: 12, xp: 4,
+      color: '#4dffc3', sides: 4, mw: { 1: 12 }, weight: 26
+    },
+    harrier: {
+      name: 'Faucheur', ai: 'harrier', hp: 62, dmg: 16, speed: 152, r: 13, xp: 9,
+      color: '#ff2d55', sides: 3, mw: { 1: 16 }, weight: 30, orbitR: 250, fireCd: 2.2
     }
   };
 
@@ -2993,6 +3130,11 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.stunT = 0;
       this.hitFlash = 0;
       this.shielded = 0;                    // réduction de dégâts par une Égide
+      if (d.ward) {                         // Gardien : bouclier rechargeable
+        this.wardMax = this.maxHp * d.ward;
+        this.ward = this.wardMax;
+        this.wardT = 0;
+      }
       this.state = 0; this.stateT = 0;
       this.orbitDir = U.chance(.5) ? 1 : -1;
       this.dead = false;
@@ -3011,6 +3153,12 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (this.slowT > 0) this.slowT -= dt;
       if (this.stunT > 0) this.stunT -= dt;
       if (this.hitFlash > 0) this.hitFlash -= dt;
+      if (this.wardMax) {                   // le bouclier se reforme après 4 s
+        this.wardT += dt;
+        if (this.ward < this.wardMax && this.wardT > 4) {
+          this.ward = Math.min(this.wardMax, this.ward + this.wardMax * 0.5 * dt);
+        }
+      }
       if (this.touchCd > 0) this.touchCd -= dt;
       if (this.fireCd > 0) this.fireCd -= dt;
       this.shielded = 0;
@@ -3113,6 +3261,96 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
           ax = Math.cos(a + wob) * sp; ay = Math.sin(a + wob) * sp;
           break;
         }
+        case 'blink': {
+          // Spectre : se dématérialise puis réapparaît près du joueur
+          this.stateT -= dt;
+          if (this.state === 0) {
+            const a = U.angle(this.x, this.y, p.x, p.y);
+            ax = Math.cos(a) * sp; ay = Math.sin(a) * sp;
+            if (this.stateT <= 0) { this.state = 1; this.stateT = .5; this.immune = true; }
+          } else {
+            ax = ay = 0;
+            if (this.stateT <= 0) {
+              const pt = U.ringPoint(p.x, p.y, 110, 190);
+              FX.burst(this.x, this.y, 8, this.color, { speed: 150, life: .35 });
+              this.x = U.clamp(pt.x, this.r, game.world.w - this.r);
+              this.y = U.clamp(pt.y, this.r, game.world.h - this.r);
+              FX.burst(this.x, this.y, 10, this.color, { speed: 180, life: .4, glow: true });
+              this.state = 0; this.stateT = this.def.blinkCd;
+              this.immune = false;
+            }
+          }
+          break;
+        }
+        case 'spawner': {
+          // Couveuse : garde ses distances et lâche des nuées
+          const d = U.dist(this.x, this.y, p.x, p.y);
+          const a = U.angle(this.x, this.y, p.x, p.y);
+          const dir = d < 380 ? -1 : (d > 520 ? 1 : 0);
+          ax = Math.cos(a) * sp * dir; ay = Math.sin(a) * sp * dir;
+          this.stateT -= dt;
+          if (this.stateT <= 0) {
+            this.stateT = this.def.broodCd;
+            if (game.enemies.length < 90) {
+              for (let i = 0; i < 2; i++) {
+                const pt = U.ringPoint(this.x, this.y, 26, 48);
+                game.spawnAdd('swarm', pt.x, pt.y, game.waves.scale);
+              }
+              FX.shockwave(this.x, this.y, 60, this.color, .35);
+            }
+          }
+          break;
+        }
+        case 'leech': {
+          // Sangsue : dévore les éclats d'XP au sol, et les rend en mourant
+          let target = null, td = 520 * 520;
+          for (const k of game.pickups) {
+            if (k.dead || k.kind !== 'xp') continue;
+            const dd = U.dist2(this.x, this.y, k.x, k.y);
+            if (dd < td) { td = dd; target = k; }
+          }
+          if (target) {
+            const a = U.angle(this.x, this.y, target.x, target.y);
+            ax = Math.cos(a) * sp; ay = Math.sin(a) * sp;
+            if (U.dist2(this.x, this.y, target.x, target.y) < (this.r + 10) * (this.r + 10)) {
+              target.dead = true;
+              this.stolen = (this.stolen || 0) + target.value;
+              FX.text(this.x, this.y - this.r - 6, 'XP VOLÉ', '#4dffc3');
+            }
+          } else {
+            const a = U.angle(this.x, this.y, p.x, p.y);
+            ax = Math.cos(a) * sp; ay = Math.sin(a) * sp;
+          }
+          break;
+        }
+        case 'harrier': {
+          // Faucheur : tourne autour, tire en rafale, puis traverse
+          const d = U.dist(this.x, this.y, p.x, p.y);
+          const a = U.angle(this.x, this.y, p.x, p.y);
+          this.stateT -= dt;
+          if (this.state === 2) {                       // traversée
+            ax = Math.cos(this.chargeA) * sp * 2.2;
+            ay = Math.sin(this.chargeA) * sp * 2.2;
+            if (this.stateT <= 0) { this.state = 0; this.stateT = U.rand(3, 5); }
+          } else {
+            const radial = (d - this.def.orbitR) / 130;
+            ax = Math.cos(a) * sp * U.clamp(radial, -1, 1) + Math.cos(a + Math.PI / 2) * sp * this.orbitDir;
+            ay = Math.sin(a) * sp * U.clamp(radial, -1, 1) + Math.sin(a + Math.PI / 2) * sp * this.orbitDir;
+            if (this.stateT <= 0) { this.state = 2; this.stateT = .8; this.chargeA = a; }
+            if (this.fireCd <= 0) {
+              this.fireCd = this.def.fireCd;
+              this.burst = 3;
+            }
+          }
+          if (this.burst > 0) {
+            this.burstT = (this.burstT || 0) - dt;
+            if (this.burstT <= 0) {
+              this.burstT = .12; this.burst--;
+              game.enemyShoot(this, a, { speed: 330, dmg: this.dmg * .6, r: 5, color: this.color });
+            }
+          }
+          break;
+        }
         case 'anchor': {
           // nœud arrimé en orbite autour de son boss
           const A = this.anchor;
@@ -3207,6 +3445,15 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         ctx.globalAlpha = 1;
       }
       if (this.shielded > 0) NF.Draw.ring(ctx, this.x, this.y, this.r + 6, C.cyan, 2, .4);
+      if (this.ward > 0) {
+        NF.Draw.ring(ctx, this.x, this.y, this.r + 7, '#ffd23e', 3, .35 + .35 * (this.ward / this.wardMax));
+      }
+      if (this.immune && this.def.ai === 'blink') {     // Spectre en transit
+        ctx.globalAlpha = .25;
+        NF.Draw.ring(ctx, this.x, this.y, this.r + 4 + (1 - this.stateT / .5) * 22, this.color, 2, .3);
+        ctx.globalAlpha = 1;
+        return;
+      }
       if (this.state === 1 && d.ai === 'rush') {
         NF.Draw.ring(ctx, this.x, this.y, this.r + 8 + Math.sin(this.stateT * 30) * 3, C.red, 2, .8);
       }
@@ -3244,11 +3491,12 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
   /* ---- types de sbires spécifiques aux boss ---- */
   Object.assign(NF.ENEMY_TYPES, {
-    bossBase: { name: 'Boss', ai: 'none', hp: 1, dmg: 20, speed: 60, r: 46, xp: 0, color: C.magenta, sides: 6, minWave: 99, weight: 0 },
-    node: { name: 'Nœud', ai: 'anchor', hp: 60, dmg: 12, speed: 0, r: 16, xp: 6, color: '#ffd23e', sides: 3, minWave: 99, weight: 0 },
-    pillar: { name: 'Pilier', ai: 'none', hp: 140, dmg: 14, speed: 0, r: 22, xp: 10, color: '#c58bff', sides: 4, minWave: 99, weight: 0, knockRes: 1 },
-    decoy: { name: 'Leurre', ai: 'decoy', hp: 1, dmg: 16, speed: 70, r: 40, xp: 0, color: C.magenta, sides: 6, minWave: 99, weight: 0, knockRes: 1 },
-    addTurret: { name: 'Tourelle', ai: 'kite', hp: 55, dmg: 10, speed: 40, r: 14, xp: 5, color: '#ff8a3e', sides: 4, minWave: 99, weight: 0, range: 300, fireCd: 1.4 }
+    bossBase: { name: 'Boss', ai: 'none', hp: 1, dmg: 20, speed: 60, r: 46, xp: 0, color: C.magenta, sides: 6, mw: {}, weight: 0 },
+    node: { name: 'Nœud', ai: 'anchor', hp: 60, dmg: 12, speed: 0, r: 16, xp: 6, color: '#ffd23e', sides: 3, mw: {}, weight: 0 },
+    pillar: { name: 'Pilier', ai: 'none', hp: 140, dmg: 14, speed: 0, r: 22, xp: 10, color: '#c58bff', sides: 4, mw: {}, weight: 0, knockRes: 1 },
+    decoy: { name: 'Leurre', ai: 'decoy', hp: 1, dmg: 16, speed: 70, r: 40, xp: 0, color: C.magenta, sides: 6, mw: {}, weight: 0, knockRes: 1 },
+    addTurret: { name: 'Tourelle', ai: 'kite', hp: 55, dmg: 10, speed: 40, r: 14, xp: 5, color: '#ff8a3e', sides: 4, mw: {}, weight: 0, range: 300, fireCd: 1.4 },
+    pod: { name: 'Couveuse', ai: 'none', hp: 110, dmg: 12, speed: 0, r: 24, xp: 14, color: '#ff6b4d', sides: 6, mw: {}, weight: 0, knockRes: 1 }
   });
 
   /* ============================================================
@@ -3607,16 +3855,409 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         b.spawnPillars(game, 2);
         game.toast('NOUVEAUX PILIERS', 'bad');
       }
+    },
+
+    /* ============================================================
+       SECTEUR 2 — LA FAILLE
+       ============================================================ */
+
+    /* ------------------------------------------------------------
+       6 — CHIMÈRE : rejoue une mécanique différente à chaque phase
+       ------------------------------------------------------------ */
+    {
+      id: 'chimere', name: 'SYNTHÈSE-06 « CHIMÈRE »', color: '#ff6b4d', sides: 7, r: 46,
+      hpMul: 2100, dmgMul: 1.7,
+      hint: 'Elle rejoue les défenses que tu as déjà brisées',
+      init(b, game) {
+        b.nodeCount = 3;
+        b.nodes = [];
+        b.decoys = [];
+        b.shieldA = 0; b.shieldArc = Math.PI * .8;
+        b.salvoT = 3;
+        b.spawnNodes(game);
+        b.hint = 'Phase 1 — détruis les nœuds';
+      },
+      update(b, dt, game) {
+        const p = game.player;
+
+        if (b.phase === 1) {
+          b.nodes = b.nodes.filter(n => !n.dead);
+          b.invuln = b.nodes.length > 0;
+          b.hint = b.invuln ? `Phase 1 — nœuds restants : ${b.nodes.length}` : 'Noyau exposé !';
+          if (!b.invuln) {
+            b.vulnT -= dt;
+            if (b.vulnT <= 0) b.spawnNodes(game);
+          }
+        } else if (b.phase === 2) {
+          /* bouclier frontal : il faut la contourner */
+          b.invuln = false;
+          b.hint = 'Phase 2 — frappe-la dans le dos';
+          b.shieldA = U.turnTo(b.shieldA, U.angle(b.x, b.y, p.x, p.y), 1.15 * dt);
+        } else {
+          /* leurres : seule celle au cœur allumé encaisse */
+          b.invuln = false;
+          b.hint = 'Phase 3 — vise le cœur allumé';
+          b.decoys = b.decoys.filter(d => !d.dead);
+          b.swapT = (b.swapT || 4) - dt;
+          if (b.swapT <= 0) {
+            b.swapT = 4.2;
+            if (b.decoys.length) {
+              const d = U.pick(b.decoys);
+              const tx = d.x, ty = d.y;
+              d.x = b.x; d.y = b.y; b.x = tx; b.y = ty;
+              FX.burst(b.x, b.y, 12, b.color, { speed: 200, life: .35, glow: true });
+              b.coreOff = .9;
+            }
+          }
+          if (b.coreOff > 0) b.coreOff -= dt;
+        }
+
+        /* salve commune à toutes les phases */
+        b.salvoT -= dt;
+        if (b.salvoT <= 0) {
+          b.salvoT = 3.4 - b.phase * .4;
+          const base = U.angle(b.x, b.y, p.x, p.y);
+          for (let i = -2; i <= 2; i++) {
+            game.enemyShoot(b, base + i * .2, { speed: 250, dmg: b.dmg * .5, r: 6, color: b.color });
+          }
+        }
+        b.driftTo(dt, game, 240, .7);
+      },
+      onPhase(b, game) {
+        for (const n of b.nodes) if (!n.dead) n.dead = true;
+        b.nodes = [];
+        b.invuln = false;
+        if (b.phase === 3) b.spawnDecoys(game, 2);
+        game.toast('LA CHIMÈRE CHANGE DE DÉFENSE', 'bad');
+        FX.screenFlash(b.color, .4);
+      },
+      draw(b, ctx) {
+        if (b.phase === 2) {
+          ctx.save();
+          ctx.strokeStyle = b.color; ctx.lineCap = 'round';
+          ctx.globalAlpha = .8; ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 14, b.shieldA - b.shieldArc / 2, b.shieldA + b.shieldArc / 2);
+          ctx.stroke();
+          ctx.restore(); ctx.globalAlpha = 1;
+        }
+        if (b.phase === 3 && !(b.coreOff > 0)) {
+          const pulse = .5 + .5 * Math.sin(performance.now() / 140);
+          ctx.globalAlpha = pulse; ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      },
+      block(b, x, y) {
+        if (b.phase !== 2) return false;
+        return Math.abs(U.angleDiff(b.shieldA, U.angle(b.x, b.y, x, y))) < b.shieldArc / 2;
+      }
+    },
+
+    /* ------------------------------------------------------------
+       7 — ORACLE : tire là où tu VAS, et mine le chemin parcouru
+       ------------------------------------------------------------ */
+    {
+      id: 'oracle', name: 'ORACLE-07 « PRÉDICTEUR »', color: '#7dd3ff', sides: 3, r: 42,
+      hpMul: 2450, dmgMul: 1.6,
+      hint: 'Il vise ta trajectoire : change de direction après le marquage',
+      init(b) {
+        b.predT = 2;
+        b.echoT = 5;
+        b.trail = [];
+        b.trailT = 0;
+      },
+      update(b, dt, game) {
+        const p = game.player;
+        b.hint = 'Change de cap quand le marqueur apparaît';
+
+        /* mémorise le chemin du joueur */
+        b.trailT -= dt;
+        if (b.trailT <= 0) {
+          b.trailT = .45;
+          b.trail.push({ x: p.x, y: p.y });
+          if (b.trail.length > 10) b.trail.shift();
+        }
+
+        /* tir prédictif : la zone vise la position anticipée */
+        b.predT -= dt;
+        if (b.predT <= 0) {
+          b.predT = b.phase >= 3 ? 1.7 : (b.phase >= 2 ? 2.2 : 2.8);
+          const shots = b.phase >= 2 ? 2 : 1;
+          for (let i = 0; i < shots; i++) {
+            const lead = 0.75 + i * 0.5 + (b.phase >= 3 ? .3 : 0);
+            game.hazards.push(new NF.Hazard({
+              kind: 'zone',
+              x: U.clamp(p.x + p.vx * lead, 40, game.world.w - 40),
+              y: U.clamp(p.y + p.vy * lead, 40, game.world.h - 40),
+              r: 118, telegraph: .95, duration: .45,
+              dmg: b.dmg * 1.25, color: '#7dd3ff', tickRate: .4
+            }));
+          }
+        }
+
+        /* échos : le chemin déjà parcouru devient dangereux */
+        b.echoT -= dt;
+        if (b.echoT <= 0) {
+          b.echoT = b.phase >= 3 ? 5 : 7;
+          const pts = b.trail.slice(-(b.phase >= 3 ? 6 : 4));
+          for (const pt of pts) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'zone', x: pt.x, y: pt.y, r: 92,
+              telegraph: 1.2, duration: .4,
+              dmg: b.dmg, color: '#4d8fff', tickRate: .4
+            }));
+          }
+          game.toast('ÉCHO TEMPOREL', 'warn');
+        }
+
+        b.driftTo(dt, game, 330, .8);
+      },
+      onPhase(b, game) {
+        game.toast('PRÉDICTION AFFINÉE', 'bad');
+        b.trail.length = 0;
+      },
+      draw(b, ctx) {
+        /* fil reliant les positions mémorisées */
+        if (b.trail.length < 2) return;
+        ctx.globalAlpha = .18; ctx.strokeStyle = '#7dd3ff'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(b.trail[0].x, b.trail[0].y);
+        for (const pt of b.trail) ctx.lineTo(pt.x, pt.y);
+        ctx.stroke(); ctx.globalAlpha = 1;
+      }
+    },
+
+    /* ------------------------------------------------------------
+       8 — RUCHE : le corps est blindé, ce sont les couveuses la cible
+       ------------------------------------------------------------ */
+    {
+      id: 'ruche', name: 'ESSAIM-08 « RUCHE »', color: '#ffb43e', sides: 6, r: 50,
+      hpMul: 2200, dmgMul: 1.5,
+      hint: 'Détruis les couveuses : chacune arrache 15 % de sa coque',
+      init(b, game) {
+        b.pods = [];
+        b.podRespawn = 0;
+        b.spawnPods(game, 3);
+        b.sweepT = 4;
+      },
+      update(b, dt, game) {
+        b.pods = b.pods.filter(p => !p.dead);
+        b.invuln = b.pods.length > 0;
+        b.hint = b.invuln
+          ? `Couveuses actives : ${b.pods.length} — la coque est scellée`
+          : 'Coque ouverte — frappe !';
+
+        /* les couveuses recrachent des nuées */
+        for (const pod of b.pods) {
+          pod.broodT = (pod.broodT || U.rand(1, 3)) - dt;
+          if (pod.broodT <= 0) {
+            pod.broodT = b.phase >= 3 ? 3 : 4.5;
+            if (game.enemies.length < 85) {
+              const pt = U.ringPoint(pod.x, pod.y, 28, 50);
+              game.spawnAdd('swarm', pt.x, pt.y, b.tierScale);
+            }
+          }
+        }
+
+        if (!b.invuln) {
+          b.podRespawn -= dt;
+          if (b.podRespawn <= 0) {
+            const n = Math.max(1, 4 - b.phase);      // de moins en moins nombreuses
+            b.spawnPods(game, n);
+            game.toast('NOUVELLES COUVEUSES', 'warn');
+          }
+        }
+
+        /* balayage de la ruche */
+        b.sweepT -= dt;
+        if (b.sweepT <= 0) {
+          b.sweepT = b.phase >= 3 ? 4 : 6;
+          const off = U.rand(0, U.TAU);
+          for (let i = 0; i < 3; i++) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: off + i * U.TAU / 3,
+              len: 1500, width: 15, telegraph: .9, duration: 2.2,
+              rotSpeed: .45, dmg: b.dmg, color: '#ffb43e',
+              owner: b, followOwner: true
+            }));
+          }
+        }
+
+        b.driftTo(dt, game, 300, .45);
+      },
+      onPhase(b, game) {
+        game.toast('LA RUCHE S\'AGITE', 'bad');
+      }
+    },
+
+    /* ------------------------------------------------------------
+       9 — PARADOXE : inverse tes commandes, mais s'expose en échange
+       ------------------------------------------------------------ */
+    {
+      id: 'paradoxe', name: 'PARADOXE-09 « MIROIR »', color: '#c58bff', sides: 4, r: 44,
+      hpMul: 2600, dmgMul: 1.55,
+      hint: 'Pendant l\'inversion il encaisse le double : profites-en',
+      init(b) {
+        b.invT = 8;
+        b.warned = false;
+        b.mirrorT = 3;
+      },
+      update(b, dt, game) {
+        const inverted = game.invertT > 0;
+        b.hint = inverted
+          ? 'INVERSION — dégâts doublés sur lui !'
+          : 'Prépare-toi : l\'inversion arrive';
+        b.dmgTaken = inverted ? 2 : 1;
+
+        /* cycle d'inversion, annoncé une seconde à l'avance */
+        b.invT -= dt;
+        if (!b.warned && b.invT <= 1.2) {
+          b.warned = true;
+          game.toast('INVERSION IMMINENTE', 'bad');
+          FX.screenFlash('#c58bff', .3);
+        }
+        if (b.invT <= 0) {
+          b.invT = b.phase >= 3 ? 9 : 12;
+          b.warned = false;
+          game.invertT = b.phase >= 3 ? 6 : 4.5;
+          U.buzz([30, 50, 30]);
+        }
+
+        /* faisceaux en miroir, symétriques par rapport au boss */
+        b.mirrorT -= dt;
+        if (b.mirrorT <= 0) {
+          b.mirrorT = b.phase >= 3 ? 3.4 : 4.6;
+          const a = U.angle(b.x, b.y, game.player.x, game.player.y);
+          for (const off of [0, Math.PI]) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: a + off,
+              len: 1500, width: 17, telegraph: .9, duration: 1.6,
+              rotSpeed: .3, dmg: b.dmg, color: '#c58bff',
+              owner: b, followOwner: true
+            }));
+          }
+        }
+
+        b.driftTo(dt, game, 260, .6);
+      },
+      onPhase(b, game) {
+        game.toast('LE MIROIR SE FISSURE', 'bad');
+        for (let i = 0; i < 3; i++) {
+          const pt = U.ringPoint(b.x, b.y, 140, 240);
+          game.spawnAdd('phantom', pt.x, pt.y, b.tierScale);
+        }
+      },
+      draw(b, ctx) {
+        if (!(b.dmgTaken > 1)) return;
+        NF.Draw.ring(ctx, b.x, b.y, b.r + 16 + Math.sin(performance.now() / 120) * 4, '#fff', 3, .8);
+      }
+    },
+
+    /* ------------------------------------------------------------
+       10 — ABYSSE : dévore ses sbires pour se soigner, referme l'arène
+       ------------------------------------------------------------ */
+    {
+      id: 'abysse', name: 'ABYSSE-10 « DÉVOREUSE »', color: '#8b5cff', sides: 8, r: 52,
+      hpMul: 3200, dmgMul: 1.7,
+      hint: 'Tue ses sbires avant qu\'elle ne les avale',
+      init(b) {
+        b.feedT = 7;
+        b.brood = [];
+        b.ringT = 14;
+        b.pullT = 0;
+      },
+      update(b, dt, game) {
+        const p = game.player;
+        b.brood = b.brood.filter(e => !e.dead);
+        b.hint = b.brood.length
+          ? `Elle va avaler ${b.brood.length} sbire${b.brood.length > 1 ? 's' : ''}`
+          : 'Reste hors de son puits';
+
+        /* aspiration permanente */
+        const d = U.dist(b.x, b.y, p.x, p.y);
+        if (d > 40 && d < 640) {
+          const a = U.angle(p.x, p.y, b.x, b.y);
+          const pull = (b.phase >= 3 ? 120 : 80) * (1 - d / 640);
+          p.x += Math.cos(a) * pull * dt;
+          p.y += Math.sin(a) * pull * dt;
+        }
+
+        /* elle invoque, puis dévore ce qui a survécu */
+        b.feedT -= dt;
+        if (b.feedT <= 0) {
+          if (b.brood.length) {
+            let healed = 0;
+            for (const e of b.brood) {
+              if (e.dead) continue;
+              e.dead = true; healed++;
+              game.zaps.push(new NF.Zap(e.x, e.y, b.x, b.y, '#8b5cff'));
+              FX.burst(e.x, e.y, 8, '#8b5cff', { speed: 200, life: .4 });
+            }
+            if (healed) {
+              b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.03 * healed);
+              game.toast('ELLE SE NOURRIT (+' + (3 * healed) + ' %)', 'bad');
+              FX.screenFlash('#8b5cff', .3);
+            }
+            b.brood = [];
+            b.feedT = 3;
+          } else {
+            b.feedT = b.phase >= 3 ? 7 : 9;
+            const n = b.phase >= 3 ? 4 : 3;
+            for (let i = 0; i < n; i++) {
+              const pt = U.ringPoint(b.x, b.y, 180, 300);
+              const e = game.spawnAdd(U.pick(['phantom', 'harrier', 'warden']), pt.x, pt.y, b.tierScale);
+              e.devoured = true;
+              b.brood.push(e);
+            }
+            game.toast('ELLE INVOQUE — TUE-LES VITE', 'warn');
+          }
+        }
+
+        /* l'arène se referme */
+        b.ringT -= dt;
+        if (b.ringT <= 0) {
+          b.ringT = 22;
+          game.hazards.push(new NF.Hazard({
+            kind: 'ring', x: b.x, y: b.y, r: 4000, rInner: 700,
+            telegraph: 1.4, duration: 9, shrink: 62, rMin: 260,
+            dmg: b.dmg * 1.2, color: '#8b5cff', owner: b, followOwner: true,
+            tickRate: .55
+          }));
+          game.toast('L\'ABYSSE SE REFERME', 'bad');
+        }
+
+        b.driftTo(dt, game, 220, .4);
+      },
+      onPhase(b, game) {
+        game.toast('PHASE ' + b.phase + ' — ELLE S\'AFFAME', 'bad');
+        b.feedT = Math.min(b.feedT, 3);
+      },
+      draw(b, ctx) {
+        /* halo de gravité */
+        ctx.globalAlpha = .1; ctx.fillStyle = '#8b5cff';
+        ctx.beginPath(); ctx.arc(b.x, b.y, 640, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        for (const e of b.brood) {
+          if (e.dead) continue;
+          ctx.globalAlpha = .3; ctx.strokeStyle = '#8b5cff'; ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 6]);
+          ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(e.x, e.y); ctx.stroke();
+          ctx.setLineDash([]); ctx.globalAlpha = 1;
+        }
+      }
     }
   ];
 
   /* ============================================================
      Entité Boss
      ============================================================ */
+  NF.bossDefById = id => BOSSES.find(b => b.id === id);
+
   class Boss extends NF.Enemy {
-    constructor(defIndex, tier, wave, scale, game) {
+    constructor(defId, tier, wave, scale, game) {
       super('bossBase', game.world.w / 2, 120, { hp: 1, dmg: 1, speed: 1 }, false);
-      const def = BOSSES[defIndex];
+      const def = NF.bossDefById(defId) || BOSSES[0];
       this.bdef = def;
       this.tier = tier;
       this.isBoss = true;
@@ -3689,6 +4330,27 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         d.bossRef = this;
         this.decoys.push(d);
       }
+    }
+
+    /** Couveuses de la RUCHE : posées loin du boss, elles crachent des nuées */
+    spawnPods(game, n) {
+      this.pods = this.pods || [];
+      for (let i = 0; i < n; i++) {
+        const a = U.rand(0, U.TAU);
+        const rad = U.rand(320, 520);
+        const e = game.spawnAdd('pod',
+          U.clamp(this.x + Math.cos(a) * rad, 60, game.world.w - 60),
+          U.clamp(this.y + Math.sin(a) * rad, 60, game.world.h - 60),
+          this.tierScale);
+        e.maxHp *= 1.4; e.hp = e.maxHp;
+        e.onDeath = () => {
+          this.hp -= this.maxHp * 0.15;
+          FX.text(this.x, this.y - 60, 'COQUE ENTAMÉE', C.lime, true);
+          FX.screenFlash('#ffb43e', .25);
+        };
+        this.pods.push(e);
+      }
+      this.podRespawn = 12;
     }
 
     spawnPillars(game, n) {
@@ -3772,12 +4434,6 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
   NF.Boss = Boss;
 
-  /** Quel boss pour cette vague ? (cycle infini avec paliers) */
-  NF.bossForWave = function (wave) {
-    const n = Math.floor(wave / 10) - 1;            // 10 → 0, 20 → 1 …
-    return { index: ((n % BOSSES.length) + BOSSES.length) % BOSSES.length, tier: Math.floor(n / BOSSES.length) };
-  };
-
 })(window);
 
 /* ===== js/systems/save.js ===== */
@@ -3790,7 +4446,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   const NF = w.NF;
 
   const KEY = 'protocole-neon.save.v1';
-  const VERSION = 3;
+  const VERSION = 4;
 
   function fresh() {
     return {
@@ -3808,6 +4464,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       playerId: '',                   // identifiant stable de l'appareil
       daily: { lastDay: '', lastTs: 0, streak: 0, bestStreak: 0, claimed: 0 },
       localScores: [],                // classement hors ligne (parties locales)
+      maxBiome: 0,                    // index du secteur le plus avancé débloqué
+      startBiome: 0,                  // secteur choisi au lancement
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
       settings: { haptics: true, shake: true, handed: 'right' },
@@ -3882,6 +4540,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       d.pseudo = cleanPseudo(obj.pseudo || '');
       if (!Array.isArray(d.localScores)) d.localScores = [];
       if (!d.playerId) d.playerId = newId();
+      d.maxBiome = Math.max(0, Math.min(20, Math.round(Number(d.maxBiome) || 0)));
+      d.startBiome = Math.max(0, Math.min(d.maxBiome, Math.round(Number(d.startBiome) || 0)));
       d.settings = Object.assign(base.settings, obj.settings || {});
       if (d.settings.handed !== 'left') d.settings.handed = 'right';
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
@@ -4046,6 +4706,26 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       };
       rd.onerror = () => cb(new Error('lecture impossible'));
       rd.readAsText(file);
+    },
+
+    /* ---------- Secteurs ---------- */
+    /** Débloque un secteur. Renvoie true si c'est une découverte. */
+    unlockBiome(index) {
+      if (index <= this.data.maxBiome) return false;
+      this.data.maxBiome = index;
+      this.save();
+      return true;
+    },
+
+    /** Secteur de départ choisi, borné à ce qui est débloqué */
+    startWave() {
+      const i = Math.min(this.data.startBiome, this.data.maxBiome);
+      return NF.biomeFirstWave(i);
+    },
+
+    setStartBiome(i) {
+      this.data.startBiome = Math.max(0, Math.min(i, this.data.maxBiome));
+      this.save();
     },
 
     /* ---------- Identité du joueur ---------- */
@@ -4301,7 +4981,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.reset();
     }
 
-    reset() {
+    reset(startWave) {
+      this.startWave = startWave || 1;
       this.wave = 0;
       this.state = 'idle';       // idle | spawning | fighting | cleared | boss
       this.queue = [];           // ennemis restant à faire apparaître
@@ -4314,27 +4995,38 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
     /** Multiplicateurs de difficulté de la vague n
         Courbe polynomiale : elle grimpe sans fin mais reste rattrapable
-        par la montée en puissance du joueur (additive). */
+        par la montée en puissance du joueur (additive). Chaque secteur
+        applique en plus son propre coefficient. */
     scaleFor(n) {
       const k = n - 1;
+      const info = NF.biomeInfo(n);
+      const b = info.biome;
+      const tierMul = 1 + info.tier * 0.6;          // au-delà du dernier secteur
       return {
-        hp: 1 + 0.34 * k + 0.020 * k * k,
-        dmg: 1 + 0.09 * k + 0.0025 * k * k,
-        speed: Math.min(1.5, 1 + 0.008 * k),
-        xp: 1 + 0.08 * k
+        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * tierMul,
+        dmg: (1 + 0.09 * k + 0.0025 * k * k) * b.dmgMul,
+        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul),
+        /* le coût d'un niveau croît géométriquement : l'XP doit suivre,
+           sinon la montée en puissance décroche en fin de partie */
+        xp: Math.pow(1.055, k)
       };
     }
 
-    /** Types disponibles à cette vague, pondérés */
+    /** Types disponibles à cette vague du secteur courant, pondérés */
     pool(n) {
+      const info = NF.biomeInfo(n);
       const out = [];
       for (const id in NF.ENEMY_TYPES) {
         const t = NF.ENEMY_TYPES[id];
-        if (t.weight <= 0 || n < t.minWave) continue;
+        if (t.weight <= 0 || !t.mw) continue;
+        const first = t.mw[info.index];
+        if (first === undefined || info.local < first) continue;
         // les types récents deviennent plus fréquents avec le temps
-        const age = n - t.minWave;
+        const age = info.local - first;
         out.push({ id, w: t.weight * (1 + Math.min(1.2, age * 0.05)) });
       }
+      /* filet de sécurité : un secteur ne peut pas être vide */
+      if (!out.length) out.push({ id: 'drone', w: 1 });
       return out;
     }
 
@@ -4347,11 +5039,11 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       const scale = this.scaleFor(n);
       this.scale = scale;
 
-      if (n % 10 === 0) {
+      const bossInfo = NF.bossForWave(n);
+      if (bossInfo) {
         /* ---------- vague de boss ---------- */
         this.state = 'boss';
-        const { index, tier } = NF.bossForWave(n);
-        const boss = new NF.Boss(index, tier, n, scale, g);
+        const boss = new NF.Boss(bossInfo.id, bossInfo.tier, n, scale, g);
         g.enemies.push(boss);
         this.boss = boss;
         g.onBossSpawn(boss);
@@ -4377,7 +5069,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         }
       }
       this.timer = 0;
-      g.onWaveStart(n);
+      this.info = NF.biomeInfo(n);
+      g.onWaveStart(n, this.info);
     }
 
     pickType(n) {
@@ -4489,10 +5182,14 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         toasts: $('toasts')
       };
       this._weaponSig = '';
+      this._biome = null;
       this._questSig = '';
     },
 
     show(v) { this.el.hud.classList.toggle('hidden', !v); },
+
+    /** Mémorise le secteur courant pour l'affichage de la vague */
+    setBiome(b) { this._biome = b; },
 
     update(game) {
       const e = this.el, p = game.player;
@@ -4509,7 +5206,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       /* --- vague --- */
       const wv = game.waves;
-      e.wave.textContent = 'VAGUE ' + wv.wave;
+      e.wave.textContent = (this._biome ? this._biome.name + ' · ' : '') + 'VAGUE ' + wv.wave;
       if (wv.state === 'cleared') {
         e.waveSub.textContent = 'PROCHAINE VAGUE DANS ' + Math.ceil(wv.breakT) + 's';
       } else if (wv.state === 'boss') {
@@ -4620,11 +5317,18 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       $('btnPause').addEventListener('click', () => NF.game.togglePause());
       $('btnReroll').addEventListener('click', () => this.reroll());
+      $('btnQuickPick').addEventListener('click', () => this.quickPick());
     },
 
     act(a, el) {
       switch (a) {
-        case 'play': NF.game.start(); break;
+        case 'play': NF.game.start(NF.Save.startWave()); break;
+        case 'again': NF.game.start(NF.Save.startWave()); break;
+        case 'setBiome':
+          NF.Save.setStartBiome(+el.dataset.i);
+          U.buzz(12);
+          this.renderMenu();
+          break;
         case 'lab': this._treeCentered = false; this.renderLab(); this.show('lab'); break;
         case 'arsenal': this.renderArsenal(); this.show('arsenal'); break;
         case 'quests': this.renderQuests(); this.show('quests'); break;
@@ -4681,7 +5385,6 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         case 'back': this.renderMenu(); this.show('menu'); break;
         case 'resume': NF.game.togglePause(); break;
         case 'quit': NF.game.endRun(true); break;
-        case 'again': NF.game.start(); break;
         case 'menu': this.renderMenu(); this.show('menu'); break;
         case 'export': NF.Save.exportFile(); break;
         case 'import': this.fileInput.click(); break;
@@ -4766,6 +5469,24 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       badge.textContent = n;
       badge.classList.toggle('hidden', n === 0);
       $('dailyBadge').classList.toggle('hidden', !NF.Daily.state().available);
+      this.renderBiomePick();
+    },
+
+    /** Choix du secteur de départ (visible dès qu'un second est ouvert) */
+    renderBiomePick() {
+      const box = $('biomePick');
+      const d = NF.Save.data;
+      if (d.maxBiome <= 0) { box.classList.add('hidden'); return; }
+      box.classList.remove('hidden');
+      const cur = Math.min(d.startBiome, d.maxBiome);
+      let html = '<span class="bp-label">Secteur de départ</span><div class="bp-row">';
+      for (let i = 0; i <= d.maxBiome; i++) {
+        const b = NF.BIOMES[i % NF.BIOMES.length];
+        const wave = NF.biomeFirstWave(i);
+        html += `<button class="bp-chip ${i === cur ? 'on' : ''}" data-act="setBiome" data-i="${i}"
+                   style="--c:${b.accent}">${b.icon} ${b.name}<em>vague ${wave}</em></button>`;
+      }
+      box.innerHTML = html + '</div>';
     },
 
     /* ============================================================
@@ -5051,6 +5772,9 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.drawCards();
       $('rerollCount').textContent = this.rerolls;
       $('btnReroll').classList.toggle('hidden', this.rerolls <= 0);
+      const many = game.player.pendingLevels > 3;
+      $('btnQuickPick').classList.toggle('hidden', !many);
+      if (many) $('quickCount').textContent = game.player.pendingLevels;
       this.show('levelup');
     },
 
@@ -5069,6 +5793,18 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       for (const el of $('cards').children) {
         el.addEventListener('click', () => this.pickCard(+el.dataset.i));
       }
+    },
+
+    /** Enchaîne les niveaux en attente en tirant au sort à chaque fois */
+    quickPick() {
+      const g = this._game;
+      let guard = 0;
+      g._quiet = true;                       // évite un mur de notifications
+      while (g.player.pendingLevels > 0 && guard++ < 80) {
+        this.pickCard((Math.random() * this.cards.length) | 0);
+      }
+      g._quiet = false;
+      g.toast('AMÉLIORATIONS APPLIQUÉES', 'good');
     },
 
     reroll() {
@@ -5238,6 +5974,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.levelling = false;
       this.time = 0;
       this.dt = 0;
+      this.invertT = 0;
       this._acc = 0;
       this._last = 0;
 
@@ -5266,7 +6003,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    start() {
+    start(startWave) {
+      startWave = Math.max(1, Math.round(startWave || 1));
       this.enemies.length = 0;
       this.bullets.length = 0;
       this.ebullets.length = 0;
@@ -5280,11 +6018,24 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       this.stats = this.freshStats();
       this.time = 0;
+      this.invertT = 0;
       this._maxedSeen = 0;
       this.player.reset(this);
       this.addWeapon('blaster');
-      this.waves.reset();
-      this.waves.start(1);
+
+      /* Démarrer dans un secteur avancé offre l'avance correspondante :
+         sans elle, la vague 51 serait injouable au niveau 1. */
+      const info = NF.biomeInfo(startWave);
+      if (info.index > 0 || info.tier > 0) {
+        const boost = (info.index + info.tier * NF.BIOMES.length) * 45;
+        this.player.level = 1 + boost;
+        this.player.xpNext = NF.xpFor(this.player.level);
+        this.player.pendingLevels += boost;
+      }
+
+      this.waves.reset(startWave);
+      this.applyBiome(NF.biomeInfo(startWave));
+      this.waves.start(startWave);
 
       NF.Input.reset();
       NF.Menus.rerolls = 1;
@@ -5296,6 +6047,53 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       // niveaux offerts par le Laboratoire
       this.checkLevelUp();
+    }
+
+    /** Change de secteur : palette, décor et dangers d'ambiance */
+    applyBiome(info) {
+      const b = info.biome;
+      const changed = this.biome !== b;
+      this.biome = b;
+      this.biomeInfo = info;
+      this.eruptT = b.eruptions || 0;
+      if (!changed && this.cracks) return;
+
+      /* décor « faille » : des fractures figées dans le sol */
+      this.cracks = [];
+      if (b.decor === 'rift') {
+        for (let i = 0; i < 26; i++) {
+          const pts = [];
+          let x = U.rand(0, this.world.w), y = U.rand(0, this.world.h);
+          let a = U.rand(0, U.TAU);
+          const seg = U.randInt(3, 6);
+          for (let j = 0; j < seg; j++) {
+            pts.push({ x, y });
+            a += U.rand(-.7, .7);
+            const len = U.rand(70, 190);
+            x += Math.cos(a) * len; y += Math.sin(a) * len;
+          }
+          pts.push({ x, y });
+          this.cracks.push(pts);
+        }
+      }
+    }
+
+    /** Éruptions d'ambiance propres au secteur (hors boss) */
+    updateAmbient(dt) {
+      if (!this.biome || !this.biome.eruptions) return;
+      this.eruptT -= dt;
+      if (this.eruptT > 0) return;
+      this.eruptT = this.biome.eruptions * U.rand(.75, 1.25);
+      const p = this.player;
+      const pt = U.ringPoint(p.x, p.y, 90, 320);
+      this.hazards.push(new NF.Hazard({
+        kind: 'zone',
+        x: U.clamp(pt.x, 40, this.world.w - 40),
+        y: U.clamp(pt.y, 40, this.world.h - 40),
+        r: 105, telegraph: 1.25, duration: .5,
+        dmg: 12 * (this.waves.scale ? this.waves.scale.dmg : 1),
+        color: this.biome.accent2, tickRate: .5
+      }));
     }
 
     endRun(quit) {
@@ -5344,6 +6142,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
     update(dt) {
       this.time += dt;
+      if (this.invertT > 0) this.invertT -= dt;
 
       this.buildGrid();
       this.player.update(dt, this);
@@ -5358,6 +6157,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       this.updateBeams(dt);
       this.updateSingularities(dt);
+      this.updateAmbient(dt);
       this.collide();
       FX.update(dt);
 
@@ -5600,10 +6400,25 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         return 0;
       }
 
+      /* Gardien : le bouclier encaisse avant la coque */
+      if (e.ward > 0) {
+        const absorbed = Math.min(e.ward, dmg);
+        e.ward -= absorbed;
+        e.wardT = 0;
+        dmg -= absorbed;
+        if (!opt.silent && Math.random() < .2) FX.text(e.x, e.y - e.r - 6, 'BOUCLIER', '#ffd23e');
+        if (e.ward <= 0) {
+          FX.shockwave(e.x, e.y, 46, '#ffd23e', .3);
+          FX.text(e.x, e.y - e.r - 6, 'BOUCLIER BRISÉ', NF.C.amber, true);
+        }
+        if (dmg <= 0) { e.hitFlash = 0.09; return 0; }
+      }
+
       const p = this.player;
       let crit = false;
       if (!opt.silent && Math.random() < p.stats.crit) { dmg *= p.stats.critMult; crit = true; }
       if (e.shielded > 0) dmg *= (1 - e.shielded);
+      if (e.dmgTaken) dmg *= e.dmgTaken;      // PARADOXE : double pendant l'inversion
 
       e.hp -= dmg;
       e.hitFlash = 0.09;
@@ -5648,6 +6463,16 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       if (e.onDeath) e.onDeath();
 
+      /* la Sangsue relâche l'expérience qu'elle a volée */
+      if (e.stolen > 0) {
+        const n = Math.min(12, Math.max(1, Math.round(e.stolen / 3)));
+        const per = Math.max(1, Math.round(e.stolen / n));
+        for (let i = 0; i < n; i++) {
+          const pt = U.ringPoint(e.x, e.y, 6, 30);
+          this.pickups.push(new NF.Pickup(pt.x, pt.y, 'xp', per));
+        }
+      }
+
       /* réplicants : éclatent en fragments */
       if (e.def.split && !noDrop) {
         for (let i = 0; i < e.def.split; i++) {
@@ -5678,6 +6503,16 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         this.stats.bosses++;
         NF.Quests.notify('boss', 1);
         this.toast('BOSS VAINCU', 'good');
+
+        /* le boss de la 50ᵉ vague d'un secteur ouvre le suivant */
+        if (NF.isBiomeFinale(this.waves.wave)) {
+          const next = NF.biomeInfo(this.waves.wave).index + 1;
+          if (NF.Save.unlockBiome(next)) {
+            const nb = NF.BIOMES[next % NF.BIOMES.length];
+            this.toast('SECTEUR DÉBLOQUÉ : ' + nb.name, 'good');
+            FX.screenFlash('#fff', .7);
+          }
+        }
         FX.screenFlash('#fff', .5);
         U.buzz([40, 60, 40, 60, 90]);
         for (let i = 0; i < 10; i++) {
@@ -5789,14 +6624,25 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.toast(wd.name + ' équipée', 'good');
     }
 
-    toast(msg, kind) { NF.HUD.toast(msg, kind); }
+    toast(msg, kind) { if (!this._quiet) NF.HUD.toast(msg, kind); }
 
     /* ============================================================
        Événements de vague
        ============================================================ */
-    onWaveStart(n) {
+    onWaveStart(n, info) {
       this.stats.tookDamageThisWave = false;
-      if (n % 10 === 0) {
+
+      /* franchissement d'un secteur */
+      if (info && this.biome !== info.biome) {
+        this.applyBiome(info);
+        FX.screenFlash(info.biome.accent, .6);
+        FX.kick(20);
+        U.buzz([60, 40, 60, 40, 90]);
+        this.toast('SECTEUR ' + (info.index + 1) + ' — ' + info.biome.name, 'bad');
+        this.toast(info.biome.tagline, 'warn');
+      }
+
+      if (NF.bossForWave(n)) {
         this.toast('⚠ VAGUE ' + n + ' — BOSS', 'bad');
         FX.screenFlash(C.magenta, .35);
         U.buzz([60, 80, 60]);
@@ -5804,6 +6650,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         this.toast('VAGUE ' + n);
       }
       if (n > 1 && (n - 1) % 10 === 0) this.toast('PALIER SUPÉRIEUR', 'warn');
+      NF.HUD.setBiome(this.biome);
     }
 
     onWaveClear(n) {
@@ -5837,7 +6684,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       const ctx = this.ctx, W = this.view.w, H = this.view.h;
 
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-      ctx.fillStyle = '#05060f';
+      ctx.fillStyle = (this.biome && this.biome.bg) || '#05060f';
       ctx.fillRect(0, 0, W, H);
 
       /* rien à dessiner tant qu'aucune partie n'a démarré */
@@ -5923,23 +6770,40 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
     drawBackground(ctx) {
       const cam = this.cam, W = this.view.w, H = this.view.h;
+      const b = this.biome || NF.BIOMES[0];
       const x0 = Math.floor(cam.x / 80) * 80 - 80;
       const y0 = Math.floor(cam.y / 80) * 80 - 80;
       const x1 = cam.x + W + 80, y1 = cam.y + H + 80;
 
-      ctx.strokeStyle = C.grid;
+      ctx.strokeStyle = b.grid;
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (let x = x0; x < x1; x += 80) { ctx.moveTo(x, y0); ctx.lineTo(x, y1); }
       for (let y = y0; y < y1; y += 80) { ctx.moveTo(x0, y); ctx.lineTo(x1, y); }
       ctx.stroke();
 
+      /* fractures du secteur « Faille » */
+      if (this.cracks && this.cracks.length) {
+        const pulse = .10 + .05 * Math.sin(this.time * 1.4);
+        ctx.strokeStyle = b.accent;
+        ctx.lineCap = 'round';
+        for (const pts of this.cracks) {
+          ctx.globalAlpha = pulse; ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+          for (const pt of pts) ctx.lineTo(pt.x, pt.y);
+          ctx.stroke();
+          ctx.globalAlpha = pulse * 2.4; ctx.lineWidth = 1.6;
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
       /* bordure du monde */
-      ctx.strokeStyle = 'rgba(62,242,255,.35)';
+      ctx.strokeStyle = b.border;
       ctx.lineWidth = 3;
       ctx.strokeRect(0, 0, this.world.w, this.world.h);
       ctx.globalAlpha = .08;
-      ctx.fillStyle = C.cyan;
+      ctx.fillStyle = b.accent;
       ctx.fillRect(0, 0, this.world.w, 6);
       ctx.fillRect(0, this.world.h - 6, this.world.w, 6);
       ctx.fillRect(0, 0, 6, this.world.h);

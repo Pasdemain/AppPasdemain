@@ -23,10 +23,14 @@
         toasts: $('toasts')
       };
       this._weaponSig = '';
+      this._biome = null;
       this._questSig = '';
     },
 
     show(v) { this.el.hud.classList.toggle('hidden', !v); },
+
+    /** Mémorise le secteur courant pour l'affichage de la vague */
+    setBiome(b) { this._biome = b; },
 
     update(game) {
       const e = this.el, p = game.player;
@@ -43,7 +47,7 @@
 
       /* --- vague --- */
       const wv = game.waves;
-      e.wave.textContent = 'VAGUE ' + wv.wave;
+      e.wave.textContent = (this._biome ? this._biome.name + ' · ' : '') + 'VAGUE ' + wv.wave;
       if (wv.state === 'cleared') {
         e.waveSub.textContent = 'PROCHAINE VAGUE DANS ' + Math.ceil(wv.breakT) + 's';
       } else if (wv.state === 'boss') {

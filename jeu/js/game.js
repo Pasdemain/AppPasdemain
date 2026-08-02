@@ -35,6 +35,7 @@
       this.levelling = false;
       this.time = 0;
       this.dt = 0;
+      this.invertT = 0;
       this._acc = 0;
       this._last = 0;
 
@@ -63,7 +64,8 @@
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    start() {
+    start(startWave) {
+      startWave = Math.max(1, Math.round(startWave || 1));
       this.enemies.length = 0;
       this.bullets.length = 0;
       this.ebullets.length = 0;
@@ -77,11 +79,24 @@
 
       this.stats = this.freshStats();
       this.time = 0;
+      this.invertT = 0;
       this._maxedSeen = 0;
       this.player.reset(this);
       this.addWeapon('blaster');
-      this.waves.reset();
-      this.waves.start(1);
+
+      /* Démarrer dans un secteur avancé offre l'avance correspondante :
+         sans elle, la vague 51 serait injouable au niveau 1. */
+      const info = NF.biomeInfo(startWave);
+      if (info.index > 0 || info.tier > 0) {
+        const boost = (info.index + info.tier * NF.BIOMES.length) * 45;
+        this.player.level = 1 + boost;
+        this.player.xpNext = NF.xpFor(this.player.level);
+        this.player.pendingLevels += boost;
+      }
+
+      this.waves.reset(startWave);
+      this.applyBiome(NF.biomeInfo(startWave));
+      this.waves.start(startWave);
 
       NF.Input.reset();
       NF.Menus.rerolls = 1;
@@ -93,6 +108,53 @@
 
       // niveaux offerts par le Laboratoire
       this.checkLevelUp();
+    }
+
+    /** Change de secteur : palette, décor et dangers d'ambiance */
+    applyBiome(info) {
+      const b = info.biome;
+      const changed = this.biome !== b;
+      this.biome = b;
+      this.biomeInfo = info;
+      this.eruptT = b.eruptions || 0;
+      if (!changed && this.cracks) return;
+
+      /* décor « faille » : des fractures figées dans le sol */
+      this.cracks = [];
+      if (b.decor === 'rift') {
+        for (let i = 0; i < 26; i++) {
+          const pts = [];
+          let x = U.rand(0, this.world.w), y = U.rand(0, this.world.h);
+          let a = U.rand(0, U.TAU);
+          const seg = U.randInt(3, 6);
+          for (let j = 0; j < seg; j++) {
+            pts.push({ x, y });
+            a += U.rand(-.7, .7);
+            const len = U.rand(70, 190);
+            x += Math.cos(a) * len; y += Math.sin(a) * len;
+          }
+          pts.push({ x, y });
+          this.cracks.push(pts);
+        }
+      }
+    }
+
+    /** Éruptions d'ambiance propres au secteur (hors boss) */
+    updateAmbient(dt) {
+      if (!this.biome || !this.biome.eruptions) return;
+      this.eruptT -= dt;
+      if (this.eruptT > 0) return;
+      this.eruptT = this.biome.eruptions * U.rand(.75, 1.25);
+      const p = this.player;
+      const pt = U.ringPoint(p.x, p.y, 90, 320);
+      this.hazards.push(new NF.Hazard({
+        kind: 'zone',
+        x: U.clamp(pt.x, 40, this.world.w - 40),
+        y: U.clamp(pt.y, 40, this.world.h - 40),
+        r: 105, telegraph: 1.25, duration: .5,
+        dmg: 12 * (this.waves.scale ? this.waves.scale.dmg : 1),
+        color: this.biome.accent2, tickRate: .5
+      }));
     }
 
     endRun(quit) {
@@ -141,6 +203,7 @@
 
     update(dt) {
       this.time += dt;
+      if (this.invertT > 0) this.invertT -= dt;
 
       this.buildGrid();
       this.player.update(dt, this);
@@ -155,6 +218,7 @@
 
       this.updateBeams(dt);
       this.updateSingularities(dt);
+      this.updateAmbient(dt);
       this.collide();
       FX.update(dt);
 
@@ -397,10 +461,25 @@
         return 0;
       }
 
+      /* Gardien : le bouclier encaisse avant la coque */
+      if (e.ward > 0) {
+        const absorbed = Math.min(e.ward, dmg);
+        e.ward -= absorbed;
+        e.wardT = 0;
+        dmg -= absorbed;
+        if (!opt.silent && Math.random() < .2) FX.text(e.x, e.y - e.r - 6, 'BOUCLIER', '#ffd23e');
+        if (e.ward <= 0) {
+          FX.shockwave(e.x, e.y, 46, '#ffd23e', .3);
+          FX.text(e.x, e.y - e.r - 6, 'BOUCLIER BRISÉ', NF.C.amber, true);
+        }
+        if (dmg <= 0) { e.hitFlash = 0.09; return 0; }
+      }
+
       const p = this.player;
       let crit = false;
       if (!opt.silent && Math.random() < p.stats.crit) { dmg *= p.stats.critMult; crit = true; }
       if (e.shielded > 0) dmg *= (1 - e.shielded);
+      if (e.dmgTaken) dmg *= e.dmgTaken;      // PARADOXE : double pendant l'inversion
 
       e.hp -= dmg;
       e.hitFlash = 0.09;
@@ -445,6 +524,16 @@
 
       if (e.onDeath) e.onDeath();
 
+      /* la Sangsue relâche l'expérience qu'elle a volée */
+      if (e.stolen > 0) {
+        const n = Math.min(12, Math.max(1, Math.round(e.stolen / 3)));
+        const per = Math.max(1, Math.round(e.stolen / n));
+        for (let i = 0; i < n; i++) {
+          const pt = U.ringPoint(e.x, e.y, 6, 30);
+          this.pickups.push(new NF.Pickup(pt.x, pt.y, 'xp', per));
+        }
+      }
+
       /* réplicants : éclatent en fragments */
       if (e.def.split && !noDrop) {
         for (let i = 0; i < e.def.split; i++) {
@@ -475,6 +564,16 @@
         this.stats.bosses++;
         NF.Quests.notify('boss', 1);
         this.toast('BOSS VAINCU', 'good');
+
+        /* le boss de la 50ᵉ vague d'un secteur ouvre le suivant */
+        if (NF.isBiomeFinale(this.waves.wave)) {
+          const next = NF.biomeInfo(this.waves.wave).index + 1;
+          if (NF.Save.unlockBiome(next)) {
+            const nb = NF.BIOMES[next % NF.BIOMES.length];
+            this.toast('SECTEUR DÉBLOQUÉ : ' + nb.name, 'good');
+            FX.screenFlash('#fff', .7);
+          }
+        }
         FX.screenFlash('#fff', .5);
         U.buzz([40, 60, 40, 60, 90]);
         for (let i = 0; i < 10; i++) {
@@ -586,14 +685,25 @@
       this.toast(wd.name + ' équipée', 'good');
     }
 
-    toast(msg, kind) { NF.HUD.toast(msg, kind); }
+    toast(msg, kind) { if (!this._quiet) NF.HUD.toast(msg, kind); }
 
     /* ============================================================
        Événements de vague
        ============================================================ */
-    onWaveStart(n) {
+    onWaveStart(n, info) {
       this.stats.tookDamageThisWave = false;
-      if (n % 10 === 0) {
+
+      /* franchissement d'un secteur */
+      if (info && this.biome !== info.biome) {
+        this.applyBiome(info);
+        FX.screenFlash(info.biome.accent, .6);
+        FX.kick(20);
+        U.buzz([60, 40, 60, 40, 90]);
+        this.toast('SECTEUR ' + (info.index + 1) + ' — ' + info.biome.name, 'bad');
+        this.toast(info.biome.tagline, 'warn');
+      }
+
+      if (NF.bossForWave(n)) {
         this.toast('⚠ VAGUE ' + n + ' — BOSS', 'bad');
         FX.screenFlash(C.magenta, .35);
         U.buzz([60, 80, 60]);
@@ -601,6 +711,7 @@
         this.toast('VAGUE ' + n);
       }
       if (n > 1 && (n - 1) % 10 === 0) this.toast('PALIER SUPÉRIEUR', 'warn');
+      NF.HUD.setBiome(this.biome);
     }
 
     onWaveClear(n) {
@@ -634,7 +745,7 @@
       const ctx = this.ctx, W = this.view.w, H = this.view.h;
 
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-      ctx.fillStyle = '#05060f';
+      ctx.fillStyle = (this.biome && this.biome.bg) || '#05060f';
       ctx.fillRect(0, 0, W, H);
 
       /* rien à dessiner tant qu'aucune partie n'a démarré */
@@ -720,23 +831,40 @@
 
     drawBackground(ctx) {
       const cam = this.cam, W = this.view.w, H = this.view.h;
+      const b = this.biome || NF.BIOMES[0];
       const x0 = Math.floor(cam.x / 80) * 80 - 80;
       const y0 = Math.floor(cam.y / 80) * 80 - 80;
       const x1 = cam.x + W + 80, y1 = cam.y + H + 80;
 
-      ctx.strokeStyle = C.grid;
+      ctx.strokeStyle = b.grid;
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (let x = x0; x < x1; x += 80) { ctx.moveTo(x, y0); ctx.lineTo(x, y1); }
       for (let y = y0; y < y1; y += 80) { ctx.moveTo(x0, y); ctx.lineTo(x1, y); }
       ctx.stroke();
 
+      /* fractures du secteur « Faille » */
+      if (this.cracks && this.cracks.length) {
+        const pulse = .10 + .05 * Math.sin(this.time * 1.4);
+        ctx.strokeStyle = b.accent;
+        ctx.lineCap = 'round';
+        for (const pts of this.cracks) {
+          ctx.globalAlpha = pulse; ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+          for (const pt of pts) ctx.lineTo(pt.x, pt.y);
+          ctx.stroke();
+          ctx.globalAlpha = pulse * 2.4; ctx.lineWidth = 1.6;
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
       /* bordure du monde */
-      ctx.strokeStyle = 'rgba(62,242,255,.35)';
+      ctx.strokeStyle = b.border;
       ctx.lineWidth = 3;
       ctx.strokeRect(0, 0, this.world.w, this.world.h);
       ctx.globalAlpha = .08;
-      ctx.fillStyle = C.cyan;
+      ctx.fillStyle = b.accent;
       ctx.fillRect(0, 0, this.world.w, 6);
       ctx.fillRect(0, this.world.h - 6, this.world.w, 6);
       ctx.fillRect(0, 0, 6, this.world.h);

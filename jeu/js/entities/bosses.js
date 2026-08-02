@@ -9,11 +9,12 @@
 
   /* ---- types de sbires spécifiques aux boss ---- */
   Object.assign(NF.ENEMY_TYPES, {
-    bossBase: { name: 'Boss', ai: 'none', hp: 1, dmg: 20, speed: 60, r: 46, xp: 0, color: C.magenta, sides: 6, minWave: 99, weight: 0 },
-    node: { name: 'Nœud', ai: 'anchor', hp: 60, dmg: 12, speed: 0, r: 16, xp: 6, color: '#ffd23e', sides: 3, minWave: 99, weight: 0 },
-    pillar: { name: 'Pilier', ai: 'none', hp: 140, dmg: 14, speed: 0, r: 22, xp: 10, color: '#c58bff', sides: 4, minWave: 99, weight: 0, knockRes: 1 },
-    decoy: { name: 'Leurre', ai: 'decoy', hp: 1, dmg: 16, speed: 70, r: 40, xp: 0, color: C.magenta, sides: 6, minWave: 99, weight: 0, knockRes: 1 },
-    addTurret: { name: 'Tourelle', ai: 'kite', hp: 55, dmg: 10, speed: 40, r: 14, xp: 5, color: '#ff8a3e', sides: 4, minWave: 99, weight: 0, range: 300, fireCd: 1.4 }
+    bossBase: { name: 'Boss', ai: 'none', hp: 1, dmg: 20, speed: 60, r: 46, xp: 0, color: C.magenta, sides: 6, mw: {}, weight: 0 },
+    node: { name: 'Nœud', ai: 'anchor', hp: 60, dmg: 12, speed: 0, r: 16, xp: 6, color: '#ffd23e', sides: 3, mw: {}, weight: 0 },
+    pillar: { name: 'Pilier', ai: 'none', hp: 140, dmg: 14, speed: 0, r: 22, xp: 10, color: '#c58bff', sides: 4, mw: {}, weight: 0, knockRes: 1 },
+    decoy: { name: 'Leurre', ai: 'decoy', hp: 1, dmg: 16, speed: 70, r: 40, xp: 0, color: C.magenta, sides: 6, mw: {}, weight: 0, knockRes: 1 },
+    addTurret: { name: 'Tourelle', ai: 'kite', hp: 55, dmg: 10, speed: 40, r: 14, xp: 5, color: '#ff8a3e', sides: 4, mw: {}, weight: 0, range: 300, fireCd: 1.4 },
+    pod: { name: 'Couveuse', ai: 'none', hp: 110, dmg: 12, speed: 0, r: 24, xp: 14, color: '#ff6b4d', sides: 6, mw: {}, weight: 0, knockRes: 1 }
   });
 
   /* ============================================================
@@ -372,16 +373,409 @@
         b.spawnPillars(game, 2);
         game.toast('NOUVEAUX PILIERS', 'bad');
       }
+    },
+
+    /* ============================================================
+       SECTEUR 2 — LA FAILLE
+       ============================================================ */
+
+    /* ------------------------------------------------------------
+       6 — CHIMÈRE : rejoue une mécanique différente à chaque phase
+       ------------------------------------------------------------ */
+    {
+      id: 'chimere', name: 'SYNTHÈSE-06 « CHIMÈRE »', color: '#ff6b4d', sides: 7, r: 46,
+      hpMul: 2100, dmgMul: 1.7,
+      hint: 'Elle rejoue les défenses que tu as déjà brisées',
+      init(b, game) {
+        b.nodeCount = 3;
+        b.nodes = [];
+        b.decoys = [];
+        b.shieldA = 0; b.shieldArc = Math.PI * .8;
+        b.salvoT = 3;
+        b.spawnNodes(game);
+        b.hint = 'Phase 1 — détruis les nœuds';
+      },
+      update(b, dt, game) {
+        const p = game.player;
+
+        if (b.phase === 1) {
+          b.nodes = b.nodes.filter(n => !n.dead);
+          b.invuln = b.nodes.length > 0;
+          b.hint = b.invuln ? `Phase 1 — nœuds restants : ${b.nodes.length}` : 'Noyau exposé !';
+          if (!b.invuln) {
+            b.vulnT -= dt;
+            if (b.vulnT <= 0) b.spawnNodes(game);
+          }
+        } else if (b.phase === 2) {
+          /* bouclier frontal : il faut la contourner */
+          b.invuln = false;
+          b.hint = 'Phase 2 — frappe-la dans le dos';
+          b.shieldA = U.turnTo(b.shieldA, U.angle(b.x, b.y, p.x, p.y), 1.15 * dt);
+        } else {
+          /* leurres : seule celle au cœur allumé encaisse */
+          b.invuln = false;
+          b.hint = 'Phase 3 — vise le cœur allumé';
+          b.decoys = b.decoys.filter(d => !d.dead);
+          b.swapT = (b.swapT || 4) - dt;
+          if (b.swapT <= 0) {
+            b.swapT = 4.2;
+            if (b.decoys.length) {
+              const d = U.pick(b.decoys);
+              const tx = d.x, ty = d.y;
+              d.x = b.x; d.y = b.y; b.x = tx; b.y = ty;
+              FX.burst(b.x, b.y, 12, b.color, { speed: 200, life: .35, glow: true });
+              b.coreOff = .9;
+            }
+          }
+          if (b.coreOff > 0) b.coreOff -= dt;
+        }
+
+        /* salve commune à toutes les phases */
+        b.salvoT -= dt;
+        if (b.salvoT <= 0) {
+          b.salvoT = 3.4 - b.phase * .4;
+          const base = U.angle(b.x, b.y, p.x, p.y);
+          for (let i = -2; i <= 2; i++) {
+            game.enemyShoot(b, base + i * .2, { speed: 250, dmg: b.dmg * .5, r: 6, color: b.color });
+          }
+        }
+        b.driftTo(dt, game, 240, .7);
+      },
+      onPhase(b, game) {
+        for (const n of b.nodes) if (!n.dead) n.dead = true;
+        b.nodes = [];
+        b.invuln = false;
+        if (b.phase === 3) b.spawnDecoys(game, 2);
+        game.toast('LA CHIMÈRE CHANGE DE DÉFENSE', 'bad');
+        FX.screenFlash(b.color, .4);
+      },
+      draw(b, ctx) {
+        if (b.phase === 2) {
+          ctx.save();
+          ctx.strokeStyle = b.color; ctx.lineCap = 'round';
+          ctx.globalAlpha = .8; ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 14, b.shieldA - b.shieldArc / 2, b.shieldA + b.shieldArc / 2);
+          ctx.stroke();
+          ctx.restore(); ctx.globalAlpha = 1;
+        }
+        if (b.phase === 3 && !(b.coreOff > 0)) {
+          const pulse = .5 + .5 * Math.sin(performance.now() / 140);
+          ctx.globalAlpha = pulse; ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      },
+      block(b, x, y) {
+        if (b.phase !== 2) return false;
+        return Math.abs(U.angleDiff(b.shieldA, U.angle(b.x, b.y, x, y))) < b.shieldArc / 2;
+      }
+    },
+
+    /* ------------------------------------------------------------
+       7 — ORACLE : tire là où tu VAS, et mine le chemin parcouru
+       ------------------------------------------------------------ */
+    {
+      id: 'oracle', name: 'ORACLE-07 « PRÉDICTEUR »', color: '#7dd3ff', sides: 3, r: 42,
+      hpMul: 2450, dmgMul: 1.6,
+      hint: 'Il vise ta trajectoire : change de direction après le marquage',
+      init(b) {
+        b.predT = 2;
+        b.echoT = 5;
+        b.trail = [];
+        b.trailT = 0;
+      },
+      update(b, dt, game) {
+        const p = game.player;
+        b.hint = 'Change de cap quand le marqueur apparaît';
+
+        /* mémorise le chemin du joueur */
+        b.trailT -= dt;
+        if (b.trailT <= 0) {
+          b.trailT = .45;
+          b.trail.push({ x: p.x, y: p.y });
+          if (b.trail.length > 10) b.trail.shift();
+        }
+
+        /* tir prédictif : la zone vise la position anticipée */
+        b.predT -= dt;
+        if (b.predT <= 0) {
+          b.predT = b.phase >= 3 ? 1.7 : (b.phase >= 2 ? 2.2 : 2.8);
+          const shots = b.phase >= 2 ? 2 : 1;
+          for (let i = 0; i < shots; i++) {
+            const lead = 0.75 + i * 0.5 + (b.phase >= 3 ? .3 : 0);
+            game.hazards.push(new NF.Hazard({
+              kind: 'zone',
+              x: U.clamp(p.x + p.vx * lead, 40, game.world.w - 40),
+              y: U.clamp(p.y + p.vy * lead, 40, game.world.h - 40),
+              r: 118, telegraph: .95, duration: .45,
+              dmg: b.dmg * 1.25, color: '#7dd3ff', tickRate: .4
+            }));
+          }
+        }
+
+        /* échos : le chemin déjà parcouru devient dangereux */
+        b.echoT -= dt;
+        if (b.echoT <= 0) {
+          b.echoT = b.phase >= 3 ? 5 : 7;
+          const pts = b.trail.slice(-(b.phase >= 3 ? 6 : 4));
+          for (const pt of pts) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'zone', x: pt.x, y: pt.y, r: 92,
+              telegraph: 1.2, duration: .4,
+              dmg: b.dmg, color: '#4d8fff', tickRate: .4
+            }));
+          }
+          game.toast('ÉCHO TEMPOREL', 'warn');
+        }
+
+        b.driftTo(dt, game, 330, .8);
+      },
+      onPhase(b, game) {
+        game.toast('PRÉDICTION AFFINÉE', 'bad');
+        b.trail.length = 0;
+      },
+      draw(b, ctx) {
+        /* fil reliant les positions mémorisées */
+        if (b.trail.length < 2) return;
+        ctx.globalAlpha = .18; ctx.strokeStyle = '#7dd3ff'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(b.trail[0].x, b.trail[0].y);
+        for (const pt of b.trail) ctx.lineTo(pt.x, pt.y);
+        ctx.stroke(); ctx.globalAlpha = 1;
+      }
+    },
+
+    /* ------------------------------------------------------------
+       8 — RUCHE : le corps est blindé, ce sont les couveuses la cible
+       ------------------------------------------------------------ */
+    {
+      id: 'ruche', name: 'ESSAIM-08 « RUCHE »', color: '#ffb43e', sides: 6, r: 50,
+      hpMul: 2200, dmgMul: 1.5,
+      hint: 'Détruis les couveuses : chacune arrache 15 % de sa coque',
+      init(b, game) {
+        b.pods = [];
+        b.podRespawn = 0;
+        b.spawnPods(game, 3);
+        b.sweepT = 4;
+      },
+      update(b, dt, game) {
+        b.pods = b.pods.filter(p => !p.dead);
+        b.invuln = b.pods.length > 0;
+        b.hint = b.invuln
+          ? `Couveuses actives : ${b.pods.length} — la coque est scellée`
+          : 'Coque ouverte — frappe !';
+
+        /* les couveuses recrachent des nuées */
+        for (const pod of b.pods) {
+          pod.broodT = (pod.broodT || U.rand(1, 3)) - dt;
+          if (pod.broodT <= 0) {
+            pod.broodT = b.phase >= 3 ? 3 : 4.5;
+            if (game.enemies.length < 85) {
+              const pt = U.ringPoint(pod.x, pod.y, 28, 50);
+              game.spawnAdd('swarm', pt.x, pt.y, b.tierScale);
+            }
+          }
+        }
+
+        if (!b.invuln) {
+          b.podRespawn -= dt;
+          if (b.podRespawn <= 0) {
+            const n = Math.max(1, 4 - b.phase);      // de moins en moins nombreuses
+            b.spawnPods(game, n);
+            game.toast('NOUVELLES COUVEUSES', 'warn');
+          }
+        }
+
+        /* balayage de la ruche */
+        b.sweepT -= dt;
+        if (b.sweepT <= 0) {
+          b.sweepT = b.phase >= 3 ? 4 : 6;
+          const off = U.rand(0, U.TAU);
+          for (let i = 0; i < 3; i++) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: off + i * U.TAU / 3,
+              len: 1500, width: 15, telegraph: .9, duration: 2.2,
+              rotSpeed: .45, dmg: b.dmg, color: '#ffb43e',
+              owner: b, followOwner: true
+            }));
+          }
+        }
+
+        b.driftTo(dt, game, 300, .45);
+      },
+      onPhase(b, game) {
+        game.toast('LA RUCHE S\'AGITE', 'bad');
+      }
+    },
+
+    /* ------------------------------------------------------------
+       9 — PARADOXE : inverse tes commandes, mais s'expose en échange
+       ------------------------------------------------------------ */
+    {
+      id: 'paradoxe', name: 'PARADOXE-09 « MIROIR »', color: '#c58bff', sides: 4, r: 44,
+      hpMul: 2600, dmgMul: 1.55,
+      hint: 'Pendant l\'inversion il encaisse le double : profites-en',
+      init(b) {
+        b.invT = 8;
+        b.warned = false;
+        b.mirrorT = 3;
+      },
+      update(b, dt, game) {
+        const inverted = game.invertT > 0;
+        b.hint = inverted
+          ? 'INVERSION — dégâts doublés sur lui !'
+          : 'Prépare-toi : l\'inversion arrive';
+        b.dmgTaken = inverted ? 2 : 1;
+
+        /* cycle d'inversion, annoncé une seconde à l'avance */
+        b.invT -= dt;
+        if (!b.warned && b.invT <= 1.2) {
+          b.warned = true;
+          game.toast('INVERSION IMMINENTE', 'bad');
+          FX.screenFlash('#c58bff', .3);
+        }
+        if (b.invT <= 0) {
+          b.invT = b.phase >= 3 ? 9 : 12;
+          b.warned = false;
+          game.invertT = b.phase >= 3 ? 6 : 4.5;
+          U.buzz([30, 50, 30]);
+        }
+
+        /* faisceaux en miroir, symétriques par rapport au boss */
+        b.mirrorT -= dt;
+        if (b.mirrorT <= 0) {
+          b.mirrorT = b.phase >= 3 ? 3.4 : 4.6;
+          const a = U.angle(b.x, b.y, game.player.x, game.player.y);
+          for (const off of [0, Math.PI]) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: a + off,
+              len: 1500, width: 17, telegraph: .9, duration: 1.6,
+              rotSpeed: .3, dmg: b.dmg, color: '#c58bff',
+              owner: b, followOwner: true
+            }));
+          }
+        }
+
+        b.driftTo(dt, game, 260, .6);
+      },
+      onPhase(b, game) {
+        game.toast('LE MIROIR SE FISSURE', 'bad');
+        for (let i = 0; i < 3; i++) {
+          const pt = U.ringPoint(b.x, b.y, 140, 240);
+          game.spawnAdd('phantom', pt.x, pt.y, b.tierScale);
+        }
+      },
+      draw(b, ctx) {
+        if (!(b.dmgTaken > 1)) return;
+        NF.Draw.ring(ctx, b.x, b.y, b.r + 16 + Math.sin(performance.now() / 120) * 4, '#fff', 3, .8);
+      }
+    },
+
+    /* ------------------------------------------------------------
+       10 — ABYSSE : dévore ses sbires pour se soigner, referme l'arène
+       ------------------------------------------------------------ */
+    {
+      id: 'abysse', name: 'ABYSSE-10 « DÉVOREUSE »', color: '#8b5cff', sides: 8, r: 52,
+      hpMul: 3200, dmgMul: 1.7,
+      hint: 'Tue ses sbires avant qu\'elle ne les avale',
+      init(b) {
+        b.feedT = 7;
+        b.brood = [];
+        b.ringT = 14;
+        b.pullT = 0;
+      },
+      update(b, dt, game) {
+        const p = game.player;
+        b.brood = b.brood.filter(e => !e.dead);
+        b.hint = b.brood.length
+          ? `Elle va avaler ${b.brood.length} sbire${b.brood.length > 1 ? 's' : ''}`
+          : 'Reste hors de son puits';
+
+        /* aspiration permanente */
+        const d = U.dist(b.x, b.y, p.x, p.y);
+        if (d > 40 && d < 640) {
+          const a = U.angle(p.x, p.y, b.x, b.y);
+          const pull = (b.phase >= 3 ? 120 : 80) * (1 - d / 640);
+          p.x += Math.cos(a) * pull * dt;
+          p.y += Math.sin(a) * pull * dt;
+        }
+
+        /* elle invoque, puis dévore ce qui a survécu */
+        b.feedT -= dt;
+        if (b.feedT <= 0) {
+          if (b.brood.length) {
+            let healed = 0;
+            for (const e of b.brood) {
+              if (e.dead) continue;
+              e.dead = true; healed++;
+              game.zaps.push(new NF.Zap(e.x, e.y, b.x, b.y, '#8b5cff'));
+              FX.burst(e.x, e.y, 8, '#8b5cff', { speed: 200, life: .4 });
+            }
+            if (healed) {
+              b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.03 * healed);
+              game.toast('ELLE SE NOURRIT (+' + (3 * healed) + ' %)', 'bad');
+              FX.screenFlash('#8b5cff', .3);
+            }
+            b.brood = [];
+            b.feedT = 3;
+          } else {
+            b.feedT = b.phase >= 3 ? 7 : 9;
+            const n = b.phase >= 3 ? 4 : 3;
+            for (let i = 0; i < n; i++) {
+              const pt = U.ringPoint(b.x, b.y, 180, 300);
+              const e = game.spawnAdd(U.pick(['phantom', 'harrier', 'warden']), pt.x, pt.y, b.tierScale);
+              e.devoured = true;
+              b.brood.push(e);
+            }
+            game.toast('ELLE INVOQUE — TUE-LES VITE', 'warn');
+          }
+        }
+
+        /* l'arène se referme */
+        b.ringT -= dt;
+        if (b.ringT <= 0) {
+          b.ringT = 22;
+          game.hazards.push(new NF.Hazard({
+            kind: 'ring', x: b.x, y: b.y, r: 4000, rInner: 700,
+            telegraph: 1.4, duration: 9, shrink: 62, rMin: 260,
+            dmg: b.dmg * 1.2, color: '#8b5cff', owner: b, followOwner: true,
+            tickRate: .55
+          }));
+          game.toast('L\'ABYSSE SE REFERME', 'bad');
+        }
+
+        b.driftTo(dt, game, 220, .4);
+      },
+      onPhase(b, game) {
+        game.toast('PHASE ' + b.phase + ' — ELLE S\'AFFAME', 'bad');
+        b.feedT = Math.min(b.feedT, 3);
+      },
+      draw(b, ctx) {
+        /* halo de gravité */
+        ctx.globalAlpha = .1; ctx.fillStyle = '#8b5cff';
+        ctx.beginPath(); ctx.arc(b.x, b.y, 640, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        for (const e of b.brood) {
+          if (e.dead) continue;
+          ctx.globalAlpha = .3; ctx.strokeStyle = '#8b5cff'; ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 6]);
+          ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(e.x, e.y); ctx.stroke();
+          ctx.setLineDash([]); ctx.globalAlpha = 1;
+        }
+      }
     }
   ];
 
   /* ============================================================
      Entité Boss
      ============================================================ */
+  NF.bossDefById = id => BOSSES.find(b => b.id === id);
+
   class Boss extends NF.Enemy {
-    constructor(defIndex, tier, wave, scale, game) {
+    constructor(defId, tier, wave, scale, game) {
       super('bossBase', game.world.w / 2, 120, { hp: 1, dmg: 1, speed: 1 }, false);
-      const def = BOSSES[defIndex];
+      const def = NF.bossDefById(defId) || BOSSES[0];
       this.bdef = def;
       this.tier = tier;
       this.isBoss = true;
@@ -454,6 +848,27 @@
         d.bossRef = this;
         this.decoys.push(d);
       }
+    }
+
+    /** Couveuses de la RUCHE : posées loin du boss, elles crachent des nuées */
+    spawnPods(game, n) {
+      this.pods = this.pods || [];
+      for (let i = 0; i < n; i++) {
+        const a = U.rand(0, U.TAU);
+        const rad = U.rand(320, 520);
+        const e = game.spawnAdd('pod',
+          U.clamp(this.x + Math.cos(a) * rad, 60, game.world.w - 60),
+          U.clamp(this.y + Math.sin(a) * rad, 60, game.world.h - 60),
+          this.tierScale);
+        e.maxHp *= 1.4; e.hp = e.maxHp;
+        e.onDeath = () => {
+          this.hp -= this.maxHp * 0.15;
+          FX.text(this.x, this.y - 60, 'COQUE ENTAMÉE', C.lime, true);
+          FX.screenFlash('#ffb43e', .25);
+        };
+        this.pods.push(e);
+      }
+      this.podRespawn = 12;
     }
 
     spawnPillars(game, n) {
@@ -536,11 +951,5 @@
   }
 
   NF.Boss = Boss;
-
-  /** Quel boss pour cette vague ? (cycle infini avec paliers) */
-  NF.bossForWave = function (wave) {
-    const n = Math.floor(wave / 10) - 1;            // 10 → 0, 20 → 1 …
-    return { index: ((n % BOSSES.length) + BOSSES.length) % BOSSES.length, tier: Math.floor(n / BOSSES.length) };
-  };
 
 })(window);

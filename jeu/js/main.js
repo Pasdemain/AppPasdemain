@@ -11,6 +11,7 @@
     NF.Input.init();
     NF.HUD.init();
     NF.Menus.init();
+    NF.QTE.init();
 
     const canvas = document.getElementById('game');
     NF.game = new NF.Game(canvas);

@@ -270,6 +270,26 @@
     </div>
   </div>
 
+  <!-- ============ QTE ============ -->
+  <div id="qte" class="qte-layer hidden">
+    <div class="qte-box">
+      <div id="qteRounds" class="qte-rounds"></div>
+      <h2 id="qteTitle">SÉQUENCE CRITIQUE</h2>
+      <p id="qteHint">Touche quand le curseur entre dans la zone</p>
+
+      <div id="qteTrack" class="qte-track">
+        <i id="qteZone" class="qte-zone"></i>
+        <i id="qteCursor" class="qte-cursor"></i>
+      </div>
+
+      <div id="qteGauge" class="qte-gauge hidden"><i id="qteFill"></i></div>
+
+      <div id="qteTimer" class="qte-timer">0.0 s</div>
+      <div id="qteVerdict" class="qte-verdict"></div>
+      <button id="qteBtn" class="qte-btn">MAINTENANT !</button>
+    </div>
+  </div>
+
   <!-- ============ FIN DE PARTIE ============ -->
   <div id="gameover" class="screen overlay hidden">
     <div class="modal">
@@ -299,6 +319,8 @@
 <script src="js/systems/save.js"></script>
 <script src="js/systems/daily.js"></script>
 <script src="js/systems/scores.js"></script>
+<script src="js/systems/qte.js"></script>
+<script src="js/systems/interlude.js"></script>
 <script src="js/systems/waves.js"></script>
 <script src="js/ui/hud.js"></script>
 <script src="js/ui/menus.js"></script>

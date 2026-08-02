@@ -617,3 +617,78 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   border:1px dashed color-mix(in srgb,var(--c) 55%,transparent);
   opacity:.55;pointer-events:none;
 }
+
+/* ============================================================
+   QTE — séquence d'action rapide
+   ============================================================ */
+.qte-layer{
+  position:absolute;inset:0;z-index:22;
+  display:flex;align-items:center;justify-content:center;
+  padding:calc(var(--safe-t) + 16px) 16px calc(var(--safe-b) + 16px);
+  background:rgba(3,5,12,.55);backdrop-filter:blur(2px);
+  --qc:#ffd23e;
+}
+.qte-box{
+  width:min(94vw,460px);padding:20px 18px;border-radius:20px;text-align:center;
+  background:linear-gradient(180deg,rgba(14,20,42,.97),rgba(8,12,26,.97));
+  border:2px solid var(--qc);
+  box-shadow:0 0 46px color-mix(in srgb,var(--qc) 35%,transparent);
+  display:flex;flex-direction:column;gap:11px;
+  animation:qtePop .22s ease-out;
+}
+@keyframes qtePop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.qte-box h2{font-size:19px;color:var(--qc);letter-spacing:.1em}
+.qte-box p{font-size:12.5px;color:#b9c9de;margin:-4px 0 2px}
+
+.qte-rounds{display:flex;gap:7px;justify-content:center}
+.qte-rounds i{
+  width:26px;height:6px;border-radius:3px;background:rgba(255,255,255,.14);
+  transition:background .2s,box-shadow .2s;
+}
+.qte-rounds i.now{background:var(--qc);box-shadow:0 0 12px var(--qc)}
+.qte-rounds i.ok{background:var(--lime)}
+
+.qte-track{
+  position:relative;height:44px;border-radius:12px;overflow:hidden;
+  background:rgba(4,8,20,.9);border:1px solid rgba(120,150,190,.3);
+}
+.qte-zone{
+  position:absolute;top:0;bottom:0;display:block;
+  background:color-mix(in srgb,var(--lime) 24%,transparent);
+  border-left:2px solid var(--lime);border-right:2px solid var(--lime);
+  transition:background .1s;
+}
+.qte-zone.hot{background:color-mix(in srgb,var(--lime) 52%,transparent)}
+.qte-cursor{
+  position:absolute;top:-3px;bottom:-3px;width:5px;margin-left:-2.5px;display:block;
+  background:#fff;box-shadow:0 0 14px #fff;border-radius:3px;
+}
+
+.qte-gauge{height:26px;border-radius:13px;overflow:hidden;background:rgba(4,8,20,.9);border:1px solid rgba(120,150,190,.3)}
+.qte-gauge i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;
+  background:linear-gradient(90deg,var(--qc),var(--lime));transition:transform .06s linear}
+
+.qte-timer{font-size:13px;font-weight:900;color:var(--txt-dim);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.qte-timer.urgent{color:var(--red)}
+.qte-verdict{min-height:20px;font-size:15px;font-weight:900;letter-spacing:.16em}
+.qte-verdict.ok{color:var(--lime)}
+.qte-verdict.ko{color:var(--red)}
+
+.qte-btn{
+  padding:20px;border-radius:15px;font-size:16px;font-weight:900;letter-spacing:.14em;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--qc) 26%,transparent),rgba(139,92,255,.24));
+  border:2px solid var(--qc);color:#fff;
+}
+.qte-btn:active{transform:scale(.97)}
+
+/* ============================================================
+   Interludes — le mini-jeu prend tout l'écran
+   ============================================================ */
+body.in-interlude .hud-top,
+body.in-interlude .hud-wave,
+body.in-interlude #bossBar,
+body.in-interlude #questTracker,
+body.in-interlude #weaponStrip { display: none; }
+/* en défense orbitale on ne saute pas : les boutons disparaissent */
+body.in-interlude.no-action #btnDash,
+body.in-interlude.no-action #btnUlt { display: none; }

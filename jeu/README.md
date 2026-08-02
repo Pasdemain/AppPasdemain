@@ -45,6 +45,11 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
   dernier secteur, le cycle reprend au palier supérieur (Mk II, Mk III…).
 - **Montée de niveau** : à chaque niveau, 3 cartes au choix (nouvelle arme,
   amélioration d'arme, statistique) + une relance offerte tous les 5 niveaux.
+  Au retour dans l'arène, une **demi-seconde d'invincibilité** évite de se faire
+  cueillir par ce qui attendait pendant le choix.
+- **Séquences d'action rapide et interludes** : certains boss figent le combat
+  pour un QTE, ou téléportent le joueur dans un mini-jeu le temps d'une phase
+  (défense orbitale, course d'obstacles). Voir *Secteur 3 — Le Noyau*.
 - **Cristaux ◈** gagnés en fin de partie → arbre de talents (bonus permanents)
   et Arsenal (déblocage d'armes).
 - **Quêtes** à paliers infinis : chaque récompense réclamée relance un objectif
@@ -68,6 +73,7 @@ n'a pas de fin.
 |---|---|---|---|
 | **▦ La Grille** | 1 – 50 | réseau cyan, sol quadrillé | bestiaire de base |
 | **⟁ La Faille** | 51 – 100 | violet, fractures pulsantes | éruptions du sol toutes les ~11 s, 5 ennemis inédits, +35 % de PV et +25 % de dégâts |
+| **⬡ Le Noyau** | 101 – 150 | ambre en fusion, bassins de magma et anneaux concentriques | éruptions toutes les ~8 s, 3 ennemis inédits, boss à QTE et **phases jouées hors de l'arène** |
 
 **Le secteur est le palier de difficulté.** On repart toujours du niveau 1 :
 la courbe de difficulté est identique dans chaque secteur (elle suit la vague
@@ -87,7 +93,15 @@ Le compteur du HUD affiche la progression dans le secteur (`VAGUE 37 / 50`).
 | **Sangsue** | Dévore tes éclats d'XP au sol — elle les relâche en mourant. |
 | **Faucheur** | Tourne autour de toi, tire en rafales, puis traverse en ligne droite. |
 
-## Les dix boss
+### Ennemis propres au Noyau
+
+| Ennemi | Comportement |
+|---|---|
+| **Fondeur** | Laisse derrière lui une traînée de zones brûlantes. |
+| **Mortier** | Reste au loin et lobe des frappes de zone annoncées au sol. |
+| **Magnétron** | T'attire vers lui en continu : impossible de simplement fuir. |
+
+## Les quinze boss
 
 ### Secteur 1 — La Grille
 
@@ -108,6 +122,21 @@ Le compteur du HUD affiche la progression dans le secteur (`VAGUE 37 / 50`).
 | 80 | **ESSAIM-08 « Ruche »** | Coque scellée tant qu'une couveuse vit. Chaque couveuse détruite lui arrache 15 % de sa coque, mais elles crachent des nuées en continu et se reforment. |
 | 90 | **PARADOXE-09 « Miroir »** | Inverse tes commandes par cycles annoncés — et pendant l'inversion il encaisse le **double** de dégâts. C'est ta fenêtre de burst. |
 | 100 | **ABYSSE-10 « Dévoreuse »** | Invoque des sbires puis les **avale pour se soigner** de 3 % chacun : il faut les tuer avant. Aspire en permanence et referme l'arène par un anneau. |
+
+### Secteur 3 — Le Noyau
+
+Ce secteur sort du cadre : deux boss lancent des **séquences d'action rapide
+(QTE)** qui figent le combat, et deux autres **téléportent le joueur dans un
+mini-jeu** le temps d'une phase avant de le renvoyer sur la carte. Réussir
+arrache une grosse part de vie au boss ; échouer le soigne.
+
+| Vague | Boss | Mécanique |
+|---|---|---|
+| 110 | **FORGE-11 « Creuset »** | Une jauge de surchauffe monte en continu. À 100 % il se verrouille, invulnérable, et lance une **purge en QTE de précision** — autant de passages que sa phase actuelle. Réussie, elle lui coûte 14 % de sa vie ; ratée, il se régénère et l'arène crache du magma. |
+| 120 | **ORBITE-12 « Sentinelle »** | En phase 2 elle t'**expédie en défense orbitale** : un écran type Space Invaders, formation qui descend, tir automatique, on glisse pour viser. Nettoyer la formation (ou tenir jusqu'au bout) lui arrache 30 % de sa vie. |
+| 130 | **CIRCUIT-13 « Traceur »** | À chaque changement de phase il t'**aspire dans un conduit** : course d'obstacles à la Geometry Dash, DASH ou ULT pour sauter, double saut autorisé. Deux traversées, 28 % de sa vie chacune. |
+| 140 | **ÉCHO-14 « Résonance »** | Bouclier invulnérable qui ne cède qu'au **martèlement** : un QTE de matraquage sature son bouclier et ouvre 9 s de frappe. Il se reforme deux fois, de plus en plus exigeant ; au **troisième bris il ne revient plus**. Émet en continu des anneaux à esquiver. |
+| 150 | **NOYAU-15 « Cœur du protocole »** | Le boss final du secteur, qui te teste sur tous les tableaux : salves radiales, triple balayage rotatif, une **épreuve QTE en trois temps** en phase 2, puis une **épreuve orbitale** en phase 3. |
 
 ## Arbre de talents
 
@@ -245,12 +274,14 @@ jeu/
     ├── entities/
     │   ├── projectiles.js projectiles, dangers, ramassables, éclairs
     │   ├── player.js      statistiques, dash, ultime, progression
-    │   ├── enemies.js     17 types d'ennemis et leurs comportements
-    │   └── bosses.js      les 5 archétypes de boss + cycle des paliers
+    │   ├── enemies.js     20 types d'ennemis et leurs comportements
+    │   └── bosses.js      les 15 boss + cycle des paliers
     ├── systems/
     │   ├── save.js       sauvegarde JSON, export/import
     │   ├── daily.js      récompense quotidienne et série
     │   ├── scores.js     classement (en ligne ou local)
+    │   ├── qte.js        séquences d'action rapide (précision, martèlement)
+    │   ├── interlude.js  mini-jeux hors arène (défense orbitale, conduit)
     │   └── waves.js      enchaînement et difficulté des vagues
     ├── ui/
     │   ├── hud.js        interface en jeu
@@ -277,3 +308,9 @@ jeu/
   palette, ses coefficients et ses cinq boss, puis déclare la vague d'apparition
   de chaque ennemi pour ce secteur via son champ `mw`. Le découpage des vagues,
   le déblocage et le sélecteur du menu suivent automatiquement.
+- **Un QTE dans un boss** : appelle `NF.QTE.start(game, {...})` depuis son
+  `update` ou son `onPhase` (`type: 'timing'` ou `'mash'`, `rounds`, `onWin`,
+  `onLose`). Le monde se fige tant que la séquence tourne.
+- **Un interlude** : appelle `NF.Interlude.start(game, {...})` (`mode:
+  'invaders'` ou `'conduit'`, `duration`, `hp`, `onWin`, `onLose`). Le mini-jeu
+  prend la main sur la boucle et sur le rendu, puis rend l'arène.

@@ -42,6 +42,21 @@
       hpMul: 1.2, dmgMul: 1.1, speedMul: 1.06,
       eruptions: 11,                 // secondes entre deux éruptions du sol
       bosses: ['chimere', 'oracle', 'ruche', 'paradoxe', 'abysse']
+    },
+    {
+      id: 'noyau',
+      name: 'LE NOYAU',
+      tagline: 'Le cœur en fusion du protocole — il te teste autrement',
+      icon: '⬡',
+      accent: '#ffd23e',
+      accent2: '#ff6b4d',
+      bg: '#0d0803',
+      grid: 'rgba(255,210,62,.06)',
+      border: 'rgba(255,210,62,.45)',
+      decor: 'core',
+      hpMul: 1.15, dmgMul: 1.05, speedMul: 1.1,
+      eruptions: 8,
+      bosses: ['creuset', 'orbitale', 'conduit', 'resonance', 'coeur']
     }
   ];
 

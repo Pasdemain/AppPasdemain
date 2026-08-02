@@ -30,6 +30,8 @@
       this.singularities = [];
 
       this.grid = new Map();
+      this.qte = null;
+      this.interlude = null;
       this.running = false;
       this.paused = false;
       this.levelling = false;
@@ -77,6 +79,9 @@
       FX.reset();
       NF.HUD.clearToasts();
 
+      if (NF.QTE.active) NF.QTE.cancel();
+      this.interlude = null;
+      document.body.classList.remove('in-interlude', 'no-action');
       this.stats = this.freshStats();
       this.time = 0;
       this.invertT = 0;
@@ -114,6 +119,16 @@
 
       /* décor « faille » : des fractures figées dans le sol */
       this.cracks = [];
+      this.pools = [];
+      if (b.decor === 'core') {
+        /* décor « noyau » : des bassins de magma et des anneaux concentriques */
+        for (let i = 0; i < 18; i++) {
+          this.pools.push({
+            x: U.rand(120, this.world.w - 120), y: U.rand(120, this.world.h - 120),
+            r: U.rand(40, 130), ph: U.rand(0, U.TAU), sp: U.rand(.5, 1.2)
+          });
+        }
+      }
       if (b.decor === 'rift') {
         for (let i = 0; i < 26; i++) {
           const pts = [];
@@ -182,7 +197,7 @@
     }
 
     togglePause() {
-      if (!this.running || this.levelling) return;
+      if (!this.running || this.levelling || this.qte || this.interlude) return;
       this.paused = !this.paused;
       if (this.paused) NF.Menus.showPause(this);
       else { NF.Menus.hideAll(); this._last = performance.now(); }
@@ -203,6 +218,17 @@
     }
 
     update(dt) {
+      /* Un QTE fige le monde : seule la surcouche vit. */
+      if (this.qte) { NF.QTE.update(dt); return; }
+      /* Un interlude prend la main sur toute la boucle. */
+      if (this.interlude) {
+        NF.Interlude.update(dt, this);
+        FX.update(dt);
+        if (!this.player.alive) { this.endRun(false); return; }
+        NF.HUD.update(this);
+        return;
+      }
+
       this.time += dt;
       if (this.invertT > 0) this.invertT -= dt;
 
@@ -258,6 +284,9 @@
         this.levelling = false;
         NF.Menus.hideAll();
         this._last = performance.now();
+        /* petit sursis en revenant dans l'action : on ne se fait pas
+           toucher pendant qu'on relit l'écran */
+        this.player.invuln = Math.max(this.player.invuln, 0.5);
         // une relance offerte par palier de 5 niveaux
         if (this.player.level % 5 === 0) NF.Menus.rerolls++;
       }
@@ -773,6 +802,16 @@
       /* rien à dessiner tant qu'aucune partie n'a démarré */
       if (!this.player.alive && !this.running) return;
 
+      /* interlude : c'est lui qui dessine tout l'écran */
+      if (this.interlude) {
+        NF.Interlude.draw(ctx, this);
+        if (FX.flash > 0) {
+          ctx.globalAlpha = FX.flash; ctx.fillStyle = FX.flashColor;
+          ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+        }
+        return;
+      }
+
       const sx = -this.cam.x + FX.shakeX, sy = -this.cam.y + FX.shakeY;
       ctx.save();
       ctx.translate(Math.round(sx), Math.round(sy));
@@ -864,6 +903,31 @@
       for (let x = x0; x < x1; x += 80) { ctx.moveTo(x, y0); ctx.lineTo(x, y1); }
       for (let y = y0; y < y1; y += 80) { ctx.moveTo(x0, y); ctx.lineTo(x1, y); }
       ctx.stroke();
+
+      /* bassins de magma du secteur « Noyau » */
+      if (this.pools && this.pools.length) {
+        const cx = this.world.w / 2, cy = this.world.h / 2;
+        ctx.strokeStyle = b.accent2 || b.accent;
+        ctx.lineWidth = 2;
+        for (let i = 1; i <= 5; i++) {
+          const r = 240 * i + Math.sin(this.time * .6 + i) * 14;
+          ctx.globalAlpha = .05;
+          ctx.beginPath(); ctx.arc(cx, cy, r, 0, U.TAU); ctx.stroke();
+        }
+        for (const p of this.pools) {
+          const k = .5 + .5 * Math.sin(this.time * p.sp + p.ph);
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+          g.addColorStop(0, b.accent2 || b.accent);
+          g.addColorStop(1, 'transparent');
+          ctx.globalAlpha = .07 + .06 * k;
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = .12 + .10 * k;
+          ctx.strokeStyle = b.accent; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * .55, 0, U.TAU); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
 
       /* fractures du secteur « Faille » */
       if (this.cracks && this.cracks.length) {

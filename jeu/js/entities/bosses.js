@@ -764,6 +764,377 @@
           ctx.setLineDash([]); ctx.globalAlpha = 1;
         }
       }
+    },
+
+    /* ============================================================
+       SECTEUR 3 — LE NOYAU
+       Ces boss sortent du cadre : séquences d'action rapide et
+       phases jouées ailleurs que sur la carte.
+       ============================================================ */
+
+    /* ------------------------------------------------------------
+       11 — CREUSET : chaque phase se conclut par un QTE de purge
+       ------------------------------------------------------------ */
+    {
+      id: 'creuset', name: 'FORGE-11 « CREUSET »', color: '#ff8a3e', sides: 5, r: 48,
+      hpMul: 3000, dmgMul: 1.6,
+      hint: 'Il surchauffe : réussis la purge quand elle se déclenche',
+      init(b) {
+        b.heat = 0;
+        b.purges = 0;          // purges réussies
+        b.venting = false;
+        b.spitT = 2.5;
+      },
+      update(b, dt, game) {
+        /* la chaleur monte ; à saturation, il se verrouille et lance le QTE */
+        if (!b.venting) {
+          b.heat += dt * (7 + b.phase * 2.5);
+          b.hint = `Surchauffe ${Math.min(100, Math.round(b.heat))} % — purges réussies : ${b.purges}/3`;
+          if (b.heat >= 100) {
+            b.venting = true;
+            b.invuln = true;
+            game.toast('SURCHAUFFE CRITIQUE', 'bad');
+            NF.QTE.start(game, {
+              type: 'timing',
+              title: 'PURGE THERMIQUE',
+              hint: 'Touche quand le curseur entre dans la zone verte',
+              rounds: b.phase,                 // de plus en plus exigeant
+              speed: 1.05 + b.phase * 0.35,
+              width: 0.24,
+              color: '#ff8a3e',
+              onWin: (g) => {
+                b.venting = false; b.invuln = false; b.heat = 0; b.purges++;
+                const dmg = b.maxHp * 0.14;
+                g.damageEnemy(b, dmg, { silent: true, source: 'qte' });
+                FX.text(b.x, b.y - 60, 'PURGE RÉUSSIE', C.lime, true);
+                g.toast('CIRCUITS PURGÉS', 'good');
+              },
+              onLose: (g) => {
+                b.venting = false; b.invuln = false; b.heat = 30;
+                b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.06);
+                g.toast('LE CREUSET SE RÉGÉNÈRE', 'bad');
+                /* l'arène crache du magma */
+                for (let i = 0; i < 6; i++) {
+                  const pt = U.ringPoint(g.player.x, g.player.y, 60, 260);
+                  g.hazards.push(new NF.Hazard({
+                    kind: 'zone', x: pt.x, y: pt.y, r: 96,
+                    telegraph: .9, duration: .5, dmg: b.dmg,
+                    color: '#ff8a3e', tickRate: .4
+                  }));
+                }
+              }
+            });
+            return;
+          }
+        }
+
+        /* crachats de magma en continu */
+        b.spitT -= dt;
+        if (b.spitT <= 0) {
+          b.spitT = b.phase >= 3 ? 1.9 : 2.8;
+          const p = game.player;
+          for (let i = 0; i < 1 + b.phase; i++) {
+            const pt = U.ringPoint(p.x, p.y, 0, 110);
+            game.hazards.push(new NF.Hazard({
+              kind: 'zone', x: pt.x, y: pt.y, r: 88,
+              telegraph: 1.05, duration: .45, dmg: b.dmg * .9,
+              color: '#ff8a3e', tickRate: .4
+            }));
+          }
+        }
+        b.driftTo(dt, game, 250, .55);
+      },
+      onPhase(b, game) {
+        game.toast('LE CREUSET S\'EMBRASE', 'bad');
+        b.heat = Math.max(b.heat, 55);
+      },
+      draw(b, ctx) {
+        /* jauge de chaleur autour du boss */
+        const k = U.clamp(b.heat / 100, 0, 1);
+        ctx.strokeStyle = '#ff8a3e'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        ctx.globalAlpha = .25;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 15, 0, U.TAU); ctx.stroke();
+        ctx.globalAlpha = .95;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 15, -Math.PI / 2, -Math.PI / 2 + k * U.TAU); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    },
+
+    /* ------------------------------------------------------------
+       12 — ORBITALE : phase 2 jouée en défense orbitale
+       ------------------------------------------------------------ */
+    {
+      id: 'orbitale', name: 'ORBITE-12 « SENTINELLE »', color: '#7dd3ff', sides: 4, r: 46,
+      hpMul: 2500, dmgMul: 1.5,
+      hint: 'Elle finira par t\'expédier en orbite : tiens la ligne',
+      init(b) {
+        b.beamT = 3;
+        b.sent = false;
+      },
+      update(b, dt, game) {
+        b.hint = b.sent ? 'Retour en arène — finis-la' : 'Elle prépare un transfert orbital';
+
+        b.beamT -= dt;
+        if (b.beamT <= 0) {
+          b.beamT = b.phase >= 3 ? 3.2 : 4.4;
+          const a = U.angle(b.x, b.y, game.player.x, game.player.y);
+          for (let i = 0; i < 2; i++) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: a + i * Math.PI / 2,
+              len: 1600, width: 16, telegraph: .9, duration: 1.8,
+              rotSpeed: .38, dmg: b.dmg, color: '#7dd3ff',
+              owner: b, followOwner: true
+            }));
+          }
+        }
+        b.driftTo(dt, game, 280, .6);
+      },
+      onPhase(b, game) {
+        /* au passage en phase 2 : transfert dans la défense orbitale */
+        if (b.phase !== 2 || b.sent) { game.toast('SENTINELLE RECONFIGURÉE', 'bad'); return; }
+        b.sent = true;
+        b.invuln = true;
+        NF.Interlude.start(game, {
+          mode: 'invaders',
+          title: 'TRANSFERT ORBITAL',
+          subtitle: 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
+          duration: 20, hp: 3, color: '#7dd3ff',
+          onWin: (g) => {
+            b.invuln = false;
+            g.damageEnemy(b, b.maxHp * 0.3, { silent: true, source: 'interlude' });
+            FX.text(b.x, b.y - 60, 'RELAIS DÉTRUIT', C.lime, true);
+            g.toast('ORBITE NETTOYÉE — ELLE ENCAISSE', 'good');
+          },
+          onLose: (g) => {
+            b.invuln = false;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.1);
+            g.toast('LA SENTINELLE SE RECHARGE', 'bad');
+          }
+        });
+      }
+    },
+
+    /* ------------------------------------------------------------
+       13 — CONDUIT : deux passages en course d'obstacles
+       ------------------------------------------------------------ */
+    {
+      id: 'conduit', name: 'CIRCUIT-13 « TRACEUR »', color: '#9dff4d', sides: 3, r: 44,
+      hpMul: 2400, dmgMul: 1.55,
+      hint: 'Il t\'aspire dans ses conduits : saute ou percute',
+      init(b) {
+        b.runs = 0;
+        b.dashT = 4;
+      },
+      update(b, dt, game) {
+        b.hint = `Conduits traversés : ${b.runs}/2`;
+        /* charges rectilignes entre deux conduits */
+        b.dashT -= dt;
+        if (b.dashT <= 0) {
+          b.dashT = b.phase >= 3 ? 3.4 : 5;
+          const a = U.angle(b.x, b.y, game.player.x, game.player.y);
+          game.hazards.push(new NF.Hazard({
+            kind: 'beam', x: b.x, y: b.y, angle: a,
+            len: 1500, width: 40, telegraph: .85, duration: .5,
+            dmg: b.dmg * 1.2, color: '#9dff4d', owner: b, followOwner: true
+          }));
+          for (let i = 0; i < 8; i++) {
+            game.enemyShoot(b, a + (i - 3.5) * .16, { speed: 260, dmg: b.dmg * .5, r: 6, color: '#9dff4d' });
+          }
+        }
+        b.driftTo(dt, game, 240, .7);
+      },
+      onPhase(b, game) {
+        if (b.phase > 3 || b.runs >= 2) return;
+        b.runs++;
+        b.invuln = true;
+        NF.Interlude.start(game, {
+          mode: 'conduit',
+          title: 'CONDUIT DE DONNÉES',
+          subtitle: 'DASH ou ULT pour sauter — double saut autorisé',
+          duration: 14 + b.runs * 3, hp: 3, color: '#9dff4d',
+          onWin: (g) => {
+            b.invuln = false;
+            g.damageEnemy(b, b.maxHp * 0.28, { silent: true, source: 'interlude' });
+            g.toast('CONDUIT TRAVERSÉ', 'good');
+          },
+          onLose: (g) => {
+            b.invuln = false;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.08);
+            g.toast('ÉJECTÉ DU CONDUIT', 'bad');
+          }
+        });
+      }
+    },
+
+    /* ------------------------------------------------------------
+       14 — RÉSONANCE : bouclier brisé au martèlement
+       ------------------------------------------------------------ */
+    {
+      id: 'resonance', name: 'ÉCHO-14 « RÉSONANCE »', color: '#c58bff', sides: 8, r: 46,
+      hpMul: 2700, dmgMul: 1.5,
+      hint: 'Son bouclier ne cède qu\'au martèlement',
+      init(b) {
+        b.shielded2 = true;
+        b.invuln = true;
+        b.ringT = 2.5;
+        b.breaks = 0;
+        b.qteT = 3;
+      },
+      update(b, dt, game) {
+        b.hint = b.breaks >= 3
+          ? 'Bouclier hors service — achève-la'
+          : (b.invuln
+            ? 'Bouclier actif — attends la fenêtre de résonance'
+            : `Bouclier brisé (${b.breaks}/3) — frappe !`);
+
+        /* anneaux concentriques à esquiver */
+        b.ringT -= dt;
+        if (b.ringT <= 0) {
+          b.ringT = b.phase >= 3 ? 2.6 : 3.6;
+          game.hazards.push(new NF.Hazard({
+            kind: 'ring', x: b.x, y: b.y, r: 150, rInner: 96,
+            telegraph: .8, duration: 3, grow: 210,
+            dmg: b.dmg, color: '#c58bff', owner: b, followOwner: true, tickRate: .6
+          }));
+        }
+
+        /* le bouclier se reforme et rouvre une fenêtre de martèlement */
+        if (b.invuln) {
+          b.qteT -= dt;
+          if (b.qteT <= 0) {
+            b.qteT = 999;
+            NF.QTE.start(game, {
+              type: 'mash',
+              title: 'BRISER LA RÉSONANCE',
+              hint: 'Martèle l\'écran pour saturer son bouclier',
+              rounds: 1,
+              taps: 16 + Math.min(2, b.breaks) * 7,
+              time: 4.5,
+              color: '#c58bff',
+              onWin: (g) => {
+                b.invuln = false; b.breaks++;
+                b.openT = 9;
+                FX.shockwave(b.x, b.y, 260, '#c58bff', .6);
+                g.toast(b.breaks >= 3 ? 'BOUCLIER HORS SERVICE' : 'BOUCLIER SATURÉ', 'good');
+              },
+              onLose: (g) => {
+                b.qteT = 7;
+                g.hurtPlayer(b.dmg * 1.2, b);
+                g.toast('RÉSONANCE INTACTE', 'bad');
+              }
+            });
+            return;
+          }
+        } else if (b.breaks < 3) {
+          /* au troisième bris le bouclier ne se reforme plus : course finale */
+          b.openT -= dt;
+          if (b.openT <= 0) { b.invuln = true; b.qteT = 4; game.toast('LE BOUCLIER SE REFORME', 'warn'); }
+        }
+
+        b.driftTo(dt, game, 260, .45);
+      },
+      onPhase(b, game) {
+        game.toast('FRÉQUENCE MODIFIÉE', 'bad');
+        b.qteT = Math.min(b.qteT, 2);
+      }
+    },
+
+    /* ------------------------------------------------------------
+       15 — CŒUR DU PROTOCOLE : QTE, orbite, puis affrontement final
+       ------------------------------------------------------------ */
+    {
+      id: 'coeur', name: 'NOYAU-15 « CŒUR DU PROTOCOLE »', color: '#ffd23e', sides: 12, r: 54,
+      hpMul: 2200, dmgMul: 1.65,
+      hint: 'Le protocole lui-même. Il te testera sur tous les tableaux.',
+      init(b) {
+        b.salvoT = 2;
+        b.beamT = 4;
+        b.trialsDone = 0;
+      },
+      update(b, dt, game) {
+        b.hint = `Épreuves franchies : ${b.trialsDone}/2 — phase ${b.phase}`;
+
+        /* salves radiales */
+        b.salvoT -= dt;
+        if (b.salvoT <= 0) {
+          b.salvoT = b.phase >= 3 ? 1.8 : 2.6;
+          const off = U.rand(0, U.TAU);
+          const n = 10 + b.phase * 4;
+          for (let i = 0; i < n; i++) {
+            game.enemyShoot(b, off + i * U.TAU / n, {
+              speed: 200, dmg: b.dmg * .45, r: 6, color: '#ffd23e', life: 7
+            });
+          }
+        }
+
+        /* balayage croisé */
+        b.beamT -= dt;
+        if (b.beamT <= 0) {
+          b.beamT = b.phase >= 3 ? 3.6 : 5.2;
+          const a = U.rand(0, U.TAU);
+          for (let i = 0; i < 3; i++) {
+            game.hazards.push(new NF.Hazard({
+              kind: 'beam', x: b.x, y: b.y, angle: a + i * U.TAU / 3,
+              len: 1800, width: 18, telegraph: .9, duration: 2.4,
+              rotSpeed: .34, dmg: b.dmg, color: '#ffd23e',
+              owner: b, followOwner: true
+            }));
+          }
+        }
+
+        b.driftTo(dt, game, 270, .5);
+      },
+      onPhase(b, game) {
+        b.invuln = true;
+        if (b.phase === 2) {
+          /* première épreuve : purge en trois temps */
+          NF.QTE.start(game, {
+            type: 'timing',
+            title: 'PROTOCOLE — ÉPREUVE 1',
+            hint: 'Trois synchronisations d\'affilée',
+            rounds: 3, speed: 1.7, width: 0.2, color: '#ffd23e',
+            onWin: (g) => {
+              b.invuln = false; b.trialsDone++;
+              g.damageEnemy(b, b.maxHp * 0.12, { silent: true, source: 'qte' });
+              g.toast('ÉPREUVE FRANCHIE', 'good');
+            },
+            onLose: (g) => {
+              b.invuln = false;
+              g.hurtPlayer(b.dmg * 1.6, b);
+              g.toast('ÉPREUVE ÉCHOUÉE', 'bad');
+            }
+          });
+        } else {
+          /* seconde épreuve : défense orbitale */
+          NF.Interlude.start(game, {
+            mode: 'invaders',
+            title: 'PROTOCOLE — ÉPREUVE 2',
+            subtitle: 'Le cœur t\'expulse : tiens la ligne orbitale',
+            duration: 22, hp: 2, color: '#ffd23e',
+            onWin: (g) => {
+              b.invuln = false; b.trialsDone++;
+              g.damageEnemy(b, b.maxHp * 0.2, { silent: true, source: 'interlude' });
+              g.toast('LE CŒUR VACILLE', 'good');
+            },
+            onLose: (g) => {
+              b.invuln = false;
+              b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.08);
+              g.toast('LE CŒUR SE RECOMPOSE', 'bad');
+            }
+          });
+        }
+      },
+      draw(b, ctx) {
+        /* anneaux du cœur */
+        ctx.strokeStyle = '#ffd23e'; ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+          ctx.globalAlpha = .3 - i * .07;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 20 + i * 16, performance.now() / (900 + i * 300), performance.now() / (900 + i * 300) + 2.4);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
     }
   ];
 

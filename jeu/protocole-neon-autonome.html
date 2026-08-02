@@ -242,7 +242,92 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .crystals{font-size:14px;color:var(--violet);font-weight:800}
 .crystals b{color:#fff}
 
-.lab-list,.arsenal-list,.quest-list{display:flex;flex-direction:column;gap:9px;padding-bottom:24px}
+.arsenal-list,.quest-list{display:flex;flex-direction:column;gap:9px;padding-bottom:24px}
+
+/* ============================================================
+   ARBRE DE TALENTS
+   ============================================================ */
+#lab{padding-bottom:calc(var(--safe-b) + 10px);overflow:hidden}
+
+.tree-bar{
+  display:flex;align-items:center;gap:10px;margin:6px 0 8px;
+  background:rgba(10,16,34,.65);border:1px solid var(--line);border-radius:13px;padding:9px 11px;
+}
+.tree-bar .points{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:5px}
+.tree-bar .points b{font-size:22px;color:var(--lime);line-height:1}
+.tree-bar .points span{font-size:11px;color:var(--txt-dim);letter-spacing:.06em;text-transform:uppercase}
+.tree-bar .points span i{font-style:normal}
+.tree-bar .points em{flex-basis:100%;font-style:normal;font-size:10px;color:#4b5c75}
+#btnBuyPoint{flex:none;width:auto;padding:8px 13px;line-height:1.25;font-size:10px;
+  background:rgba(139,92,255,.18);border-color:rgba(139,92,255,.5)}
+#btnBuyPoint em{font-style:normal;font-size:12px;color:#fff;letter-spacing:.02em}
+#btnBuyPoint.poor{opacity:.45}
+
+.tree-viewport{
+  flex:1;min-height:230px;border-radius:15px;overflow:auto;
+  display:grid;place-content:center;place-content:safe center;
+  -webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(62,242,255,.09),transparent 62%),
+    rgba(4,7,18,.75);
+}
+.tree-canvas{position:relative;width:760px;height:760px;transform-origin:0 0;transition:transform .2s}
+.tree-canvas.fit{transform:scale(var(--fit,1))}
+#treeLinks{position:absolute;inset:0;width:760px;height:760px;pointer-events:none}
+#treeLinks line{stroke:rgba(120,150,190,.18);stroke-width:3;stroke-linecap:round}
+#treeLinks line.on{stroke:rgba(62,242,255,.55);stroke-width:4}
+
+.tnode{
+  position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+  background:#0a1024;border:2px solid rgba(120,150,190,.3);color:var(--txt);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  transition:transform .1s,box-shadow .2s,border-color .2s;
+}
+.tnode .tico{font-size:19px;line-height:1;filter:grayscale(1) opacity(.55)}
+.tnode .trank{font-style:normal;font-size:9px;font-weight:800;color:#54657f;letter-spacing:.04em}
+.tnode:active{transform:scale(.92)}
+.tnode.locked{opacity:.4}
+.tnode.ready{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.tnode.ready .tico{filter:none}
+.tnode.owned{background:color-mix(in srgb,var(--c) 16%,#0a1024);border-color:var(--c)}
+.tnode.owned .tico{filter:none}
+.tnode.owned .trank{color:var(--c)}
+.tnode.maxed{box-shadow:0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.tnode.sel{outline:2px solid #fff;outline-offset:3px}
+.tnode.key{width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:18px;border-width:3px}
+.tnode.key .tico{font-size:23px}
+.tnode.core{width:64px;height:64px;margin:-32px 0 0 -32px;border-color:var(--cyan);
+  background:radial-gradient(circle,rgba(62,242,255,.3),#0a1024)}
+.tnode.core .tico{font-size:22px;filter:none}
+
+.tree-detail{
+  margin-top:9px;padding:11px;border-radius:14px;min-height:96px;
+  background:rgba(10,16,34,.75);border:1px solid var(--line);
+}
+.tree-detail .hint{font-size:12px;color:var(--txt-dim);text-align:center;padding:14px 0}
+.tdet-head{display:flex;align-items:center;gap:10px}
+.tdet-head .tico{
+  width:38px;height:38px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:19px;background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid var(--c);
+}
+.tdet-head h4{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.tbranch{font-size:10px;color:var(--txt-dim);letter-spacing:.08em;text-transform:uppercase}
+.trankbig{margin-left:auto;font-size:15px;color:var(--c);font-variant-numeric:tabular-nums}
+.tstep{font-size:12.5px;color:#b9c9de;margin-top:7px}
+.tstep em{font-style:normal;color:var(--txt-dim);font-size:11px}
+.tcur{font-size:11px;color:var(--lime);margin-top:4px}
+.tstate{display:block;margin-top:8px;font-size:11px;color:var(--txt-dim);letter-spacing:.04em}
+.tstate.max{color:var(--lime)}
+.tstate.lock{color:var(--amber)}
+.tbuy{
+  display:block;width:100%;margin-top:9px;padding:11px;border-radius:11px;
+  background:linear-gradient(90deg,rgba(62,242,255,.22),rgba(139,92,255,.22));
+  border:1px solid rgba(62,242,255,.55);color:#fff;
+  font-size:12px;font-weight:900;letter-spacing:.1em;
+}
+.tbuy:active{transform:scale(.97)}
+#btnRespec{margin-top:9px}
 
 .lab-row{
   display:flex;align-items:center;gap:11px;padding:11px;
@@ -401,7 +486,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     </div>
     <div class="menu-actions">
       <button class="btn primary big" data-act="play">LANCER LA PARTIE</button>
-      <button class="btn" data-act="lab">⚛ LABORATOIRE</button>
+      <button class="btn" data-act="lab">⚛ ARBRE DE TALENTS</button>
       <button class="btn" data-act="arsenal">⚔ ARSENAL</button>
       <button class="btn" data-act="quests">✔ QUÊTES <em id="questBadge" class="badge hidden">0</em></button>
       <button class="btn ghost" data-act="help">? COMMENT JOUER</button>
@@ -413,15 +498,34 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     <div class="version">v1.0 — sauvegarde locale (JSON) — <button class="linklike" data-act="reset">réinitialiser la progression</button></div>
   </div>
 
-  <!-- ============ LABORATOIRE (méta-upgrades) ============ -->
+  <!-- ============ ARBRE DE TALENTS ============ -->
   <div id="lab" class="screen panel hidden">
     <header class="panel-head">
       <button class="icon-btn back" data-act="back">←</button>
-      <h2>LABORATOIRE</h2>
+      <h2>TALENTS</h2>
       <div class="crystals">◈ <b id="labCrystals">0</b></div>
     </header>
-    <p class="panel-sub">Améliorations permanentes, conservées entre les parties.</p>
-    <div id="labList" class="lab-list"></div>
+
+    <div class="tree-bar">
+      <div class="points">
+        <b id="ptsFree">0</b><span>point<i id="ptsPlural"></i> à placer</span>
+        <em id="ptsTotal">0 au total</em>
+      </div>
+      <button class="icon-btn" data-act="fitTree" id="btnFit" aria-label="Vue d'ensemble">⤢</button>
+      <button class="btn small" data-act="buyPoint" id="btnBuyPoint">+ 1 POINT<br><em id="ptPrice">◈ 70</em></button>
+    </div>
+
+    <div id="treeViewport" class="tree-viewport">
+      <div id="treeCanvas" class="tree-canvas">
+        <svg id="treeLinks" viewBox="0 0 760 760" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div id="treeDetail" class="tree-detail">
+      <p class="hint">Touche un nœud pour voir ce qu'il apporte.</p>
+    </div>
+
+    <button class="btn ghost small" data-act="respec" id="btnRespec">↺ RÉCUPÉRER TOUS LES POINTS</button>
   </div>
 
   <!-- ============ ARSENAL ============ -->
@@ -466,7 +570,11 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <h3>Boss</h3>
       <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
       <h3>Après la partie</h3>
-      <p>Tu gagnes des <b>cristaux ◈</b> selon ta vague atteinte. Dépense-les au Laboratoire (bonus permanents) et dans l'Arsenal (nouvelles armes).</p>
+      <p>Tu gagnes des <b>cristaux ◈</b> selon ta vague atteinte. Dépense-les dans l'Arsenal (nouvelles armes) et dans l'<b>arbre de talents</b>.</p>
+      <h3>Arbre de talents</h3>
+      <p>Les cristaux achètent des <b>points de talent</b> ; chaque point coûte un peu plus cher que le précédent.
+      Tu places ensuite ces points où tu veux dans l'arbre, en partant du noyau central et en progressant de proche
+      en proche. Rien n'est définitif : le bouton <b>Récupérer tous les points</b> les libère pour les replacer autrement.</p>
     </div>
   </div>
 
@@ -1445,99 +1553,186 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 })(window);
 
-/* ===== js/data/meta.js ===== */
+/* ===== js/data/talents.js ===== */
 /* ============================================================
-   meta.js — améliorations permanentes du Laboratoire
-   Achetées avec des cristaux ◈, conservées entre les parties.
+   talents.js — arbre de talents permanent
+   On part du noyau central et on progresse dans la direction de son choix.
+   Les points s'achètent avec des cristaux (prix croissant) puis se
+   répartissent librement ; ils sont récupérables à tout moment.
    ============================================================ */
 (function (w) {
   'use strict';
   const NF = w.NF;
 
-  /** Coût du niveau `lvl` (0-indexé) */
-  const cost = (base, growth) => lvl => Math.round(base * Math.pow(growth, lvl));
+  /* ---------- Géométrie de l'arbre ---------- */
+  const CENTER = 380;               // l'arbre est dessiné dans un carré de 760
+  const RING_R = [0, 96, 172, 248, 322];
+  NF.TREE_SIZE = 760;
+  NF.TREE_CENTER = CENTER;
 
-  const META = NF.META = [
-    { id: 'power', name: 'Noyau de puissance', icon: '💥', max: 25,
-      desc: l => `+${(l * 6)} % de dégâts`, step: '+6 % dégâts',
-      cost: cost(60, 1.32), apply: (b, l) => b.damage += l * 0.06 },
+  /* ---------- Branches ---------- */
+  const BRANCHES = NF.TALENT_BRANCHES = [
+    { id: 'pow', name: 'Puissance', color: '#ff6b4d', angle: -90 },
+    { id: 'rate', name: 'Cadence', color: '#3ef2ff', angle: -30 },
+    { id: 'surv', name: 'Survie', color: '#9dff4d', angle: 30 },
+    { id: 'mob', name: 'Mobilité', color: '#7dd3ff', angle: 90 },
+    { id: 'loot', name: 'Butin', color: '#c58bff', angle: 150 },
+    { id: 'ars', name: 'Arsenal', color: '#ff3ea5', angle: 210 }
+  ];
+  const branchById = id => BRANCHES.find(b => b.id === id);
 
-    { id: 'vitality', name: 'Structure renforcée', icon: '❤️', max: 25,
-      desc: l => `+${l * 12} PV max`, step: '+12 PV max',
-      cost: cost(55, 1.30), apply: (b, l) => b.maxHp += l * 12 },
+  /* ---------- Nœuds ----------
+     cost = points de talent par rang ; max = nombre de rangs         */
+  const T = NF.TALENTS = [
+    { id: 'core', branch: null, ring: 0, name: 'Noyau', icon: '✦', max: 0, cost: 0,
+      step: 'Point de départ de l\'arbre', apply() { } },
 
-    { id: 'rate', name: 'Dissipateur', icon: '🌀', max: 20,
-      desc: l => `+${l * 4} % de cadence`, step: '+4 % cadence',
-      cost: cost(80, 1.34), apply: (b, l) => b.fireRate += l * 0.04 },
+    /* ---- Puissance ---- */
+    { id: 'pow1', branch: 'pow', ring: 1, name: 'Surcharge', icon: '💥', max: 6, cost: 1,
+      step: '+5 % de dégâts', apply: (b, r) => b.damage += r * 0.05 },
+    { id: 'pow2', branch: 'pow', ring: 2, name: 'Munitions creuses', icon: '💢', max: 5, cost: 1,
+      step: '+8 % de dégâts critiques et +1,5 % de chance de critique',
+      apply: (b, r) => { b.critMult += r * 0.08; b.crit += r * 0.015; } },
+    { id: 'pow3', branch: 'pow', ring: 3, name: 'Noyau perforant', icon: '➰', max: 3, cost: 2,
+      step: '+1 ennemi traversé par projectile', apply: (b, r) => b.pierce += r },
+    { id: 'powK', branch: 'pow', ring: 4, name: 'Détonation critique', icon: '☄️', max: 1, cost: 3, key: true,
+      step: 'Chaque coup critique déclenche une explosion',
+      apply: (b, r) => { if (r) b.critExplode = true; } },
 
-    { id: 'speed', name: 'Exosquelette', icon: '👟', max: 12,
-      desc: l => `+${l * 3} % de vitesse`, step: '+3 % vitesse',
-      cost: cost(90, 1.35), apply: (b, l) => b.moveSpeed += l * 0.03 },
+    /* ---- Cadence ---- */
+    { id: 'rate1', branch: 'rate', ring: 1, name: 'Dissipateur', icon: '🌀', max: 6, cost: 1,
+      step: '+4 % de cadence de tir', apply: (b, r) => b.fireRate += r * 0.04 },
+    { id: 'rate2', branch: 'rate', ring: 2, name: 'Accélérateur', icon: '⏩', max: 5, cost: 1,
+      step: '+6 % de vitesse et +3 % de taille des projectiles',
+      apply: (b, r) => { b.projSpeed += r * 0.06; b.projSize += r * 0.03; } },
+    { id: 'rate3', branch: 'rate', ring: 3, name: 'Chargeur étendu', icon: '🧊', max: 4, cost: 2,
+      step: '+3 % de cadence de tir', apply: (b, r) => b.fireRate += r * 0.03 },
+    { id: 'rateK', branch: 'rate', ring: 4, name: 'Surcadence', icon: '⚡', max: 1, cost: 3, key: true,
+      step: '+18 % de cadence de tir', apply: (b, r) => b.fireRate += r * 0.18 },
 
-    { id: 'armor', name: 'Alliage dense', icon: '🛡️', max: 12,
-      desc: l => `−${l * 3} % de dégâts subis`, step: '−3 % dégâts subis',
-      cost: cost(120, 1.38), apply: (b, l) => b.armor += l * 0.03 },
+    /* ---- Survie ---- */
+    { id: 'surv1', branch: 'surv', ring: 1, name: 'Structure renforcée', icon: '❤️', max: 6, cost: 1,
+      step: '+10 PV max', apply: (b, r) => b.maxHp += r * 10 },
+    { id: 'surv2', branch: 'surv', ring: 2, name: 'Alliage dense', icon: '🛡️', max: 5, cost: 1,
+      step: '−2,5 % de dégâts subis', apply: (b, r) => b.armor += r * 0.025 },
+    { id: 'surv3', branch: 'surv', ring: 3, name: 'Essaim de nanites', icon: '🩹', max: 4, cost: 2,
+      step: '+0,35 PV régénéré par seconde', apply: (b, r) => b.regen += r * 0.35 },
+    { id: 'survK', branch: 'surv', ring: 4, name: 'Seconde peau', icon: '🔵', max: 1, cost: 3, key: true,
+      step: 'Un bouclier absorbe un coup toutes les 12 s',
+      apply: (b, r) => { b.shieldCd += r; } },
 
-    { id: 'crit', name: 'Processeur de visée', icon: '🎯', max: 15,
-      desc: l => `+${l * 2} % de critique`, step: '+2 % critique',
-      cost: cost(110, 1.34), apply: (b, l) => b.crit += l * 0.02 },
+    /* ---- Mobilité ---- */
+    { id: 'mob1', branch: 'mob', ring: 1, name: 'Exosquelette', icon: '👟', max: 6, cost: 1,
+      step: '+3 % de vitesse de déplacement', apply: (b, r) => b.moveSpeed += r * 0.03 },
+    { id: 'mob2', branch: 'mob', ring: 2, name: 'Injecteurs', icon: '💨', max: 5, cost: 1,
+      step: '−4 % de recharge du dash', apply: (b, r) => b.dashCd += r * 0.04 },
+    { id: 'mob3', branch: 'mob', ring: 3, name: 'Champ entropique', icon: '🕸️', max: 3, cost: 2,
+      step: 'Ralentit de 6 % les ennemis proches', apply: (b, r) => b.slowAura += r * 0.06 },
+    { id: 'mobK', branch: 'mob', ring: 4, name: 'Dash de phase', icon: '🌀', max: 1, cost: 3, key: true,
+      step: 'Le dash traverse les ennemis et les blesse au passage',
+      apply: (b, r) => { if (r) b.dashPhase = true; } },
 
-    { id: 'regen', name: 'Essaim de nanites', icon: '🩹', max: 12,
-      desc: l => `+${(l * 0.3).toFixed(1)} PV/s`, step: '+0,3 PV/s',
-      cost: cost(140, 1.36), apply: (b, l) => b.regen += l * 0.3 },
+    /* ---- Butin ---- */
+    { id: 'loot1', branch: 'loot', ring: 1, name: 'Raffineur', icon: '◈', max: 6, cost: 1,
+      step: '+6 % de cristaux gagnés', apply: (b, r) => b.greed += r * 0.06 },
+    { id: 'loot2', branch: 'loot', ring: 2, name: 'Bobine de collecte', icon: '🧲', max: 5, cost: 1,
+      step: '+10 % de rayon de collecte', apply: (b, r) => b.magnet += r * 0.10 },
+    { id: 'loot3', branch: 'loot', ring: 3, name: 'Cortex d\'analyse', icon: '📈', max: 4, cost: 2,
+      step: '+5 % d\'expérience gagnée', apply: (b, r) => b.xpGain += r * 0.05 },
+    { id: 'lootK', branch: 'loot', ring: 4, name: 'Amorçage', icon: '⏫', max: 1, cost: 3, key: true,
+      step: 'Chaque partie démarre avec 2 niveaux d\'avance',
+      apply: (b, r) => { b.startLevel += r * 2; } },
 
-    { id: 'magnet', name: 'Bobine de collecte', icon: '🧲', max: 10,
-      desc: l => `+${l * 12} % de rayon de collecte`, step: '+12 % collecte',
-      cost: cost(70, 1.3), apply: (b, l) => b.magnet += l * 0.12 },
-
-    { id: 'xp', name: 'Cortex d\'analyse', icon: '📈', max: 12,
-      desc: l => `+${l * 6} % d'expérience`, step: '+6 % XP',
-      cost: cost(100, 1.33), apply: (b, l) => b.xpGain += l * 0.06 },
-
-    { id: 'dash', name: 'Injecteurs', icon: '💨', max: 10,
-      desc: l => `−${l * 5} % de recharge du dash`, step: '−5 % recharge dash',
-      cost: cost(130, 1.34), apply: (b, l) => b.dashCd += l * 0.05 },
-
-    { id: 'ult', name: 'Réacteur d\'ultime', icon: '🔋', max: 10,
-      desc: l => `+${l * 10} % de charge d'ultime`, step: '+10 % charge ultime',
-      cost: cost(150, 1.35), apply: (b, l) => b.ultGain += l * 0.10 },
-
-    { id: 'greed', name: 'Raffineur', icon: '◈', max: 15,
-      desc: l => `+${l * 8} % de cristaux gagnés`, step: '+8 % cristaux',
-      cost: cost(120, 1.31), apply: (b, l) => b.greed += l * 0.08 },
-
-    { id: 'luck', name: 'Générateur stochastique', icon: '🍀', max: 10,
-      desc: l => `+${l * 5} % de chance`, step: '+5 % chance',
-      cost: cost(200, 1.38), apply: (b, l) => b.luck += l * 0.05 },
-
-    { id: 'startlvl', name: 'Amorçage', icon: '⏫', max: 5,
-      desc: l => `Commence la partie niveau ${1 + l}`, step: '+1 niveau de départ',
-      cost: cost(400, 1.6), apply: (b, l) => b.startLevel += l },
-
-    { id: 'slots', name: 'Rack d\'armement', icon: '⚔️', max: 2,
-      desc: l => `+${l} emplacement d'arme`, step: '+1 emplacement d\'arme',
-      cost: cost(900, 2.4), apply: (b, l) => b.slots += l },
-
-    { id: 'revive', name: 'Sauvegarde persistante', icon: '💾', max: 2,
-      desc: l => `${l} résurrection${l > 1 ? 's' : ''} par partie`, step: '+1 résurrection',
-      cost: cost(1200, 2.6), apply: (b, l) => b.revives += l }
+    /* ---- Arsenal ---- */
+    { id: 'ars1', branch: 'ars', ring: 1, name: 'Condensateur', icon: '🔋', max: 6, cost: 1,
+      step: '+8 % de charge d\'ultime', apply: (b, r) => b.ultGain += r * 0.08 },
+    { id: 'ars2', branch: 'ars', ring: 2, name: 'Générateur stochastique', icon: '🍀', max: 5, cost: 1,
+      step: '+3 % de chance', apply: (b, r) => b.luck += r * 0.03 },
+    { id: 'ars3', branch: 'ars', ring: 3, name: 'Sauvegarde persistante', icon: '💾', max: 2, cost: 2,
+      step: '+1 résurrection par partie', apply: (b, r) => b.revives += r },
+    { id: 'arsK', branch: 'ars', ring: 4, name: 'Rack d\'armement', icon: '⚔️', max: 1, cost: 3, key: true,
+      step: '+1 emplacement d\'arme', apply: (b, r) => b.slots += r }
   ];
 
-  NF.metaById = id => META.find(m => m.id === id);
+  NF.talentById = id => T.find(t => t.id === id);
 
-  /** Statistiques de base + effets du Laboratoire */
-  NF.baseStats = function (levels) {
+  /* ---------- Position à l'écran ---------- */
+  for (const t of T) {
+    if (!t.branch) { t.x = CENTER; t.y = CENTER; t.color = '#e8f4ff'; continue; }
+    const br = branchById(t.branch);
+    const a = br.angle * Math.PI / 180;
+    t.x = CENTER + Math.cos(a) * RING_R[t.ring];
+    t.y = CENTER + Math.sin(a) * RING_R[t.ring];
+    t.color = br.color;
+    t.branchName = br.name;
+  }
+
+  /* ---------- Liaisons ----------
+     Chaque branche part du noyau ; les anneaux 2 sont reliés entre
+     branches voisines, ce qui permet de passer de l'une à l'autre. */
+  const LINKS = NF.TALENT_LINKS = [];
+  for (const br of BRANCHES) {
+    LINKS.push(['core', br.id + '1']);
+    LINKS.push([br.id + '1', br.id + '2']);
+    LINKS.push([br.id + '2', br.id + '3']);
+    LINKS.push([br.id + '3', br.id + 'K']);
+  }
+  for (let i = 0; i < BRANCHES.length; i++) {
+    const a = BRANCHES[i], b = BRANCHES[(i + 1) % BRANCHES.length];
+    LINKS.push([a.id + '2', b.id + '2']);
+  }
+
+  /* Table d'adjacence */
+  const ADJ = Object.create(null);
+  for (const [a, b] of LINKS) {
+    (ADJ[a] || (ADJ[a] = [])).push(b);
+    (ADJ[b] || (ADJ[b] = [])).push(a);
+  }
+  NF.talentNeighbours = id => ADJ[id] || [];
+
+  /** Un nœud est accessible s'il touche le noyau ou un nœud déjà investi. */
+  NF.talentUnlocked = function (id, talents) {
+    if (id === 'core') return true;
+    for (const n of NF.talentNeighbours(id)) {
+      if (n === 'core') return true;
+      if ((talents[n] || 0) > 0) return true;
+    }
+    return false;
+  };
+
+  /** Points dépensés dans l'arbre */
+  NF.talentSpent = function (talents) {
+    let n = 0;
+    for (const id in talents) {
+      const t = NF.talentById(id);
+      if (t) n += t.cost * talents[id];
+    }
+    return n;
+  };
+
+  /** Prix en cristaux du point de talent numéro `owned` (0-indexé) */
+  NF.talentPointCost = function (owned) {
+    return Math.round(70 * Math.pow(1.09, owned) / 5) * 5;
+  };
+
+  /* ============================================================
+     Statistiques de base + effets de l'arbre
+     ============================================================ */
+  NF.baseStats = function (talents) {
     const b = {
       maxHp: 100, damage: 1, fireRate: 1, moveSpeed: 1,
       armor: 0, crit: 0.05, critMult: 1.8, regen: 0,
       magnet: 1, xpGain: 1, pierce: 0, projSpeed: 1, projSize: 1,
       dashCd: 0, ultGain: 1, greed: 0, luck: 0,
-      lifesteal: 0, thorns: 0, slowAura: 0,
-      startLevel: 0, slots: 4, revives: 0
+      lifesteal: 0, thorns: 0, slowAura: 0, shieldCd: 0,
+      startLevel: 0, slots: 4, revives: 0,
+      critExplode: false, dashPhase: false
     };
-    for (const m of META) {
-      const l = (levels && levels[m.id]) || 0;
-      if (l > 0) m.apply(b, l);
+    if (talents) {
+      for (const t of T) {
+        const r = talents[t.id] || 0;
+        if (r > 0) t.apply(b, r);
+      }
     }
     return b;
   };
@@ -1688,6 +1883,9 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 (function (w) {
   'use strict';
   const NF = w.NF, U = NF.U, FX = NF.FX;
+
+  /** Liseré d'alerte porté par tous les tirs ennemis */
+  const DANGER = '#ff2d55';
 
   /* ------------------------------------------------------------
      Projectile du joueur
@@ -1866,10 +2064,30 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (this.x < -60 || this.y < -60 || this.x > W.w + 60 || this.y > W.h + 60) this.dead = true;
     }
 
+    /* Losange anguleux à liseré rouge : impossible à confondre avec un
+       éclat d'XP (rond, doux, cyan) même quand la teinte de l'ennemi est claire. */
     draw(ctx) {
-      NF.Draw.glowCircle(ctx, this.x, this.y, this.r, this.color, .3);
-      ctx.globalAlpha = .8; ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.r * .35, 0, U.TAU); ctx.fill();
+      const r = this.r;
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle + this.t * 7);
+
+      ctx.globalAlpha = .2; ctx.fillStyle = DANGER;
+      ctx.beginPath(); ctx.arc(0, 0, r * 2.1, 0, U.TAU); ctx.fill();
+
+      ctx.globalAlpha = 1; ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.moveTo(r * 1.75, 0);
+      ctx.lineTo(0, r * .74);
+      ctx.lineTo(-r * 1.75, 0);
+      ctx.lineTo(0, -r * .74);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = DANGER; ctx.lineWidth = 2; ctx.stroke();
+
+      ctx.fillStyle = '#2a0713';
+      ctx.beginPath(); ctx.arc(0, 0, r * .3, 0, U.TAU); ctx.fill();
+      ctx.restore();
       ctx.globalAlpha = 1;
     }
   }
@@ -2023,9 +2241,18 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     draw(ctx) {
       const bob = Math.sin(this.t * 5) * 1.6;
       switch (this.kind) {
-        case 'xp':
-          NF.Draw.glowCircle(ctx, this.x, this.y + bob, 4, NF.C.cyan, .3);
+        case 'xp': {
+          /* Éclat rond et doux, cœur clair : lecture opposée aux tirs
+             ennemis, anguleux et cerclés de rouge. */
+          const pulse = .85 + .15 * Math.sin(this.t * 4);
+          ctx.globalAlpha = .15 * pulse; ctx.fillStyle = NF.C.cyan;
+          ctx.beginPath(); ctx.arc(this.x, this.y + bob, 13 * pulse, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = .55; ctx.fillStyle = NF.C.cyanD;
+          ctx.beginPath(); ctx.arc(this.x, this.y + bob, 5.5, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = 1; ctx.fillStyle = '#d8fbff';
+          ctx.beginPath(); ctx.arc(this.x, this.y + bob, 2.8, 0, U.TAU); ctx.fill();
           break;
+        }
         case 'heal':
           ctx.fillStyle = NF.C.lime; ctx.globalAlpha = .25;
           ctx.beginPath(); ctx.arc(this.x, this.y + bob, 15, 0, U.TAU); ctx.fill();
@@ -2109,7 +2336,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
     /** Nouvelle partie */
     reset(game) {
-      const base = NF.baseStats(NF.Save.data.meta);
+      const base = NF.baseStats(NF.Save.data.talents);
       this.base = base;
 
       this.x = game.world.w / 2;
@@ -2145,7 +2372,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.recompute();
       this.hp = this.stats.maxHp;
 
-      // niveaux de départ offerts par le Laboratoire
+      // niveaux de départ offerts par l'arbre de talents
       for (let i = 0; i < base.startLevel; i++) this.pendingLevels++;
     }
 
@@ -2173,8 +2400,9 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       s.thorns = b.thorns + m.thorns;
       s.slowAura = b.slowAura + m.slowAura;
       if (this.hp > s.maxHp) this.hp = s.maxHp;
-      this.shieldMax = m.shieldCd > 0 ? 1 : 0;
-      this.shieldPeriod = m.shieldCd > 0 ? 12 / m.shieldCd : 0;
+      const shieldStacks = (b.shieldCd || 0) + m.shieldCd;
+      this.shieldMax = shieldStacks > 0 ? 1 : 0;
+      this.shieldPeriod = shieldStacks > 0 ? 12 / shieldStacks : 0;
     }
 
     /* ---------------- Boucle ---------------- */
@@ -2191,6 +2419,17 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         this.vy = Math.sin(this.dashAngle) * DASH_SPEED;
         this.trailT += dt;
         if (this.trailT > 0.015) { this.trailT = 0; FX.trail(this.x, this.y, C.cyan, 4); }
+        /* talent « Dash de phase » : le sillage blesse les ennemis traversés */
+        if (this.base.dashPhase) {
+          this.dashHit = this.dashHit || new Set();
+          for (const e of game.enemies) {
+            if (e.dead || this.dashHit.has(e.uid)) continue;
+            if (U.dist2(this.x, this.y, e.x, e.y) < (this.r + e.r + 8) * (this.r + e.r + 8)) {
+              this.dashHit.add(e.uid);
+              game.damageEnemy(e, 60 * this.stats.damage, { fromX: this.x, fromY: this.y, source: 'dash', knock: 220 });
+            }
+          }
+        }
       } else {
         const sp = this.stats.moveSpeed;
         const tx = mv.x * sp, ty = mv.y * sp;
@@ -2211,6 +2450,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         this.dashAngle = (mv.x || mv.y) ? Math.atan2(mv.y, mv.x) : this.facing;
         this.dashT = DASH_TIME;
         this.dashCd = this.stats.dashCd;
+        if (this.dashHit) this.dashHit.clear();
         this.invuln = Math.max(this.invuln, DASH_TIME + 0.14);
         FX.burst(this.x, this.y, 10, C.cyan, { speed: 260, life: .3, dir: this.dashAngle + Math.PI, spread: 1.2 });
         U.buzz(10);
@@ -3294,7 +3534,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   const NF = w.NF;
 
   const KEY = 'protocole-neon.save.v1';
-  const VERSION = 1;
+  const VERSION = 2;
 
   function fresh() {
     return {
@@ -3306,12 +3546,32 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       runs: 0,
       totalKills: 0,
       playTime: 0,
-      meta: {},                       // { idAmélioration: niveau }
+      talentPoints: 0,                // points achetés (placés ou non)
+      talents: {},                    // { idNœud: rang }
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
       settings: { haptics: true, shake: true },
       updated: 0
     };
+  }
+
+  /* Anciens tarifs du Laboratoire, conservés pour rembourser les
+     sauvegardes créées avant l'arbre de talents. */
+  const LEGACY_META_COST = {
+    power: [60, 1.32], vitality: [55, 1.30], rate: [80, 1.34], speed: [90, 1.35],
+    armor: [120, 1.38], crit: [110, 1.34], regen: [140, 1.36], magnet: [70, 1.30],
+    xp: [100, 1.33], dash: [130, 1.34], ult: [150, 1.35], greed: [120, 1.31],
+    luck: [200, 1.38], startlvl: [400, 1.60], slots: [900, 2.40], revive: [1200, 2.60]
+  };
+
+  function refundLegacyMeta(meta) {
+    let total = 0;
+    for (const id in meta) {
+      const c = LEGACY_META_COST[id];
+      if (!c) continue;
+      for (let l = 0; l < meta[id]; l++) total += Math.round(c[0] * Math.pow(c[1], l));
+    }
+    return total;
   }
 
   const Save = NF.Save = {
@@ -3339,14 +3599,37 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (!obj || typeof obj !== 'object') return base;
       const d = Object.assign(base, obj);
       d.v = VERSION;
-      d.meta = Object.assign({}, obj.meta || {});
       d.quests = Object.assign({}, obj.quests || {});
+      d.talents = Object.assign({}, obj.talents || {});
       d.settings = Object.assign(base.settings, obj.settings || {});
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
       if (d.weapons.indexOf('blaster') < 0) d.weapons.push('blaster');
+
+      /* v1 → v2 : le Laboratoire devient un arbre de talents.
+         Les anciennes améliorations sont remboursées en cristaux. */
+      if (obj.meta && Object.keys(obj.meta).length) {
+        this.pendingRefund = refundLegacyMeta(obj.meta);
+        d.crystals = (Number(d.crystals) || 0) + this.pendingRefund;
+      }
+      delete d.meta;
+
       // garde-fous numériques
-      for (const k of ['crystals', 'totalCrystals', 'bestWave', 'bestTime', 'runs', 'totalKills', 'playTime']) {
+      for (const k of ['crystals', 'totalCrystals', 'bestWave', 'bestTime', 'runs', 'totalKills', 'playTime', 'talentPoints']) {
         d[k] = Math.max(0, Number(d[k]) || 0);
+      }
+      /* Rangs incohérents (nœud supprimé, valeur trafiquée) : on nettoie */
+      for (const id in d.talents) {
+        const t = NF.talentById(id);
+        if (!t || t.max <= 0) { delete d.talents[id]; continue; }
+        d.talents[id] = Math.max(0, Math.min(t.max, Math.round(Number(d.talents[id]) || 0)));
+        if (!d.talents[id]) delete d.talents[id];
+      }
+      /* Jamais plus de points placés que de points possédés */
+      while (NF.talentSpent(d.talents) > d.talentPoints) {
+        const ids = Object.keys(d.talents);
+        if (!ids.length) break;
+        const last = ids[ids.length - 1];
+        if (--d.talents[last] <= 0) delete d.talents[last];
       }
       return d;
     },
@@ -3388,18 +3671,45 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       return true;
     },
 
-    /* ---------- Laboratoire ---------- */
-    metaLevel(id) { return this.data.meta[id] || 0; },
-    buyMeta(id) {
-      const m = NF.metaById(id);
-      if (!m) return false;
-      const lvl = this.metaLevel(id);
-      if (lvl >= m.max) return false;
-      const price = m.cost(lvl);
+    /* ---------- Arbre de talents ---------- */
+    talentRank(id) { return this.data.talents[id] || 0; },
+
+    /** Points possédés / placés / disponibles */
+    talentPointsFree() {
+      return this.data.talentPoints - NF.talentSpent(this.data.talents);
+    },
+
+    /** Prix du prochain point de talent */
+    nextPointCost() { return NF.talentPointCost(this.data.talentPoints); },
+
+    /** Achète un point de talent avec des cristaux */
+    buyTalentPoint() {
+      const price = this.nextPointCost();
       if (!this.spend(price)) return false;
-      this.data.meta[id] = lvl + 1;
+      this.data.talentPoints++;
       this.save();
       return true;
+    },
+
+    /** Place un point dans un nœud. Renvoie une raison d'échec, ou null. */
+    investTalent(id) {
+      const t = NF.talentById(id);
+      if (!t || t.max <= 0) return 'inconnu';
+      const rank = this.talentRank(id);
+      if (rank >= t.max) return 'max';
+      if (!NF.talentUnlocked(id, this.data.talents)) return 'verrouillé';
+      if (this.talentPointsFree() < t.cost) return 'points';
+      this.data.talents[id] = rank + 1;
+      this.save();
+      return null;
+    },
+
+    /** Libère tous les points placés (ils restent acquis) */
+    respecTalents() {
+      const freed = NF.talentSpent(this.data.talents);
+      this.data.talents = {};
+      this.save();
+      return freed;
     },
 
     /* ---------- Arsenal ---------- */
@@ -3763,7 +4073,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 /* ===== js/ui/menus.js ===== */
 /* ============================================================
-   menus.js — écrans hors jeu : menu, laboratoire, arsenal, quêtes,
+   menus.js — écrans hors jeu : menu, arbre de talents, arsenal, quêtes,
    pause, montée de niveau, fin de partie, sauvegarde JSON
    ============================================================ */
 (function (w) {
@@ -3807,7 +4117,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     act(a, el) {
       switch (a) {
         case 'play': NF.game.start(); break;
-        case 'lab': this.renderLab(); this.show('lab'); break;
+        case 'lab': this._treeCentered = false; this.renderLab(); this.show('lab'); break;
         case 'arsenal': this.renderArsenal(); this.show('arsenal'); break;
         case 'quests': this.renderQuests(); this.show('quests'); break;
         case 'help': this.show('help'); break;
@@ -3823,9 +4133,24 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
             NF.Save.reset(); this.renderMenu();
           }
           break;
-        case 'buyMeta': {
-          const id = el.dataset.id;
-          if (NF.Save.buyMeta(id)) { U.buzz(12); this.renderLab(); }
+        case 'fitTree': this.toggleFit(); break;
+        case 'buyPoint':
+          if (NF.Save.buyTalentPoint()) { U.buzz(12); this.renderLab(); if (this._selTalent) this.selectTalent(this._selTalent); }
+          break;
+        case 'invest': {
+          const why = NF.Save.investTalent(el.dataset.id);
+          if (!why) { U.buzz(16); this.renderLab(); this.selectTalent(el.dataset.id); }
+          break;
+        }
+        case 'respec': {
+          const n = NF.talentSpent(NF.Save.data.talents);
+          if (!n) break;
+          if (confirm(`Récupérer les ${n} points placés pour les réattribuer ?`)) {
+            NF.Save.respecTalents();
+            U.buzz(20);
+            this.renderLab();
+            if (this._selTalent) this.selectTalent(this._selTalent);
+          }
           break;
         }
         case 'buyWeapon': {
@@ -3866,30 +4191,148 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     },
 
     /* ============================================================
-       Laboratoire
+       Arbre de talents
        ============================================================ */
     renderLab() {
-      $('labCrystals').textContent = U.fmt(NF.Save.data.crystals);
-      const box = $('labList');
-      box.innerHTML = NF.META.map(m => {
-        const lvl = NF.Save.metaLevel(m.id);
-        const maxed = lvl >= m.max;
-        const price = maxed ? 0 : m.cost(lvl);
-        const poor = !maxed && NF.Save.data.crystals < price;
-        return `
-        <div class="lab-row">
-          <div class="lab-ico">${m.icon}</div>
-          <div class="lab-info">
-            <h4>${m.name}</h4>
-            <p>${m.step} — actuel : ${m.desc(lvl)}</p>
-            <div class="lvl">Niveau ${lvl} / ${m.max}</div>
-          </div>
-          <button class="lab-buy ${maxed ? 'max' : (poor ? 'poor' : '')}"
-                  data-act="${maxed ? '' : 'buyMeta'}" data-id="${m.id}">
-            ${maxed ? 'MAX' : '◈ ' + U.fmt(price)}
-          </button>
-        </div>`;
+      const S = NF.Save, d = S.data;
+      $('labCrystals').textContent = U.fmt(d.crystals);
+
+      /* --- bandeau : points et achat --- */
+      const free = S.talentPointsFree();
+      const price = S.nextPointCost();
+      $('ptsFree').textContent = free;
+      $('ptsPlural').textContent = free > 1 ? 's' : '';
+      $('ptsTotal').textContent = d.talentPoints + ' acheté' + (d.talentPoints > 1 ? 's' : '');
+      $('ptPrice').textContent = '◈ ' + U.fmt(price);
+      $('btnBuyPoint').classList.toggle('poor', d.crystals < price);
+      $('btnRespec').classList.toggle('hidden', NF.talentSpent(d.talents) === 0);
+
+      this.buildTree();
+      this.paintTree();
+      if (!this._treeCentered) {
+        this._treeCentered = true;
+        requestAnimationFrame(() => this.centerTree());
+      }
+    },
+
+    /** Construit une fois le SVG des liaisons et les boutons des nœuds */
+    buildTree() {
+      if (this._treeBuilt) return;
+      this._treeBuilt = true;
+      const canvas = $('treeCanvas');
+      const svg = $('treeLinks');
+
+      svg.setAttribute('width', NF.TREE_SIZE);
+      svg.setAttribute('height', NF.TREE_SIZE);
+      svg.innerHTML = NF.TALENT_LINKS.map(([a, b]) => {
+        const A = NF.talentById(a), B = NF.talentById(b);
+        return `<line data-link="${a}|${b}" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" />`;
       }).join('');
+
+      for (const t of NF.TALENTS) {
+        const el = document.createElement('button');
+        el.className = 'tnode' + (t.key ? ' key' : '') + (t.id === 'core' ? ' core' : '');
+        el.dataset.id = t.id;
+        el.style.left = t.x + 'px';
+        el.style.top = t.y + 'px';
+        el.style.setProperty('--c', t.color);
+        el.innerHTML = `<span class="tico">${t.icon}</span><em class="trank"></em>`;
+        el.addEventListener('click', () => this.selectTalent(t.id));
+        canvas.appendChild(el);
+      }
+    },
+
+    /** Met à jour l'état visuel de chaque nœud et de chaque liaison */
+    paintTree() {
+      const talents = NF.Save.data.talents;
+      const free = NF.Save.talentPointsFree();
+      for (const t of NF.TALENTS) {
+        const el = $('treeCanvas').querySelector(`[data-id="${t.id}"]`);
+        const rank = talents[t.id] || 0;
+        const unlocked = NF.talentUnlocked(t.id, talents);
+        const maxed = t.max > 0 && rank >= t.max;
+        el.classList.toggle('locked', !unlocked && t.id !== 'core');
+        el.classList.toggle('owned', rank > 0 || t.id === 'core');
+        el.classList.toggle('maxed', maxed);
+        el.classList.toggle('ready', unlocked && !maxed && t.max > 0 && free >= t.cost);
+        el.classList.toggle('sel', this._selTalent === t.id);
+        el.querySelector('.trank').textContent = t.max > 0 ? rank + '/' + t.max : '';
+      }
+      for (const line of $('treeLinks').children) {
+        const [a, b] = line.dataset.link.split('|');
+        const on = (a === 'core' || (talents[a] || 0) > 0) && (b === 'core' || (talents[b] || 0) > 0);
+        line.classList.toggle('on', on);
+      }
+    },
+
+    centerTree() {
+      const vp = $('treeViewport');
+      vp.scrollLeft = (vp.scrollWidth - vp.clientWidth) / 2;
+      vp.scrollTop = (vp.scrollHeight - vp.clientHeight) / 2;
+    },
+
+    /** Vue d'ensemble : l'arbre entier tient dans la largeur disponible */
+    toggleFit() {
+      const cv = $('treeCanvas'), vp = $('treeViewport');
+      this._fit = !this._fit;
+      const k = Math.min(1, (vp.clientWidth - 8) / NF.TREE_SIZE);
+      cv.style.setProperty('--fit', k);
+      cv.style.width = cv.style.height = this._fit ? (NF.TREE_SIZE * k) + 'px' : NF.TREE_SIZE + 'px';
+      cv.classList.toggle('fit', this._fit);
+      $('btnFit').classList.toggle('on', this._fit);
+      requestAnimationFrame(() => this._selTalent ? this.centerOn(this._selTalent) : this.centerTree());
+    },
+
+    /** Amène un nœud au centre de la fenêtre de l'arbre */
+    centerOn(id) {
+      const t = NF.talentById(id);
+      if (!t) return;
+      const vp = $('treeViewport');
+      const k = this._fit ? Math.min(1, (vp.clientWidth - 8) / NF.TREE_SIZE) : 1;
+      vp.scrollTo({
+        left: t.x * k - vp.clientWidth / 2,
+        top: t.y * k - vp.clientHeight / 2,
+        behavior: 'smooth'
+      });
+    },
+
+    selectTalent(id) {
+      this._selTalent = id;
+      const t = NF.talentById(id);
+      const talents = NF.Save.data.talents;
+      const rank = talents[id] || 0;
+      const unlocked = NF.talentUnlocked(id, talents);
+      const free = NF.Save.talentPointsFree();
+      const maxed = t.max > 0 && rank >= t.max;
+
+      let action = '';
+      if (t.max <= 0) {
+        action = '<span class="tstate">Toujours actif</span>';
+      } else if (maxed) {
+        action = '<span class="tstate max">Rang maximum</span>';
+      } else if (!unlocked) {
+        action = '<span class="tstate lock">Investis d\'abord dans un nœud voisin</span>';
+      } else if (free < t.cost) {
+        action = `<span class="tstate lock">${t.cost} point${t.cost > 1 ? 's' : ''} requis — il t'en reste ${free}</span>`;
+      } else {
+        action = `<button class="tbuy" data-act="invest" data-id="${id}">PLACER ${t.cost} POINT${t.cost > 1 ? 'S' : ''}</button>`;
+      }
+
+      const cur = rank > 0 ? `<div class="tcur">Cumul actuel : ${describe(t, rank)}</div>` : '';
+      $('treeDetail').innerHTML = `
+        <div class="tdet-head" style="--c:${t.color}">
+          <span class="tico">${t.icon}</span>
+          <div>
+            <h4>${t.name}</h4>
+            <span class="tbranch">${t.branchName || 'Noyau'}${t.key ? ' · talent majeur' : ''}</span>
+          </div>
+          <b class="trankbig">${t.max > 0 ? rank + ' / ' + t.max : '—'}</b>
+        </div>
+        <p class="tstep">${t.step}${t.max > 1 ? ' <em>par rang</em>' : ''}</p>
+        ${cur}
+        ${action}`;
+      this.paintTree();
+      this.centerOn(id);
     },
 
     /* ============================================================
@@ -4004,6 +4447,53 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this.show('gameover');
     }
   };
+
+  /* ------------------------------------------------------------
+     Décrit l'effet cumulé d'un talent en comparant les statistiques
+     de base avec et sans lui : aucun texte à maintenir à la main.
+     ------------------------------------------------------------ */
+  const pct = v => (v > 0 ? '+' : '') + Math.round(v * 100) + ' %';
+  const num = v => (v > 0 ? '+' : '') + Math.round(v * 10) / 10;
+  const STAT_LABEL = {
+    maxHp: [v => num(v) + ' PV max'],
+    damage: [v => pct(v) + ' de dégâts'],
+    fireRate: [v => pct(v) + ' de cadence'],
+    moveSpeed: [v => pct(v) + ' de vitesse'],
+    armor: [v => '−' + Math.round(v * 100) + ' % de dégâts subis'],
+    crit: [v => pct(v) + ' de critique'],
+    critMult: [v => pct(v) + ' de dégâts critiques'],
+    regen: [v => num(v) + ' PV/s'],
+    magnet: [v => pct(v) + ' de collecte'],
+    xpGain: [v => pct(v) + ' d\'expérience'],
+    pierce: [v => num(v) + ' ennemi traversé'],
+    projSpeed: [v => pct(v) + ' de vitesse de projectile'],
+    projSize: [v => pct(v) + ' de taille de projectile'],
+    dashCd: [v => '−' + Math.round(v * 100) + ' % de recharge du dash'],
+    ultGain: [v => pct(v) + ' de charge d\'ultime'],
+    greed: [v => pct(v) + ' de cristaux'],
+    luck: [v => pct(v) + ' de chance'],
+    slowAura: [v => 'ralentissement de ' + Math.round(v * 100) + ' %'],
+    shieldCd: [() => 'bouclier périodique'],
+    startLevel: [v => num(v) + ' niveau de départ'],
+    slots: [v => num(v) + ' emplacement d\'arme'],
+    revives: [v => num(v) + ' résurrection'],
+    critExplode: [() => 'explosions critiques'],
+    dashPhase: [() => 'dash traversant']
+  };
+
+  function describe(t, rank) {
+    const before = NF.baseStats(null);
+    const after = NF.baseStats(null);
+    t.apply(after, rank);
+    const out = [];
+    for (const k in after) {
+      if (after[k] === before[k]) continue;
+      const lbl = STAT_LABEL[k];
+      if (!lbl) continue;
+      out.push(typeof after[k] === 'boolean' ? lbl[0]() : lbl[0](after[k] - before[k]));
+    }
+    return out.length ? out.join(', ') : '—';
+  }
 
   function statGrid(game) {
     const p = game.player;
@@ -4432,6 +4922,19 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (!opt.silent) {
         FX.text(e.x, e.y - e.r - 4, Math.round(dmg) + (crit ? '!' : ''), crit ? NF.C.amber : '#fff', crit);
         if (crit) FX.burst(e.x, e.y, 3, NF.C.amber, { speed: 130, life: .25, size: 2.5 });
+      }
+
+      /* talent « Détonation critique » — les dégâts de souffle sont muets,
+         ils ne peuvent donc pas critiquer à leur tour ni s'enchaîner. */
+      if (crit && p.base.critExplode) {
+        const R = 96, blast = dmg * 0.4;
+        FX.shockwave(e.x, e.y, R, NF.C.amber, .3);
+        for (const o of this.enemies) {
+          if (o.dead || o === e) continue;
+          if (U.dist(e.x, e.y, o.x, o.y) < R + o.r) {
+            this.damageEnemy(o, blast, { silent: true, source: 'critblast' });
+          }
+        }
       }
 
       if (e.hp <= 0) this.killEnemy(e);

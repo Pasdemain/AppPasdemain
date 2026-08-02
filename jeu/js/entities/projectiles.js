@@ -5,6 +5,9 @@
   'use strict';
   const NF = w.NF, U = NF.U, FX = NF.FX;
 
+  /** Liseré d'alerte porté par tous les tirs ennemis */
+  const DANGER = '#ff2d55';
+
   /* ------------------------------------------------------------
      Projectile du joueur
      ------------------------------------------------------------ */
@@ -182,10 +185,30 @@
       if (this.x < -60 || this.y < -60 || this.x > W.w + 60 || this.y > W.h + 60) this.dead = true;
     }
 
+    /* Losange anguleux à liseré rouge : impossible à confondre avec un
+       éclat d'XP (rond, doux, cyan) même quand la teinte de l'ennemi est claire. */
     draw(ctx) {
-      NF.Draw.glowCircle(ctx, this.x, this.y, this.r, this.color, .3);
-      ctx.globalAlpha = .8; ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.r * .35, 0, U.TAU); ctx.fill();
+      const r = this.r;
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle + this.t * 7);
+
+      ctx.globalAlpha = .2; ctx.fillStyle = DANGER;
+      ctx.beginPath(); ctx.arc(0, 0, r * 2.1, 0, U.TAU); ctx.fill();
+
+      ctx.globalAlpha = 1; ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.moveTo(r * 1.75, 0);
+      ctx.lineTo(0, r * .74);
+      ctx.lineTo(-r * 1.75, 0);
+      ctx.lineTo(0, -r * .74);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = DANGER; ctx.lineWidth = 2; ctx.stroke();
+
+      ctx.fillStyle = '#2a0713';
+      ctx.beginPath(); ctx.arc(0, 0, r * .3, 0, U.TAU); ctx.fill();
+      ctx.restore();
       ctx.globalAlpha = 1;
     }
   }
@@ -339,9 +362,18 @@
     draw(ctx) {
       const bob = Math.sin(this.t * 5) * 1.6;
       switch (this.kind) {
-        case 'xp':
-          NF.Draw.glowCircle(ctx, this.x, this.y + bob, 4, NF.C.cyan, .3);
+        case 'xp': {
+          /* Éclat rond et doux, cœur clair : lecture opposée aux tirs
+             ennemis, anguleux et cerclés de rouge. */
+          const pulse = .85 + .15 * Math.sin(this.t * 4);
+          ctx.globalAlpha = .15 * pulse; ctx.fillStyle = NF.C.cyan;
+          ctx.beginPath(); ctx.arc(this.x, this.y + bob, 13 * pulse, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = .55; ctx.fillStyle = NF.C.cyanD;
+          ctx.beginPath(); ctx.arc(this.x, this.y + bob, 5.5, 0, U.TAU); ctx.fill();
+          ctx.globalAlpha = 1; ctx.fillStyle = '#d8fbff';
+          ctx.beginPath(); ctx.arc(this.x, this.y + bob, 2.8, 0, U.TAU); ctx.fill();
           break;
+        }
         case 'heal':
           ctx.fillStyle = NF.C.lime; ctx.globalAlpha = .25;
           ctx.beginPath(); ctx.arc(this.x, this.y + bob, 15, 0, U.TAU); ctx.fill();

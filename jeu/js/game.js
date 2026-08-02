@@ -413,6 +413,19 @@
         if (crit) FX.burst(e.x, e.y, 3, NF.C.amber, { speed: 130, life: .25, size: 2.5 });
       }
 
+      /* talent « Détonation critique » — les dégâts de souffle sont muets,
+         ils ne peuvent donc pas critiquer à leur tour ni s'enchaîner. */
+      if (crit && p.base.critExplode) {
+        const R = 96, blast = dmg * 0.4;
+        FX.shockwave(e.x, e.y, R, NF.C.amber, .3);
+        for (const o of this.enemies) {
+          if (o.dead || o === e) continue;
+          if (U.dist(e.x, e.y, o.x, o.y) < R + o.r) {
+            this.damageEnemy(o, blast, { silent: true, source: 'critblast' });
+          }
+        }
+      }
+
       if (e.hp <= 0) this.killEnemy(e);
       return dmg;
     }

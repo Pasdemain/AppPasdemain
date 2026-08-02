@@ -7,7 +7,7 @@
   const NF = w.NF;
 
   const KEY = 'protocole-neon.save.v1';
-  const VERSION = 1;
+  const VERSION = 2;
 
   function fresh() {
     return {
@@ -19,12 +19,32 @@
       runs: 0,
       totalKills: 0,
       playTime: 0,
-      meta: {},                       // { idAmélioration: niveau }
+      talentPoints: 0,                // points achetés (placés ou non)
+      talents: {},                    // { idNœud: rang }
       weapons: ['blaster', 'plasma', 'orbit'],   // armes débloquées
       quests: {},                     // { idQuête: {tier, prog} }
       settings: { haptics: true, shake: true },
       updated: 0
     };
+  }
+
+  /* Anciens tarifs du Laboratoire, conservés pour rembourser les
+     sauvegardes créées avant l'arbre de talents. */
+  const LEGACY_META_COST = {
+    power: [60, 1.32], vitality: [55, 1.30], rate: [80, 1.34], speed: [90, 1.35],
+    armor: [120, 1.38], crit: [110, 1.34], regen: [140, 1.36], magnet: [70, 1.30],
+    xp: [100, 1.33], dash: [130, 1.34], ult: [150, 1.35], greed: [120, 1.31],
+    luck: [200, 1.38], startlvl: [400, 1.60], slots: [900, 2.40], revive: [1200, 2.60]
+  };
+
+  function refundLegacyMeta(meta) {
+    let total = 0;
+    for (const id in meta) {
+      const c = LEGACY_META_COST[id];
+      if (!c) continue;
+      for (let l = 0; l < meta[id]; l++) total += Math.round(c[0] * Math.pow(c[1], l));
+    }
+    return total;
   }
 
   const Save = NF.Save = {
@@ -52,14 +72,37 @@
       if (!obj || typeof obj !== 'object') return base;
       const d = Object.assign(base, obj);
       d.v = VERSION;
-      d.meta = Object.assign({}, obj.meta || {});
       d.quests = Object.assign({}, obj.quests || {});
+      d.talents = Object.assign({}, obj.talents || {});
       d.settings = Object.assign(base.settings, obj.settings || {});
       if (!Array.isArray(d.weapons) || !d.weapons.length) d.weapons = ['blaster', 'plasma', 'orbit'];
       if (d.weapons.indexOf('blaster') < 0) d.weapons.push('blaster');
+
+      /* v1 → v2 : le Laboratoire devient un arbre de talents.
+         Les anciennes améliorations sont remboursées en cristaux. */
+      if (obj.meta && Object.keys(obj.meta).length) {
+        this.pendingRefund = refundLegacyMeta(obj.meta);
+        d.crystals = (Number(d.crystals) || 0) + this.pendingRefund;
+      }
+      delete d.meta;
+
       // garde-fous numériques
-      for (const k of ['crystals', 'totalCrystals', 'bestWave', 'bestTime', 'runs', 'totalKills', 'playTime']) {
+      for (const k of ['crystals', 'totalCrystals', 'bestWave', 'bestTime', 'runs', 'totalKills', 'playTime', 'talentPoints']) {
         d[k] = Math.max(0, Number(d[k]) || 0);
+      }
+      /* Rangs incohérents (nœud supprimé, valeur trafiquée) : on nettoie */
+      for (const id in d.talents) {
+        const t = NF.talentById(id);
+        if (!t || t.max <= 0) { delete d.talents[id]; continue; }
+        d.talents[id] = Math.max(0, Math.min(t.max, Math.round(Number(d.talents[id]) || 0)));
+        if (!d.talents[id]) delete d.talents[id];
+      }
+      /* Jamais plus de points placés que de points possédés */
+      while (NF.talentSpent(d.talents) > d.talentPoints) {
+        const ids = Object.keys(d.talents);
+        if (!ids.length) break;
+        const last = ids[ids.length - 1];
+        if (--d.talents[last] <= 0) delete d.talents[last];
       }
       return d;
     },
@@ -101,18 +144,45 @@
       return true;
     },
 
-    /* ---------- Laboratoire ---------- */
-    metaLevel(id) { return this.data.meta[id] || 0; },
-    buyMeta(id) {
-      const m = NF.metaById(id);
-      if (!m) return false;
-      const lvl = this.metaLevel(id);
-      if (lvl >= m.max) return false;
-      const price = m.cost(lvl);
+    /* ---------- Arbre de talents ---------- */
+    talentRank(id) { return this.data.talents[id] || 0; },
+
+    /** Points possédés / placés / disponibles */
+    talentPointsFree() {
+      return this.data.talentPoints - NF.talentSpent(this.data.talents);
+    },
+
+    /** Prix du prochain point de talent */
+    nextPointCost() { return NF.talentPointCost(this.data.talentPoints); },
+
+    /** Achète un point de talent avec des cristaux */
+    buyTalentPoint() {
+      const price = this.nextPointCost();
       if (!this.spend(price)) return false;
-      this.data.meta[id] = lvl + 1;
+      this.data.talentPoints++;
       this.save();
       return true;
+    },
+
+    /** Place un point dans un nœud. Renvoie une raison d'échec, ou null. */
+    investTalent(id) {
+      const t = NF.talentById(id);
+      if (!t || t.max <= 0) return 'inconnu';
+      const rank = this.talentRank(id);
+      if (rank >= t.max) return 'max';
+      if (!NF.talentUnlocked(id, this.data.talents)) return 'verrouillé';
+      if (this.talentPointsFree() < t.cost) return 'points';
+      this.data.talents[id] = rank + 1;
+      this.save();
+      return null;
+    },
+
+    /** Libère tous les points placés (ils restent acquis) */
+    respecTalents() {
+      const freed = NF.talentSpent(this.data.talents);
+      this.data.talents = {};
+      this.save();
+      return freed;
     },
 
     /* ---------- Arsenal ---------- */

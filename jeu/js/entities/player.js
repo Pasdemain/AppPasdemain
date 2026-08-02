@@ -18,7 +18,7 @@
 
     /** Nouvelle partie */
     reset(game) {
-      const base = NF.baseStats(NF.Save.data.meta);
+      const base = NF.baseStats(NF.Save.data.talents);
       this.base = base;
 
       this.x = game.world.w / 2;
@@ -54,7 +54,7 @@
       this.recompute();
       this.hp = this.stats.maxHp;
 
-      // niveaux de départ offerts par le Laboratoire
+      // niveaux de départ offerts par l'arbre de talents
       for (let i = 0; i < base.startLevel; i++) this.pendingLevels++;
     }
 
@@ -82,8 +82,9 @@
       s.thorns = b.thorns + m.thorns;
       s.slowAura = b.slowAura + m.slowAura;
       if (this.hp > s.maxHp) this.hp = s.maxHp;
-      this.shieldMax = m.shieldCd > 0 ? 1 : 0;
-      this.shieldPeriod = m.shieldCd > 0 ? 12 / m.shieldCd : 0;
+      const shieldStacks = (b.shieldCd || 0) + m.shieldCd;
+      this.shieldMax = shieldStacks > 0 ? 1 : 0;
+      this.shieldPeriod = shieldStacks > 0 ? 12 / shieldStacks : 0;
     }
 
     /* ---------------- Boucle ---------------- */
@@ -100,6 +101,17 @@
         this.vy = Math.sin(this.dashAngle) * DASH_SPEED;
         this.trailT += dt;
         if (this.trailT > 0.015) { this.trailT = 0; FX.trail(this.x, this.y, C.cyan, 4); }
+        /* talent « Dash de phase » : le sillage blesse les ennemis traversés */
+        if (this.base.dashPhase) {
+          this.dashHit = this.dashHit || new Set();
+          for (const e of game.enemies) {
+            if (e.dead || this.dashHit.has(e.uid)) continue;
+            if (U.dist2(this.x, this.y, e.x, e.y) < (this.r + e.r + 8) * (this.r + e.r + 8)) {
+              this.dashHit.add(e.uid);
+              game.damageEnemy(e, 60 * this.stats.damage, { fromX: this.x, fromY: this.y, source: 'dash', knock: 220 });
+            }
+          }
+        }
       } else {
         const sp = this.stats.moveSpeed;
         const tx = mv.x * sp, ty = mv.y * sp;
@@ -120,6 +132,7 @@
         this.dashAngle = (mv.x || mv.y) ? Math.atan2(mv.y, mv.x) : this.facing;
         this.dashT = DASH_TIME;
         this.dashCd = this.stats.dashCd;
+        if (this.dashHit) this.dashHit.clear();
         this.invuln = Math.max(this.invuln, DASH_TIME + 0.14);
         FX.burst(this.x, this.y, 10, C.cyan, { speed: 260, life: .3, dir: this.dashAngle + Math.PI, spread: 1.2 });
         U.buzz(10);

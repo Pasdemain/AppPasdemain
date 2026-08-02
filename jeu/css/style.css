@@ -231,7 +231,92 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .crystals{font-size:14px;color:var(--violet);font-weight:800}
 .crystals b{color:#fff}
 
-.lab-list,.arsenal-list,.quest-list{display:flex;flex-direction:column;gap:9px;padding-bottom:24px}
+.arsenal-list,.quest-list{display:flex;flex-direction:column;gap:9px;padding-bottom:24px}
+
+/* ============================================================
+   ARBRE DE TALENTS
+   ============================================================ */
+#lab{padding-bottom:calc(var(--safe-b) + 10px);overflow:hidden}
+
+.tree-bar{
+  display:flex;align-items:center;gap:10px;margin:6px 0 8px;
+  background:rgba(10,16,34,.65);border:1px solid var(--line);border-radius:13px;padding:9px 11px;
+}
+.tree-bar .points{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:5px}
+.tree-bar .points b{font-size:22px;color:var(--lime);line-height:1}
+.tree-bar .points span{font-size:11px;color:var(--txt-dim);letter-spacing:.06em;text-transform:uppercase}
+.tree-bar .points span i{font-style:normal}
+.tree-bar .points em{flex-basis:100%;font-style:normal;font-size:10px;color:#4b5c75}
+#btnBuyPoint{flex:none;width:auto;padding:8px 13px;line-height:1.25;font-size:10px;
+  background:rgba(139,92,255,.18);border-color:rgba(139,92,255,.5)}
+#btnBuyPoint em{font-style:normal;font-size:12px;color:#fff;letter-spacing:.02em}
+#btnBuyPoint.poor{opacity:.45}
+
+.tree-viewport{
+  flex:1;min-height:230px;border-radius:15px;overflow:auto;
+  display:grid;place-content:center;place-content:safe center;
+  -webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(62,242,255,.09),transparent 62%),
+    rgba(4,7,18,.75);
+}
+.tree-canvas{position:relative;width:760px;height:760px;transform-origin:0 0;transition:transform .2s}
+.tree-canvas.fit{transform:scale(var(--fit,1))}
+#treeLinks{position:absolute;inset:0;width:760px;height:760px;pointer-events:none}
+#treeLinks line{stroke:rgba(120,150,190,.18);stroke-width:3;stroke-linecap:round}
+#treeLinks line.on{stroke:rgba(62,242,255,.55);stroke-width:4}
+
+.tnode{
+  position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+  background:#0a1024;border:2px solid rgba(120,150,190,.3);color:var(--txt);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  transition:transform .1s,box-shadow .2s,border-color .2s;
+}
+.tnode .tico{font-size:19px;line-height:1;filter:grayscale(1) opacity(.55)}
+.tnode .trank{font-style:normal;font-size:9px;font-weight:800;color:#54657f;letter-spacing:.04em}
+.tnode:active{transform:scale(.92)}
+.tnode.locked{opacity:.4}
+.tnode.ready{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.tnode.ready .tico{filter:none}
+.tnode.owned{background:color-mix(in srgb,var(--c) 16%,#0a1024);border-color:var(--c)}
+.tnode.owned .tico{filter:none}
+.tnode.owned .trank{color:var(--c)}
+.tnode.maxed{box-shadow:0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.tnode.sel{outline:2px solid #fff;outline-offset:3px}
+.tnode.key{width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:18px;border-width:3px}
+.tnode.key .tico{font-size:23px}
+.tnode.core{width:64px;height:64px;margin:-32px 0 0 -32px;border-color:var(--cyan);
+  background:radial-gradient(circle,rgba(62,242,255,.3),#0a1024)}
+.tnode.core .tico{font-size:22px;filter:none}
+
+.tree-detail{
+  margin-top:9px;padding:11px;border-radius:14px;min-height:96px;
+  background:rgba(10,16,34,.75);border:1px solid var(--line);
+}
+.tree-detail .hint{font-size:12px;color:var(--txt-dim);text-align:center;padding:14px 0}
+.tdet-head{display:flex;align-items:center;gap:10px}
+.tdet-head .tico{
+  width:38px;height:38px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:19px;background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid var(--c);
+}
+.tdet-head h4{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.tbranch{font-size:10px;color:var(--txt-dim);letter-spacing:.08em;text-transform:uppercase}
+.trankbig{margin-left:auto;font-size:15px;color:var(--c);font-variant-numeric:tabular-nums}
+.tstep{font-size:12.5px;color:#b9c9de;margin-top:7px}
+.tstep em{font-style:normal;color:var(--txt-dim);font-size:11px}
+.tcur{font-size:11px;color:var(--lime);margin-top:4px}
+.tstate{display:block;margin-top:8px;font-size:11px;color:var(--txt-dim);letter-spacing:.04em}
+.tstate.max{color:var(--lime)}
+.tstate.lock{color:var(--amber)}
+.tbuy{
+  display:block;width:100%;margin-top:9px;padding:11px;border-radius:11px;
+  background:linear-gradient(90deg,rgba(62,242,255,.22),rgba(139,92,255,.22));
+  border:1px solid rgba(62,242,255,.55);color:#fff;
+  font-size:12px;font-weight:900;letter-spacing:.1em;
+}
+.tbuy:active{transform:scale(.97)}
+#btnRespec{margin-top:9px}
 
 .lab-row{
   display:flex;align-items:center;gap:11px;padding:11px;

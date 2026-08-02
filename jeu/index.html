@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Protocole Néon</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ CANVAS DE JEU ============ -->
+  <canvas id="game"></canvas>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="bar bar-hp"><i id="hpFill"></i><span id="hpText">100 / 100</span></div>
+        <div class="bar bar-xp"><i id="xpFill"></i><span id="xpText">Niv. 1</span></div>
+      </div>
+      <div class="hud-right">
+        <button id="btnPause" class="icon-btn" aria-label="Pause">❚❚</button>
+      </div>
+    </div>
+
+    <div class="hud-wave">
+      <div id="waveLabel">VAGUE 1</div>
+      <div id="waveSub">0 / 0</div>
+    </div>
+
+    <div id="bossBar" class="boss-bar hidden">
+      <div class="boss-name"><span id="bossName">BOSS</span><span id="bossPhase"></span></div>
+      <div class="boss-track"><i id="bossFill"></i></div>
+      <div id="bossHint" class="boss-hint"></div>
+    </div>
+
+    <div id="questTracker" class="quest-tracker"></div>
+    <div id="toasts" class="toasts"></div>
+
+    <!-- Contrôles tactiles -->
+    <div id="touchLayer">
+      <div id="stickBase" class="stick-base"><div id="stickKnob" class="stick-knob"></div></div>
+      <button id="btnDash" class="action-btn dash">DASH<i></i></button>
+      <button id="btnUlt" class="action-btn ult">ULT<i></i></button>
+    </div>
+
+    <div id="weaponStrip" class="weapon-strip"></div>
+  </div>
+
+  <!-- ============ MENU PRINCIPAL ============ -->
+  <div id="menu" class="screen">
+    <div class="logo">
+      <h1>PROTOCOLE<span>NÉON</span></h1>
+      <p class="tagline">Roguelite — vagues infinies</p>
+    </div>
+    <div class="menu-stats">
+      <div><b id="statBestWave">0</b><span>Meilleure vague</span></div>
+      <div><b id="statCrystals">0</b><span>Cristaux</span></div>
+      <div><b id="statRuns">0</b><span>Parties</span></div>
+    </div>
+    <div class="menu-actions">
+      <button class="btn primary big" data-act="play">LANCER LA PARTIE</button>
+      <button class="btn" data-act="lab">⚛ LABORATOIRE</button>
+      <button class="btn" data-act="arsenal">⚔ ARSENAL</button>
+      <button class="btn" data-act="quests">✔ QUÊTES <em id="questBadge" class="badge hidden">0</em></button>
+      <button class="btn ghost" data-act="help">? COMMENT JOUER</button>
+    </div>
+    <div class="save-row">
+      <button class="btn ghost small" data-act="export">⬇ EXPORTER LA SAUVEGARDE</button>
+      <button class="btn ghost small" data-act="import">⬆ IMPORTER</button>
+    </div>
+    <div class="version">v1.0 — sauvegarde locale (JSON) — <button class="linklike" data-act="reset">réinitialiser la progression</button></div>
+  </div>
+
+  <!-- ============ LABORATOIRE (méta-upgrades) ============ -->
+  <div id="lab" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>LABORATOIRE</h2>
+      <div class="crystals">◈ <b id="labCrystals">0</b></div>
+    </header>
+    <p class="panel-sub">Améliorations permanentes, conservées entre les parties.</p>
+    <div id="labList" class="lab-list"></div>
+  </div>
+
+  <!-- ============ ARSENAL ============ -->
+  <div id="arsenal" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>ARSENAL</h2>
+      <div class="crystals">◈ <b id="arsCrystals">0</b></div>
+    </header>
+    <p class="panel-sub">Les armes débloquées peuvent apparaître dans les cartes de niveau.</p>
+    <div id="arsenalList" class="arsenal-list"></div>
+  </div>
+
+  <!-- ============ QUÊTES ============ -->
+  <div id="quests" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>QUÊTES</h2>
+      <div class="crystals">◈ <b id="qCrystals">0</b></div>
+    </header>
+    <p class="panel-sub">Objectifs permanents. Les récompenses se réclament ici.</p>
+    <div id="questList" class="quest-list"></div>
+  </div>
+
+  <!-- ============ AIDE ============ -->
+  <div id="help" class="screen panel hidden">
+    <header class="panel-head">
+      <button class="icon-btn back" data-act="back">←</button>
+      <h2>COMMENT JOUER</h2>
+    </header>
+    <div class="help-body">
+      <h3>Déplacement</h3>
+      <p><b>Mobile :</b> pose et glisse ton pouce sur la moitié gauche de l'écran (joystick virtuel).<br>
+      <b>Clavier :</b> ZQSD / WASD / flèches.</p>
+      <h3>Tir</h3>
+      <p>Le tir est <b>automatique</b> et vise l'ennemi le plus proche. Concentre-toi sur l'esquive.</p>
+      <h3>Dash &amp; Ultime</h3>
+      <p><b>DASH</b> (Espace) : ruée rapide, invincible pendant l'élan.<br>
+      <b>ULT</b> (E) : onde de choc qui détruit les projectiles et repousse tout. Se recharge en tuant.</p>
+      <h3>Progression</h3>
+      <p>Les ennemis lâchent des <b>éclats d'XP</b>. À chaque niveau, choisis une carte parmi trois : nouvelle arme, amélioration d'arme ou statistique.</p>
+      <h3>Boss</h3>
+      <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
+      <h3>Après la partie</h3>
+      <p>Tu gagnes des <b>cristaux ◈</b> selon ta vague atteinte. Dépense-les au Laboratoire (bonus permanents) et dans l'Arsenal (nouvelles armes).</p>
+    </div>
+  </div>
+
+  <!-- ============ PAUSE ============ -->
+  <div id="pause" class="screen overlay hidden">
+    <div class="modal">
+      <h2>PAUSE</h2>
+      <div id="pauseStats" class="stat-grid"></div>
+      <button class="btn primary" data-act="resume">REPRENDRE</button>
+      <button class="btn ghost" data-act="quit">ABANDONNER</button>
+    </div>
+  </div>
+
+  <!-- ============ LEVEL UP ============ -->
+  <div id="levelup" class="screen overlay hidden">
+    <div class="levelup-box">
+      <h2>NIVEAU <span id="luLevel">2</span></h2>
+      <p class="panel-sub">Choisis une amélioration</p>
+      <div id="cards" class="cards"></div>
+      <button id="btnReroll" class="btn ghost small">↻ RELANCER <em id="rerollCount">1</em></button>
+    </div>
+  </div>
+
+  <!-- ============ FIN DE PARTIE ============ -->
+  <div id="gameover" class="screen overlay hidden">
+    <div class="modal">
+      <h2 id="goTitle">SYSTÈME HORS LIGNE</h2>
+      <div id="goStats" class="stat-grid"></div>
+      <div id="goRewards" class="rewards"></div>
+      <button class="btn primary" data-act="again">REJOUER</button>
+      <button class="btn ghost" data-act="menu">MENU</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/core/utils.js"></script>
+<script src="js/core/input.js"></script>
+<script src="js/core/fx.js"></script>
+<script src="js/data/weapons.js"></script>
+<script src="js/data/upgrades.js"></script>
+<script src="js/data/meta.js"></script>
+<script src="js/data/quests.js"></script>
+<script src="js/entities/projectiles.js"></script>
+<script src="js/entities/player.js"></script>
+<script src="js/entities/enemies.js"></script>
+<script src="js/entities/bosses.js"></script>
+<script src="js/systems/save.js"></script>
+<script src="js/systems/waves.js"></script>
+<script src="js/ui/hud.js"></script>
+<script src="js/ui/menus.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

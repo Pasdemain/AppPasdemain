@@ -595,3 +595,13 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 .lu-actions{display:flex;gap:8px;justify-content:center}
 .lu-actions .btn{margin:0}
+
+/* ---------- Écran de victoire ---------- */
+.modal.win{border-color:rgba(157,255,77,.55);box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(157,255,77,.18)}
+.modal.win #goTitle{color:var(--lime)}
+.go-win{
+  grid-column:1 / -1;padding:8px;border-radius:9px;text-align:center;
+  background:rgba(157,255,77,.1);border:1px solid rgba(157,255,77,.35);
+  font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--lime);
+}
+.rewards em{font-style:normal;font-size:11px;color:var(--txt-dim)}

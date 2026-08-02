@@ -47,7 +47,10 @@
 
       /* --- vague --- */
       const wv = game.waves;
-      e.wave.textContent = (this._biome ? this._biome.name + ' · ' : '') + 'VAGUE ' + wv.wave;
+      const total = game.endWave ? (game.endWave - game.startWave + 1) : 0;
+      const done = total ? (wv.wave - game.startWave + 1) : wv.wave;
+      e.wave.textContent = (this._biome ? this._biome.name + ' · ' : '')
+        + 'VAGUE ' + done + (total ? ' / ' + total : '');
       if (wv.state === 'cleared') {
         e.waveSub.textContent = 'PROCHAINE VAGUE DANS ' + Math.ceil(wv.breakT) + 's';
       } else if (wv.state === 'boss') {

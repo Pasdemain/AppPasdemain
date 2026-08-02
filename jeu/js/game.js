@@ -96,6 +96,9 @@
 
       this.waves.reset(startWave);
       this.applyBiome(NF.biomeInfo(startWave));
+      this.startWave = startWave;
+      this.endWave = startWave + NF.WAVES_PER_BIOME - 1;   // la partie s'arrête là
+      this.finishing = false;
       this.waves.start(startWave);
 
       NF.Input.reset();
@@ -157,12 +160,14 @@
       }));
     }
 
-    endRun(quit) {
+    endRun(quit, victory) {
       if (!this.running) return;
       this.running = false;
       const wave = Math.max(1, this.waves.wave - (this.waves.state === 'cleared' ? 0 : 1));
       const greed = 1 + this.player.stats.greed;
-      const crystals = Math.round((Math.pow(this.waves.wave, 1.55) * 2.2 + this.stats.kills * 0.35 + this.stats.bosses * 40) * greed);
+      let crystals = Math.round((Math.pow(this.waves.wave, 1.55) * 2.2 + this.stats.kills * 0.35 + this.stats.bosses * 40) * greed);
+      /* nettoyer un secteur entier vaut une prime */
+      if (victory) crystals = Math.round(crystals * 1.6 + 400);
 
       const best = this.waves.wave > NF.Save.data.bestWave;
       NF.Save.addCrystals(crystals);
@@ -177,7 +182,13 @@
         wave: this.waves.wave, time: this.time,
         kills: this.stats.kills, level: this.player.level
       };
-      NF.Menus.showGameOver(this, { crystals, best, quit: !!quit, wave, run });
+      NF.Menus.showGameOver(this, {
+        crystals, best, quit: !!quit, wave, run,
+        victory: !!victory,
+        biome: this.biome,
+        unlocked: this._justUnlocked || null
+      });
+      this._justUnlocked = null;
     }
 
     togglePause() {
@@ -569,8 +580,8 @@
         if (NF.isBiomeFinale(this.waves.wave)) {
           const next = NF.biomeInfo(this.waves.wave).index + 1;
           if (NF.Save.unlockBiome(next)) {
-            const nb = NF.BIOMES[next % NF.BIOMES.length];
-            this.toast('SECTEUR DÉBLOQUÉ : ' + nb.name, 'good');
+            this._justUnlocked = next;
+            this.toast('SECTEUR DÉBLOQUÉ : ' + NF.biomeLabel(next), 'good');
             FX.screenFlash('#fff', .7);
           }
         }
@@ -693,16 +704,6 @@
     onWaveStart(n, info) {
       this.stats.tookDamageThisWave = false;
 
-      /* franchissement d'un secteur */
-      if (info && this.biome !== info.biome) {
-        this.applyBiome(info);
-        FX.screenFlash(info.biome.accent, .6);
-        FX.kick(20);
-        U.buzz([60, 40, 60, 40, 90]);
-        this.toast('SECTEUR ' + (info.index + 1) + ' — ' + info.biome.name, 'bad');
-        this.toast(info.biome.tagline, 'warn');
-      }
-
       if (NF.bossForWave(n)) {
         this.toast('⚠ VAGUE ' + n + ' — BOSS', 'bad');
         FX.screenFlash(C.magenta, .35);
@@ -731,6 +732,16 @@
         this._maxedSeen = maxed;
       }
       NF.Save.queueSave();
+
+      /* dernière vague du secteur : la partie s'arrête sur une victoire */
+      if (n >= this.endWave) {
+        FX.screenFlash('#fff', .8);
+        FX.kick(20);
+        U.buzz([60, 60, 60, 60, 140]);
+        this.finishing = true;                  // laisse l'explosion se jouer
+        this.toast('SECTEUR NETTOYÉ', 'good');
+        setTimeout(() => this.endRun(false, true), 1100);
+      }
     }
 
     onBossSpawn(boss) {

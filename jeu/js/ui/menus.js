@@ -203,9 +203,9 @@
       let html = '<span class="bp-label">Secteur de départ</span><div class="bp-row">';
       for (let i = 0; i <= d.maxBiome; i++) {
         const b = NF.BIOMES[i % NF.BIOMES.length];
-        const wave = NF.biomeFirstWave(i);
+        const first = NF.biomeFirstWave(i);
         html += `<button class="bp-chip ${i === cur ? 'on' : ''}" data-act="setBiome" data-i="${i}"
-                   style="--c:${b.accent}">${b.icon} ${b.name}<em>vague ${wave}</em></button>`;
+                   style="--c:${b.accent}">${b.icon} ${esc(NF.biomeLabel(i))}<em>vagues ${first}–${first + 49}</em></button>`;
       }
       box.innerHTML = html + '</div>';
     },
@@ -574,10 +574,20 @@
 
     showGameOver(game, res) {
       this._lastRes = res;
-      $('goTitle').textContent = res.quit ? 'PARTIE ABANDONNÉE' : 'SYSTÈME HORS LIGNE';
-      $('goStats').innerHTML = statGrid(game);
+      const box = $('gameover').querySelector('.modal');
+      box.classList.toggle('win', !!res.victory);
+      $('goTitle').textContent = res.victory
+        ? 'SECTEUR NETTOYÉ'
+        : (res.quit ? 'PARTIE ABANDONNÉE' : 'SYSTÈME HORS LIGNE');
+      $('goStats').innerHTML =
+        (res.victory && res.biome ? `<div class="go-win">${res.biome.icon} ${esc(res.biome.name)} — 50 vagues, 5 boss</div>` : '')
+        + statGrid(game);
       $('goRewards').innerHTML = `
-        <div>◈ ${U.fmt(res.crystals)} cristaux gagnés</div>
+        <div>◈ ${U.fmt(res.crystals)} cristaux gagnés${res.victory ? ' <em>(prime de secteur)</em>' : ''}</div>
+        ${res.unlocked != null
+          ? `<div style="color:var(--lime)">SECTEUR DÉBLOQUÉ : ${esc(NF.biomeLabel(res.unlocked))}</div>
+             <div class="dhint">Choisis-le au menu pour y lancer une partie.</div>`
+          : ''}
         ${res.best ? '<div style="color:var(--lime)">NOUVEAU RECORD !</div>' : ''}`;
       this.renderGameOverBoard(res);
       this.show('gameover');

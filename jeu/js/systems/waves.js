@@ -114,8 +114,9 @@
       const g = this.game;
       this.timer = (this.timer || 0) + dt;
 
-      /* pause entre deux vagues */
+      /* pause entre deux vagues — sauf après la dernière du secteur */
       if (this.state === 'cleared') {
+        if (g.finishing || this.wave >= g.endWave) return;
         this.breakT -= dt;
         if (this.breakT <= 0) this.start(this.wave + 1);
         return;

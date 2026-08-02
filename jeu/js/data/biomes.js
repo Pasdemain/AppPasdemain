@@ -74,6 +74,13 @@
     };
   };
 
+  /** Nom affiché d'un secteur, palier compris : « LA GRILLE Mk II » */
+  NF.biomeLabel = function (index) {
+    const b = BIOMES[index % BIOMES.length];
+    const tier = Math.floor(index / BIOMES.length);
+    return b.name + (tier > 0 ? ' Mk ' + NF.romanize(tier + 1) : '');
+  };
+
   /** Le boss final d'un secteur ferme le secteur et ouvre le suivant */
   NF.isBiomeFinale = wave => NF.biomeInfo(wave).local === WAVES_PER_BIOME;
 

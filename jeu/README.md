@@ -36,10 +36,11 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 
 ## Boucle de jeu
 
-- **Deux secteurs de 50 vagues**, chacun avec son décor, son bestiaire et ses
-  cinq boss. Vaincre le boss de la vague 50 ouvre le suivant.
-- **Vagues infinies.** La difficulté suit une courbe polynomiale : elle monte
-  sans fin mais reste rattrapable par la montée en puissance du joueur.
+- **Une partie = un secteur de 50 vagues**, terminé par un écran de victoire.
+  Chaque secteur a son décor, son bestiaire et ses cinq boss ; le nettoyer
+  débloque le suivant, qu'on choisit ensuite au menu.
+- **Progression sans fin.** La difficulté suit une courbe polynomiale et les
+  secteurs reprennent en paliers supérieurs une fois la liste épuisée.
 - **Un boss toutes les 10 vagues**, avec une mécanique propre à chacun. Passé le
   dernier secteur, le cycle reprend au palier supérieur (Mk II, Mk III…).
 - **Montée de niveau** : à chaque niveau, 3 cartes au choix (nouvelle arme,
@@ -53,10 +54,15 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
 
 ## Secteurs
 
-Un secteur = **50 vagues + 5 boss**. Battre le boss de la vague 50 débloque
-définitivement le secteur suivant, qui devient alors sélectionnable comme point
-de départ depuis le menu. Au-delà du dernier secteur, le cycle reprend au palier
-supérieur : mêmes boss en Mk II, statistiques relevées, sans limite.
+Un secteur = **50 vagues + 5 boss**, et **une partie couvre exactement un
+secteur**. Nettoyer la 50ᵉ vague termine la partie sur un **écran de victoire**
+assorti d'une prime de cristaux : le jeu n'enchaîne pas sur le secteur suivant.
+
+Cette victoire débloque définitivement le secteur d'après. On choisit ensuite
+au menu celui dans lequel on veut lancer sa partie — les secteurs déjà nettoyés
+restent rejouables. Au-delà du dernier secteur listé, le cycle reprend au palier
+supérieur (mêmes boss en Mk II, coefficients relevés), donc la progression
+n'a pas de fin.
 
 | Secteur | Vagues | Décor | Particularités |
 |---|---|---|---|
@@ -65,7 +71,10 @@ supérieur : mêmes boss en Mk II, statistiques relevées, sans limite.
 
 Démarrer dans un secteur avancé accorde l'avance de niveaux correspondante
 (45 par secteur), distribuée en cartes à choisir — le bouton **⚡ Tout tirer**
-les résout d'un coup quand il y en a beaucoup.
+les résout d'un coup quand il y en a beaucoup. Sans elle, la vague 51 serait
+injouable au niveau 1.
+
+Le compteur du HUD affiche la progression dans le secteur (`VAGUE 37 / 50`).
 
 ### Ennemis propres à La Faille
 

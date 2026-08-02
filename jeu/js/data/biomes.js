@@ -39,7 +39,7 @@
       grid: 'rgba(255,62,165,.06)',
       border: 'rgba(255,62,165,.4)',
       decor: 'rift',
-      hpMul: 1.35, dmgMul: 1.25, speedMul: 1.08,
+      hpMul: 1.2, dmgMul: 1.1, speedMul: 1.06,
       eruptions: 11,                 // secondes entre deux éruptions du sol
       bosses: ['chimere', 'oracle', 'ruche', 'paradoxe', 'abysse']
     }

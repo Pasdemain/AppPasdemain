@@ -30,15 +30,25 @@
         Courbe polynomiale : elle grimpe sans fin mais reste rattrapable
         par la montée en puissance du joueur (additive). Chaque secteur
         applique en plus son propre coefficient. */
+    /** Multiplicateurs de difficulté.
+
+        La courbe est identique dans chaque secteur — elle suit la vague
+        LOCALE (1 à 50), pas la vague absolue. Une partie est donc toujours
+        le même arc : on repart du niveau 1 et on monte en puissance sur
+        50 vagues. Ce qui change d'un secteur à l'autre, c'est un
+        multiplicateur global : le secteur EST le palier de difficulté, et
+        l'arbre de talents est ce qui permet de l'encaisser. */
     scaleFor(n) {
-      const k = n - 1;
       const info = NF.biomeInfo(n);
+      const k = info.local - 1;
       const b = info.biome;
-      const tierMul = 1 + info.tier * 0.6;          // au-delà du dernier secteur
+      const sector = info.tier * NF.BIOMES.length + info.index;
       return {
-        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * tierMul,
-        dmg: (1 + 0.09 * k + 0.0025 * k * k) * b.dmgMul,
-        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul),
+        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * Math.pow(1.9, sector),
+        /* les dégâts montent bien plus doucement que les PV : sinon deux
+           contacts suffisent à tuer et aucune quantité de vie ne suit */
+        dmg: (1 + 0.055 * k + 0.0009 * k * k) * b.dmgMul * Math.pow(1.3, sector),
+        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul * (1 + 0.04 * sector)),
         /* le coût d'un niveau croît géométriquement : l'XP doit suivre,
            sinon la montée en puissance décroche en fin de partie */
         xp: Math.pow(1.055, k)
@@ -82,14 +92,15 @@
         g.onBossSpawn(boss);
         this.total = 1;
         // quelques sbires d'accompagnement
-        const adds = Math.min(14, 4 + Math.floor(n / 10) * 2);
+        const adds = Math.min(14, 4 + Math.floor(NF.biomeInfo(n).local / 10) * 2);
         for (let i = 0; i < adds; i++) this.queue.push({ id: this.pickType(n), delay: 1.5 + i * 0.6 });
       } else {
         /* ---------- vague normale ---------- */
         this.state = 'spawning';
-        const count = Math.min(120, Math.round(7 + n * 1.7));
+        const count = Math.min(120, Math.round(7 + NF.biomeInfo(n).local * 1.7));
         this.total = count;
-        const eliteChance = n >= 5 ? Math.min(0.22, (n - 4) * 0.012) : 0;
+        const loc = NF.biomeInfo(n).local;
+        const eliteChance = loc >= 5 ? Math.min(0.22, (loc - 4) * 0.012) : 0;
         let t = 0;
         for (let i = 0; i < count; i++) {
           // les ennemis arrivent par petits paquets

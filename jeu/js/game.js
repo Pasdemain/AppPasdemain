@@ -84,16 +84,6 @@
       this.player.reset(this);
       this.addWeapon('blaster');
 
-      /* Démarrer dans un secteur avancé offre l'avance correspondante :
-         sans elle, la vague 51 serait injouable au niveau 1. */
-      const info = NF.biomeInfo(startWave);
-      if (info.index > 0 || info.tier > 0) {
-        const boost = (info.index + info.tier * NF.BIOMES.length) * 45;
-        this.player.level = 1 + boost;
-        this.player.xpNext = NF.xpFor(this.player.level);
-        this.player.pendingLevels += boost;
-      }
-
       this.waves.reset(startWave);
       this.applyBiome(NF.biomeInfo(startWave));
       this.startWave = startWave;
@@ -419,7 +409,21 @@
     /* ============================================================
        Actions de jeu
        ============================================================ */
-    shoot(bullet) { this.bullets.push(bullet); }
+    shoot(bullet) {
+      this.bullets.push(bullet);
+      /* talent « Double détente » : le tir part parfois en double */
+      const dbl = this.player.base && this.player.base.doubleShot;
+      if (dbl && Math.random() < dbl) {
+        const twin = Object.assign(Object.create(Object.getPrototypeOf(bullet)), bullet);
+        twin.hits = null;
+        const a = bullet.angle + U.rand(-.09, .09);
+        const sp = Math.hypot(bullet.vx, bullet.vy);
+        twin.angle = a;
+        twin.vx = Math.cos(a) * sp;
+        twin.vy = Math.sin(a) * sp;
+        this.bullets.push(twin);
+      }
+    }
 
     enemyShoot(from, angle, o) {
       o = o || {};
@@ -518,6 +522,13 @@
             this.damageEnemy(o, blast, { silent: true, source: 'critblast' });
           }
         }
+      }
+
+      /* talent « Exécution » : achève les ennemis très entamés */
+      const ex = p.base.execute;
+      if (ex && !e.isBoss && e.hp > 0 && e.hp < e.maxHp * ex) {
+        FX.text(e.x, e.y - e.r - 6, 'EXÉCUTÉ', '#ff4d5e');
+        e.hp = 0;
       }
 
       if (e.hp <= 0) this.killEnemy(e);
@@ -692,7 +703,7 @@
       const wd = NF.weaponById(id);
       if (!wd) return;
       if (this.player.weapons.some(x => x.id === id)) return;
-      this.player.weapons.push({ id, lvl: 1, t: 0 });
+      this.player.weapons.push({ id, lvl: this.player.base.weaponStartLvl || 1, t: 0 });
       this.toast(wd.name + ' équipée', 'good');
     }
 

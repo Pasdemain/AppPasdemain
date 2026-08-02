@@ -109,7 +109,8 @@
             if (e.dead || this.dashHit.has(e.uid)) continue;
             if (U.dist2(this.x, this.y, e.x, e.y) < (this.r + e.r + 8) * (this.r + e.r + 8)) {
               this.dashHit.add(e.uid);
-              game.damageEnemy(e, 60 * this.stats.damage, { fromX: this.x, fromY: this.y, source: 'dash', knock: 220 });
+              game.damageEnemy(e, 60 * this.stats.damage * (this.base.dashPower || 1),
+                { fromX: this.x, fromY: this.y, source: 'dash', knock: 220 });
             }
           }
         }
@@ -239,7 +240,7 @@
       if (this.hp <= 0) {
         if (this.revives > 0) {
           this.revives--;
-          this.hp = this.stats.maxHp * 0.5;
+          this.hp = this.stats.maxHp * (this.base.reviveHeal || 0.5);
           this.invuln = 2.2;
           FX.shockwave(this.x, this.y, 300, C.lime, .7);
           game.toast('SAUVEGARDE D\'URGENCE', 'good');

@@ -302,7 +302,8 @@
       const price = S.nextPointCost();
       $('ptsFree').textContent = free;
       $('ptsPlural').textContent = free > 1 ? 's' : '';
-      $('ptsTotal').textContent = d.talentPoints + ' acheté' + (d.talentPoints > 1 ? 's' : '');
+      $('ptsTotal').textContent = d.talentPoints + ' acheté' + (d.talentPoints > 1 ? 's' : '')
+        + ' · ' + NF.talentTotalPoints() + ' pour tout maximiser';
       $('ptPrice').textContent = '◈ ' + U.fmt(price);
       $('btnBuyPoint').classList.toggle('poor', d.crystals < price);
       $('btnRespec').classList.toggle('hidden', NF.talentSpent(d.talents) === 0);
@@ -321,9 +322,13 @@
       this._treeBuilt = true;
       const canvas = $('treeCanvas');
       const svg = $('treeLinks');
+      const S = NF.TREE_SIZE;
 
-      svg.setAttribute('width', NF.TREE_SIZE);
-      svg.setAttribute('height', NF.TREE_SIZE);
+      canvas.style.width = canvas.style.height = S + 'px';
+      svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+      svg.setAttribute('width', S);
+      svg.setAttribute('height', S);
+      svg.style.width = svg.style.height = S + 'px';
       svg.innerHTML = NF.TALENT_LINKS.map(([a, b]) => {
         const A = NF.talentById(a), B = NF.talentById(b);
         return `<line data-link="${a}|${b}" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" />`;
@@ -331,7 +336,7 @@
 
       for (const t of NF.TALENTS) {
         const el = document.createElement('button');
-        el.className = 'tnode' + (t.key ? ' key' : '') + (t.id === 'core' ? ' core' : '');
+        el.className = 'tnode' + (t.key ? ' key' : '') + (t.ult ? ' ult' : '') + (t.id === 'core' ? ' core' : '');
         el.dataset.id = t.id;
         el.style.left = t.x + 'px';
         el.style.top = t.y + 'px';
@@ -424,7 +429,7 @@
           <span class="tico">${t.icon}</span>
           <div>
             <h4>${t.name}</h4>
-            <span class="tbranch">${t.branchName || 'Noyau'}${t.key ? ' · talent majeur' : ''}</span>
+            <span class="tbranch">${t.branchName || 'Noyau'}${t.ult ? ' · talent ultime' : (t.key ? ' · talent majeur' : '')}</span>
           </div>
           <b class="trankbig">${t.max > 0 ? rank + ' / ' + t.max : '—'}</b>
         </div>
@@ -624,7 +629,12 @@
     slots: [v => num(v) + ' emplacement d\'arme'],
     revives: [v => num(v) + ' résurrection'],
     critExplode: [() => 'explosions critiques'],
-    dashPhase: [() => 'dash traversant']
+    dashPhase: [() => 'dash traversant'],
+    execute: [v => 'exécution sous ' + Math.round(v * 100) + ' % de vie'],
+    doubleShot: [v => Math.round(v * 100) + ' % de tir double'],
+    reviveHeal: [v => 'relève à ' + Math.round(v * 100) + ' % des PV'],
+    dashPower: [v => 'dash ×' + (1 + v).toFixed(0) + ' en dégâts'],
+    weaponStartLvl: [v => 'armes au niveau ' + (1 + v)]
   };
 
   function describe(t, rank) {

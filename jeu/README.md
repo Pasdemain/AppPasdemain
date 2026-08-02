@@ -69,10 +69,11 @@ n'a pas de fin.
 | **▦ La Grille** | 1 – 50 | réseau cyan, sol quadrillé | bestiaire de base |
 | **⟁ La Faille** | 51 – 100 | violet, fractures pulsantes | éruptions du sol toutes les ~11 s, 5 ennemis inédits, +35 % de PV et +25 % de dégâts |
 
-Démarrer dans un secteur avancé accorde l'avance de niveaux correspondante
-(45 par secteur), distribuée en cartes à choisir — le bouton **⚡ Tout tirer**
-les résout d'un coup quand il y en a beaucoup. Sans elle, la vague 51 serait
-injouable au niveau 1.
+**Le secteur est le palier de difficulté.** On repart toujours du niveau 1 :
+la courbe de difficulté est identique dans chaque secteur (elle suit la vague
+*locale*, de 1 à 50), seul un multiplicateur global change — ×1,9 en vie et
+×1,3 en dégâts par secteur franchi. Une partie est donc toujours le même arc,
+et c'est l'arbre de talents qui permet d'encaisser le palier suivant.
 
 Le compteur du HUD affiche la progression dans le secteur (`VAGUE 37 / 50`).
 
@@ -121,16 +122,29 @@ dans l'ordre qu'on veut. Les anneaux intermédiaires des branches voisines sont
 reliés entre eux : on peut passer d'une branche à l'autre sans repartir du
 centre.
 
-Chaque branche se termine par un **talent majeur** au comportement particulier :
+**31 nœuds, 153 rangs, 220 points pour tout maximiser.** Le prix d'un point
+croît de 5,5 % à chaque achat (60 ◈ le premier) : les premiers dizaines de
+points viennent vite, la fin de l'arbre est un objectif de très longue haleine.
 
-| Branche | Talent majeur | Effet |
+| Points possédés | Cristaux cumulés |
+|---|---|
+| 20 | ~2 100 |
+| 40 | ~8 200 |
+| 60 | ~26 000 |
+| 100 | ~230 000 |
+| 220 (tout) | astronomique |
+
+Chaque branche se termine par un **talent majeur**, puis par un **talent
+ultime** (5 points, accessible seulement après le majeur) :
+
+| Branche | Talent majeur | Talent ultime |
 |---|---|---|
-| Puissance | Détonation critique | chaque coup critique déclenche une explosion |
-| Cadence | Surcadence | +18 % de cadence de tir |
-| Survie | Seconde peau | un bouclier absorbe un coup toutes les 12 s |
-| Mobilité | Dash de phase | le dash traverse les ennemis et les blesse |
-| Butin | Amorçage | chaque partie démarre avec 2 niveaux d'avance |
-| Arsenal | Rack d'armement | +1 emplacement d'arme |
+| Puissance | Détonation critique — chaque critique explose | **Exécution** — les ennemis sous 15 % de vie meurent instantanément |
+| Cadence | Surcadence — +18 % de cadence | **Double détente** — 30 % de chance de tirer en double |
+| Survie | Seconde peau — bouclier toutes les 12 s | **Dernier rempart** — +1 résurrection, relève à 70 % des PV |
+| Mobilité | Dash de phase — le dash traverse et blesse | **Sillage** — dash ×3 en dégâts, −25 % de recharge |
+| Butin | Amorçage — 2 niveaux d'avance | **Cristallisation** — +50 % de cristaux, +25 % d'XP |
+| Arsenal | Rack d'armement — +1 emplacement | **Arsenal préchargé** — toute arme obtenue démarre niveau 3 |
 
 Le bouton **Récupérer tous les points** les libère tous d'un coup, gratuitement,
 pour les réattribuer autrement. Les points achetés ne sont jamais perdus.

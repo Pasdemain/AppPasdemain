@@ -617,6 +617,18 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 }
 .rewards em{font-style:normal;font-size:11px;color:var(--txt-dim)}
 
+/* ---------- Talents ultimes (dernier anneau) ---------- */
+.tnode.ult{
+  width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border-width:3px;
+}
+.tnode.ult .tico{font-size:25px}
+.tnode.ult.owned{box-shadow:0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
+.tnode.ult::after{
+  content:'';position:absolute;inset:-7px;border-radius:50%;
+  border:1px dashed color-mix(in srgb,var(--c) 55%,transparent);
+  opacity:.55;pointer-events:none;
+}
+
 </style>
 </head>
 <body>
@@ -832,10 +844,11 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       <h3>Progression</h3>
       <p>Les ennemis lâchent des <b>éclats d'XP</b>. À chaque niveau, choisis une carte parmi trois : nouvelle arme, amélioration d'arme ou statistique.</p>
       <h3>Secteurs</h3>
-      <p>Chaque secteur compte <b>50 vagues</b> et cinq boss. Vaincre le boss de la vague 50
-      ouvre le secteur suivant : décor, bestiaire et boss changent, et la difficulté fait un bond.
-      Une fois découvert, un secteur peut être choisi comme point de départ depuis le menu —
-      tu commences alors avec l'avance de niveaux correspondante.</p>
+      <p>Chaque secteur compte <b>50 vagues</b> et cinq boss, et <b>une partie couvre un secteur</b> :
+      nettoyer la vague 50 termine la partie sur une victoire et ouvre le secteur suivant.</p>
+      <p>Tu repars toujours du <b>niveau 1</b>, quel que soit le secteur : ce qui change, c'est un
+      multiplicateur global. Le secteur est donc le <b>palier de difficulté</b>, et c'est l'arbre de
+      talents qui te permet de l'encaisser. Les secteurs déjà nettoyés restent rejouables.</p>
       <h3>Boss</h3>
       <p>Toutes les <b>10 vagues</b>, un boss apparaît avec des mécaniques propres. Lis l'indice sous sa barre de vie : il te dit comment le battre.</p>
       <h3>Après la partie</h3>
@@ -1887,7 +1900,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       grid: 'rgba(255,62,165,.06)',
       border: 'rgba(255,62,165,.4)',
       decor: 'rift',
-      hpMul: 1.35, dmgMul: 1.25, speedMul: 1.08,
+      hpMul: 1.2, dmgMul: 1.1, speedMul: 1.06,
       eruptions: 11,                 // secondes entre deux éruptions du sol
       bosses: ['chimere', 'oracle', 'ruche', 'paradoxe', 'abysse']
     }
@@ -1946,9 +1959,9 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   const NF = w.NF;
 
   /* ---------- Géométrie de l'arbre ---------- */
-  const CENTER = 380;               // l'arbre est dessiné dans un carré de 760
-  const RING_R = [0, 96, 172, 248, 322];
-  NF.TREE_SIZE = 760;
+  const CENTER = 450;               // l'arbre est dessiné dans un carré de 900
+  const RING_R = [0, 96, 172, 248, 322, 400];
+  NF.TREE_SIZE = 900;
   NF.TREE_CENTER = CENTER;
 
   /* ---------- Branches ---------- */
@@ -1969,70 +1982,90 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       step: 'Point de départ de l\'arbre', apply() { } },
 
     /* ---- Puissance ---- */
-    { id: 'pow1', branch: 'pow', ring: 1, name: 'Surcharge', icon: '💥', max: 6, cost: 1,
+    { id: 'pow1', branch: 'pow', ring: 1, name: 'Surcharge', icon: '💥', max: 10, cost: 1,
       step: '+5 % de dégâts', apply: (b, r) => b.damage += r * 0.05 },
-    { id: 'pow2', branch: 'pow', ring: 2, name: 'Munitions creuses', icon: '💢', max: 5, cost: 1,
+    { id: 'pow2', branch: 'pow', ring: 2, name: 'Munitions creuses', icon: '💢', max: 8, cost: 1,
       step: '+8 % de dégâts critiques et +1,5 % de chance de critique',
       apply: (b, r) => { b.critMult += r * 0.08; b.crit += r * 0.015; } },
-    { id: 'pow3', branch: 'pow', ring: 3, name: 'Noyau perforant', icon: '➰', max: 3, cost: 2,
+    { id: 'pow3', branch: 'pow', ring: 3, name: 'Noyau perforant', icon: '➰', max: 5, cost: 2,
       step: '+1 ennemi traversé par projectile', apply: (b, r) => b.pierce += r },
     { id: 'powK', branch: 'pow', ring: 4, name: 'Détonation critique', icon: '☄️', max: 1, cost: 3, key: true,
       step: 'Chaque coup critique déclenche une explosion',
       apply: (b, r) => { if (r) b.critExplode = true; } },
 
     /* ---- Cadence ---- */
-    { id: 'rate1', branch: 'rate', ring: 1, name: 'Dissipateur', icon: '🌀', max: 6, cost: 1,
+    { id: 'rate1', branch: 'rate', ring: 1, name: 'Dissipateur', icon: '🌀', max: 10, cost: 1,
       step: '+4 % de cadence de tir', apply: (b, r) => b.fireRate += r * 0.04 },
-    { id: 'rate2', branch: 'rate', ring: 2, name: 'Accélérateur', icon: '⏩', max: 5, cost: 1,
+    { id: 'rate2', branch: 'rate', ring: 2, name: 'Accélérateur', icon: '⏩', max: 8, cost: 1,
       step: '+6 % de vitesse et +3 % de taille des projectiles',
       apply: (b, r) => { b.projSpeed += r * 0.06; b.projSize += r * 0.03; } },
-    { id: 'rate3', branch: 'rate', ring: 3, name: 'Chargeur étendu', icon: '🧊', max: 4, cost: 2,
+    { id: 'rate3', branch: 'rate', ring: 3, name: 'Chargeur étendu', icon: '🧊', max: 6, cost: 2,
       step: '+3 % de cadence de tir', apply: (b, r) => b.fireRate += r * 0.03 },
     { id: 'rateK', branch: 'rate', ring: 4, name: 'Surcadence', icon: '⚡', max: 1, cost: 3, key: true,
       step: '+18 % de cadence de tir', apply: (b, r) => b.fireRate += r * 0.18 },
 
     /* ---- Survie ---- */
-    { id: 'surv1', branch: 'surv', ring: 1, name: 'Structure renforcée', icon: '❤️', max: 6, cost: 1,
-      step: '+10 PV max', apply: (b, r) => b.maxHp += r * 10 },
-    { id: 'surv2', branch: 'surv', ring: 2, name: 'Alliage dense', icon: '🛡️', max: 5, cost: 1,
-      step: '−2,5 % de dégâts subis', apply: (b, r) => b.armor += r * 0.025 },
-    { id: 'surv3', branch: 'surv', ring: 3, name: 'Essaim de nanites', icon: '🩹', max: 4, cost: 2,
+    { id: 'surv1', branch: 'surv', ring: 1, name: 'Structure renforcée', icon: '❤️', max: 12, cost: 1,
+      step: '+16 PV max', apply: (b, r) => b.maxHp += r * 16 },
+    { id: 'surv2', branch: 'surv', ring: 2, name: 'Alliage dense', icon: '🛡️', max: 8, cost: 1,
+      step: '−3 % de dégâts subis', apply: (b, r) => b.armor += r * 0.03 },
+    { id: 'surv3', branch: 'surv', ring: 3, name: 'Essaim de nanites', icon: '🩹', max: 6, cost: 2,
       step: '+0,35 PV régénéré par seconde', apply: (b, r) => b.regen += r * 0.35 },
     { id: 'survK', branch: 'surv', ring: 4, name: 'Seconde peau', icon: '🔵', max: 1, cost: 3, key: true,
       step: 'Un bouclier absorbe un coup toutes les 12 s',
       apply: (b, r) => { b.shieldCd += r; } },
 
     /* ---- Mobilité ---- */
-    { id: 'mob1', branch: 'mob', ring: 1, name: 'Exosquelette', icon: '👟', max: 6, cost: 1,
+    { id: 'mob1', branch: 'mob', ring: 1, name: 'Exosquelette', icon: '👟', max: 10, cost: 1,
       step: '+3 % de vitesse de déplacement', apply: (b, r) => b.moveSpeed += r * 0.03 },
-    { id: 'mob2', branch: 'mob', ring: 2, name: 'Injecteurs', icon: '💨', max: 5, cost: 1,
+    { id: 'mob2', branch: 'mob', ring: 2, name: 'Injecteurs', icon: '💨', max: 8, cost: 1,
       step: '−4 % de recharge du dash', apply: (b, r) => b.dashCd += r * 0.04 },
-    { id: 'mob3', branch: 'mob', ring: 3, name: 'Champ entropique', icon: '🕸️', max: 3, cost: 2,
+    { id: 'mob3', branch: 'mob', ring: 3, name: 'Champ entropique', icon: '🕸️', max: 5, cost: 2,
       step: 'Ralentit de 6 % les ennemis proches', apply: (b, r) => b.slowAura += r * 0.06 },
     { id: 'mobK', branch: 'mob', ring: 4, name: 'Dash de phase', icon: '🌀', max: 1, cost: 3, key: true,
       step: 'Le dash traverse les ennemis et les blesse au passage',
       apply: (b, r) => { if (r) b.dashPhase = true; } },
 
     /* ---- Butin ---- */
-    { id: 'loot1', branch: 'loot', ring: 1, name: 'Raffineur', icon: '◈', max: 6, cost: 1,
+    { id: 'loot1', branch: 'loot', ring: 1, name: 'Raffineur', icon: '◈', max: 10, cost: 1,
       step: '+6 % de cristaux gagnés', apply: (b, r) => b.greed += r * 0.06 },
-    { id: 'loot2', branch: 'loot', ring: 2, name: 'Bobine de collecte', icon: '🧲', max: 5, cost: 1,
+    { id: 'loot2', branch: 'loot', ring: 2, name: 'Bobine de collecte', icon: '🧲', max: 8, cost: 1,
       step: '+10 % de rayon de collecte', apply: (b, r) => b.magnet += r * 0.10 },
-    { id: 'loot3', branch: 'loot', ring: 3, name: 'Cortex d\'analyse', icon: '📈', max: 4, cost: 2,
+    { id: 'loot3', branch: 'loot', ring: 3, name: 'Cortex d\'analyse', icon: '📈', max: 6, cost: 2,
       step: '+5 % d\'expérience gagnée', apply: (b, r) => b.xpGain += r * 0.05 },
     { id: 'lootK', branch: 'loot', ring: 4, name: 'Amorçage', icon: '⏫', max: 1, cost: 3, key: true,
       step: 'Chaque partie démarre avec 2 niveaux d\'avance',
       apply: (b, r) => { b.startLevel += r * 2; } },
 
     /* ---- Arsenal ---- */
-    { id: 'ars1', branch: 'ars', ring: 1, name: 'Condensateur', icon: '🔋', max: 6, cost: 1,
+    { id: 'ars1', branch: 'ars', ring: 1, name: 'Condensateur', icon: '🔋', max: 10, cost: 1,
       step: '+8 % de charge d\'ultime', apply: (b, r) => b.ultGain += r * 0.08 },
-    { id: 'ars2', branch: 'ars', ring: 2, name: 'Générateur stochastique', icon: '🍀', max: 5, cost: 1,
+    { id: 'ars2', branch: 'ars', ring: 2, name: 'Générateur stochastique', icon: '🍀', max: 8, cost: 1,
       step: '+3 % de chance', apply: (b, r) => b.luck += r * 0.03 },
-    { id: 'ars3', branch: 'ars', ring: 3, name: 'Sauvegarde persistante', icon: '💾', max: 2, cost: 2,
+    { id: 'ars3', branch: 'ars', ring: 3, name: 'Sauvegarde persistante', icon: '💾', max: 3, cost: 2,
       step: '+1 résurrection par partie', apply: (b, r) => b.revives += r },
     { id: 'arsK', branch: 'ars', ring: 4, name: 'Rack d\'armement', icon: '⚔️', max: 1, cost: 3, key: true,
-      step: '+1 emplacement d\'arme', apply: (b, r) => b.slots += r }
+      step: '+1 emplacement d\'arme', apply: (b, r) => b.slots += r },
+
+    /* ---- Anneau ultime : un talent décisif au bout de chaque branche ---- */
+    { id: 'powU', branch: 'pow', ring: 5, name: 'Exécution', icon: '☠️', max: 1, cost: 5, ult: true,
+      step: 'Les ennemis sous 15 % de vie sont détruits instantanément (hors boss)',
+      apply: (b, r) => { if (r) b.execute = 0.15; } },
+    { id: 'rateU', branch: 'rate', ring: 5, name: 'Double détente', icon: '🎰', max: 1, cost: 5, ult: true,
+      step: '30 % de chance que chaque tir parte en double',
+      apply: (b, r) => { if (r) b.doubleShot = 0.30; } },
+    { id: 'survU', branch: 'surv', ring: 5, name: 'Dernier rempart', icon: '🕊️', max: 1, cost: 5, ult: true,
+      step: '+1 résurrection, et chaque relève rend 70 % des PV au lieu de 50 %',
+      apply: (b, r) => { if (r) { b.revives += 1; b.reviveHeal = 0.7; } } },
+    { id: 'mobU', branch: 'mob', ring: 5, name: 'Sillage', icon: '🌠', max: 1, cost: 5, ult: true,
+      step: 'Le dash inflige le triple de dégâts et se recharge 25 % plus vite',
+      apply: (b, r) => { if (r) { b.dashPower = 3; b.dashCd += 0.25; } } },
+    { id: 'lootU', branch: 'loot', ring: 5, name: 'Cristallisation', icon: '💎', max: 1, cost: 5, ult: true,
+      step: '+50 % de cristaux et +25 % d\'expérience',
+      apply: (b, r) => { if (r) { b.greed += 0.5; b.xpGain += 0.25; } } },
+    { id: 'arsU', branch: 'ars', ring: 5, name: 'Arsenal préchargé', icon: '📦', max: 1, cost: 5, ult: true,
+      step: 'Toute arme obtenue démarre au niveau 3',
+      apply: (b, r) => { if (r) b.weaponStartLvl = 3; } }
   ];
 
   NF.talentById = id => T.find(t => t.id === id);
@@ -2057,6 +2090,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     LINKS.push([br.id + '1', br.id + '2']);
     LINKS.push([br.id + '2', br.id + '3']);
     LINKS.push([br.id + '3', br.id + 'K']);
+    LINKS.push([br.id + 'K', br.id + 'U']);
   }
   for (let i = 0; i < BRANCHES.length; i++) {
     const a = BRANCHES[i], b = BRANCHES[(i + 1) % BRANCHES.length];
@@ -2091,9 +2125,18 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     return n;
   };
 
-  /** Prix en cristaux du point de talent numéro `owned` (0-indexé) */
+  /** Prix en cristaux du point de talent numéro `owned` (0-indexé).
+      Croissance géométrique : les premiers points sont abordables, un arbre
+      complet reste un objectif de très longue haleine. */
   NF.talentPointCost = function (owned) {
-    return Math.round(70 * Math.pow(1.09, owned) / 5) * 5;
+    return Math.round(60 * Math.pow(1.055, owned) / 5) * 5;
+  };
+
+  /** Points nécessaires pour tout maximiser (affiché dans l'arbre) */
+  NF.talentTotalPoints = function () {
+    let n = 0;
+    for (const t of T) n += t.cost * t.max;
+    return n;
   };
 
   /* ============================================================
@@ -2107,7 +2150,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       dashCd: 0, ultGain: 1, greed: 0, luck: 0,
       lifesteal: 0, thorns: 0, slowAura: 0, shieldCd: 0,
       startLevel: 0, slots: 4, revives: 0,
-      critExplode: false, dashPhase: false
+      critExplode: false, dashPhase: false,
+      execute: 0, doubleShot: 0, reviveHeal: 0.5, dashPower: 1, weaponStartLvl: 1
     };
     if (talents) {
       for (const t of T) {
@@ -2811,7 +2855,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
             if (e.dead || this.dashHit.has(e.uid)) continue;
             if (U.dist2(this.x, this.y, e.x, e.y) < (this.r + e.r + 8) * (this.r + e.r + 8)) {
               this.dashHit.add(e.uid);
-              game.damageEnemy(e, 60 * this.stats.damage, { fromX: this.x, fromY: this.y, source: 'dash', knock: 220 });
+              game.damageEnemy(e, 60 * this.stats.damage * (this.base.dashPower || 1),
+                { fromX: this.x, fromY: this.y, source: 'dash', knock: 220 });
             }
           }
         }
@@ -2941,7 +2986,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       if (this.hp <= 0) {
         if (this.revives > 0) {
           this.revives--;
-          this.hp = this.stats.maxHp * 0.5;
+          this.hp = this.stats.maxHp * (this.base.reviveHeal || 0.5);
           this.invuln = 2.2;
           FX.shockwave(this.x, this.y, 300, C.lime, .7);
           game.toast('SAUVEGARDE D\'URGENCE', 'good');
@@ -5014,15 +5059,25 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         Courbe polynomiale : elle grimpe sans fin mais reste rattrapable
         par la montée en puissance du joueur (additive). Chaque secteur
         applique en plus son propre coefficient. */
+    /** Multiplicateurs de difficulté.
+
+        La courbe est identique dans chaque secteur — elle suit la vague
+        LOCALE (1 à 50), pas la vague absolue. Une partie est donc toujours
+        le même arc : on repart du niveau 1 et on monte en puissance sur
+        50 vagues. Ce qui change d'un secteur à l'autre, c'est un
+        multiplicateur global : le secteur EST le palier de difficulté, et
+        l'arbre de talents est ce qui permet de l'encaisser. */
     scaleFor(n) {
-      const k = n - 1;
       const info = NF.biomeInfo(n);
+      const k = info.local - 1;
       const b = info.biome;
-      const tierMul = 1 + info.tier * 0.6;          // au-delà du dernier secteur
+      const sector = info.tier * NF.BIOMES.length + info.index;
       return {
-        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * tierMul,
-        dmg: (1 + 0.09 * k + 0.0025 * k * k) * b.dmgMul,
-        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul),
+        hp: (1 + 0.34 * k + 0.020 * k * k) * b.hpMul * Math.pow(1.9, sector),
+        /* les dégâts montent bien plus doucement que les PV : sinon deux
+           contacts suffisent à tuer et aucune quantité de vie ne suit */
+        dmg: (1 + 0.055 * k + 0.0009 * k * k) * b.dmgMul * Math.pow(1.3, sector),
+        speed: Math.min(1.6, (1 + 0.008 * k) * b.speedMul * (1 + 0.04 * sector)),
         /* le coût d'un niveau croît géométriquement : l'XP doit suivre,
            sinon la montée en puissance décroche en fin de partie */
         xp: Math.pow(1.055, k)
@@ -5066,14 +5121,15 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
         g.onBossSpawn(boss);
         this.total = 1;
         // quelques sbires d'accompagnement
-        const adds = Math.min(14, 4 + Math.floor(n / 10) * 2);
+        const adds = Math.min(14, 4 + Math.floor(NF.biomeInfo(n).local / 10) * 2);
         for (let i = 0; i < adds; i++) this.queue.push({ id: this.pickType(n), delay: 1.5 + i * 0.6 });
       } else {
         /* ---------- vague normale ---------- */
         this.state = 'spawning';
-        const count = Math.min(120, Math.round(7 + n * 1.7));
+        const count = Math.min(120, Math.round(7 + NF.biomeInfo(n).local * 1.7));
         this.total = count;
-        const eliteChance = n >= 5 ? Math.min(0.22, (n - 4) * 0.012) : 0;
+        const loc = NF.biomeInfo(n).local;
+        const eliteChance = loc >= 5 ? Math.min(0.22, (loc - 4) * 0.012) : 0;
         let t = 0;
         for (let i = 0; i < count; i++) {
           // les ennemis arrivent par petits paquets
@@ -5602,7 +5658,8 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       const price = S.nextPointCost();
       $('ptsFree').textContent = free;
       $('ptsPlural').textContent = free > 1 ? 's' : '';
-      $('ptsTotal').textContent = d.talentPoints + ' acheté' + (d.talentPoints > 1 ? 's' : '');
+      $('ptsTotal').textContent = d.talentPoints + ' acheté' + (d.talentPoints > 1 ? 's' : '')
+        + ' · ' + NF.talentTotalPoints() + ' pour tout maximiser';
       $('ptPrice').textContent = '◈ ' + U.fmt(price);
       $('btnBuyPoint').classList.toggle('poor', d.crystals < price);
       $('btnRespec').classList.toggle('hidden', NF.talentSpent(d.talents) === 0);
@@ -5621,9 +5678,13 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this._treeBuilt = true;
       const canvas = $('treeCanvas');
       const svg = $('treeLinks');
+      const S = NF.TREE_SIZE;
 
-      svg.setAttribute('width', NF.TREE_SIZE);
-      svg.setAttribute('height', NF.TREE_SIZE);
+      canvas.style.width = canvas.style.height = S + 'px';
+      svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+      svg.setAttribute('width', S);
+      svg.setAttribute('height', S);
+      svg.style.width = svg.style.height = S + 'px';
       svg.innerHTML = NF.TALENT_LINKS.map(([a, b]) => {
         const A = NF.talentById(a), B = NF.talentById(b);
         return `<line data-link="${a}|${b}" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" />`;
@@ -5631,7 +5692,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
       for (const t of NF.TALENTS) {
         const el = document.createElement('button');
-        el.className = 'tnode' + (t.key ? ' key' : '') + (t.id === 'core' ? ' core' : '');
+        el.className = 'tnode' + (t.key ? ' key' : '') + (t.ult ? ' ult' : '') + (t.id === 'core' ? ' core' : '');
         el.dataset.id = t.id;
         el.style.left = t.x + 'px';
         el.style.top = t.y + 'px';
@@ -5724,7 +5785,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
           <span class="tico">${t.icon}</span>
           <div>
             <h4>${t.name}</h4>
-            <span class="tbranch">${t.branchName || 'Noyau'}${t.key ? ' · talent majeur' : ''}</span>
+            <span class="tbranch">${t.branchName || 'Noyau'}${t.ult ? ' · talent ultime' : (t.key ? ' · talent majeur' : '')}</span>
           </div>
           <b class="trankbig">${t.max > 0 ? rank + ' / ' + t.max : '—'}</b>
         </div>
@@ -5924,7 +5985,12 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     slots: [v => num(v) + ' emplacement d\'arme'],
     revives: [v => num(v) + ' résurrection'],
     critExplode: [() => 'explosions critiques'],
-    dashPhase: [() => 'dash traversant']
+    dashPhase: [() => 'dash traversant'],
+    execute: [v => 'exécution sous ' + Math.round(v * 100) + ' % de vie'],
+    doubleShot: [v => Math.round(v * 100) + ' % de tir double'],
+    reviveHeal: [v => 'relève à ' + Math.round(v * 100) + ' % des PV'],
+    dashPower: [v => 'dash ×' + (1 + v).toFixed(0) + ' en dégâts'],
+    weaponStartLvl: [v => 'armes au niveau ' + (1 + v)]
   };
 
   function describe(t, rank) {
@@ -6053,16 +6119,6 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       this._maxedSeen = 0;
       this.player.reset(this);
       this.addWeapon('blaster');
-
-      /* Démarrer dans un secteur avancé offre l'avance correspondante :
-         sans elle, la vague 51 serait injouable au niveau 1. */
-      const info = NF.biomeInfo(startWave);
-      if (info.index > 0 || info.tier > 0) {
-        const boost = (info.index + info.tier * NF.BIOMES.length) * 45;
-        this.player.level = 1 + boost;
-        this.player.xpNext = NF.xpFor(this.player.level);
-        this.player.pendingLevels += boost;
-      }
 
       this.waves.reset(startWave);
       this.applyBiome(NF.biomeInfo(startWave));
@@ -6389,7 +6445,21 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     /* ============================================================
        Actions de jeu
        ============================================================ */
-    shoot(bullet) { this.bullets.push(bullet); }
+    shoot(bullet) {
+      this.bullets.push(bullet);
+      /* talent « Double détente » : le tir part parfois en double */
+      const dbl = this.player.base && this.player.base.doubleShot;
+      if (dbl && Math.random() < dbl) {
+        const twin = Object.assign(Object.create(Object.getPrototypeOf(bullet)), bullet);
+        twin.hits = null;
+        const a = bullet.angle + U.rand(-.09, .09);
+        const sp = Math.hypot(bullet.vx, bullet.vy);
+        twin.angle = a;
+        twin.vx = Math.cos(a) * sp;
+        twin.vy = Math.sin(a) * sp;
+        this.bullets.push(twin);
+      }
+    }
 
     enemyShoot(from, angle, o) {
       o = o || {};
@@ -6488,6 +6558,13 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
             this.damageEnemy(o, blast, { silent: true, source: 'critblast' });
           }
         }
+      }
+
+      /* talent « Exécution » : achève les ennemis très entamés */
+      const ex = p.base.execute;
+      if (ex && !e.isBoss && e.hp > 0 && e.hp < e.maxHp * ex) {
+        FX.text(e.x, e.y - e.r - 6, 'EXÉCUTÉ', '#ff4d5e');
+        e.hp = 0;
       }
 
       if (e.hp <= 0) this.killEnemy(e);
@@ -6662,7 +6739,7 @@ h1,h2,h3{font-weight:800;letter-spacing:.06em;text-transform:uppercase}
       const wd = NF.weaponById(id);
       if (!wd) return;
       if (this.player.weapons.some(x => x.id === id)) return;
-      this.player.weapons.push({ id, lvl: 1, t: 0 });
+      this.player.weapons.push({ id, lvl: this.player.base.weaponStartLvl || 1, t: 0 });
       this.toast(wd.name + ' équipée', 'good');
     }
 

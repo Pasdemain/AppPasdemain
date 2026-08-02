@@ -18,6 +18,159 @@
   });
 
   /* ============================================================
+     Ruptures d'écran — les mécaniques que les boss peuvent déclencher
+
+     Chaque fabrique renvoie une fonction à passer à `b.queueBreak()` :
+     la mécanique attend ainsi une image où ni QTE ni interlude ne
+     tourne. Les rendements sont exprimés en fraction des PV max du
+     boss, pour rester justes quel que soit le secteur.
+     ============================================================ */
+  const BREAK = {
+
+    /** QTE de précision : intercepter le curseur dans la zone */
+    timing(b, o) {
+      o = o || {};
+      const gain = o.gain != null ? o.gain : 0.10;
+      return (g) => {
+        b.invuln = true;
+        NF.QTE.start(g, {
+          type: 'timing',
+          title: o.title || 'SYNCHRONISATION',
+          hint: o.hint || 'Touche quand le curseur entre dans la zone',
+          rounds: o.rounds || 1,
+          speed: o.speed || 1.1,
+          width: o.width || 0.24,
+          color: o.color || b.color,
+          onWin: (gg) => {
+            b.invuln = false;
+            gg.damageEnemy(b, b.maxHp * gain, { silent: true, source: 'qte' });
+            FX.text(b.x, b.y - 60, 'SYNCHRONISÉ', C.lime, true);
+            gg.toast(o.win || 'SÉQUENCE RÉUSSIE', 'good');
+          },
+          onLose: (gg) => {
+            b.invuln = false;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.05);
+            gg.toast(o.lose || 'IL SE RESSAISIT', 'bad');
+          }
+        });
+      };
+    },
+
+    /** QTE de martèlement : saturer la jauge avant la fin du chrono */
+    mash(b, o) {
+      o = o || {};
+      const gain = o.gain != null ? o.gain : 0.12;
+      return (g) => {
+        b.invuln = true;
+        NF.QTE.start(g, {
+          type: 'mash',
+          title: o.title || 'SURCHARGE',
+          hint: o.hint || 'Martèle l\'écran pour saturer sa défense',
+          rounds: 1,
+          taps: o.taps || 16,
+          time: o.time || 4.5,
+          color: o.color || b.color,
+          onWin: (gg) => {
+            b.invuln = false;
+            gg.damageEnemy(b, b.maxHp * gain, { silent: true, source: 'qte' });
+            FX.shockwave(b.x, b.y, 240, o.color || b.color, .6);
+            gg.toast(o.win || 'DÉFENSE SATURÉE', 'good');
+          },
+          onLose: (gg) => {
+            b.invuln = false;
+            gg.hurtPlayer(b.dmg * 1.2, b);
+            gg.toast(o.lose || 'SURCHARGE MANQUÉE', 'bad');
+          }
+        });
+      };
+    },
+
+    /** Course d'obstacles : sauter ou percuter */
+    conduit(b, o) {
+      o = o || {};
+      const gain = o.gain != null ? o.gain : 0.18;
+      return (g) => {
+        b.invuln = true;
+        NF.Interlude.start(g, {
+          mode: 'conduit',
+          title: o.title || 'CONDUIT DE DONNÉES',
+          subtitle: o.subtitle || 'DASH ou ULT pour sauter — double saut autorisé',
+          duration: o.duration || 15, hp: o.hp || 3, rush: !!o.rush,
+          color: o.color || b.color,
+          onWin: (gg) => {
+            b.invuln = false;
+            gg.damageEnemy(b, b.maxHp * gain, { silent: true, source: 'interlude' });
+            gg.toast(o.win || 'CONDUIT TRAVERSÉ', 'good');
+          },
+          onLose: (gg) => {
+            b.invuln = false;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.06);
+            gg.toast(o.lose || 'ÉJECTÉ DU CONDUIT', 'bad');
+          }
+        });
+      };
+    },
+
+    /** Défense orbitale : tenir la ligne face à la formation */
+    invaders(b, o) {
+      o = o || {};
+      const gain = o.gain != null ? o.gain : 0.20;
+      return (g) => {
+        b.invuln = true;
+        NF.Interlude.start(g, {
+          mode: 'invaders',
+          title: o.title || 'TRANSFERT ORBITAL',
+          subtitle: o.subtitle || 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
+          duration: o.duration || 18, hp: o.hp || 3,
+          color: o.color || b.color,
+          onWin: (gg) => {
+            b.invuln = false;
+            gg.damageEnemy(b, b.maxHp * gain, { silent: true, source: 'interlude' });
+            FX.text(b.x, b.y - 60, 'RELAIS DÉTRUIT', C.lime, true);
+            gg.toast(o.win || 'ORBITE NETTOYÉE', 'good');
+          },
+          onLose: (gg) => {
+            b.invuln = false;
+            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.07);
+            gg.toast(o.lose || 'LE RELAIS SE RECHARGE', 'bad');
+          }
+        });
+      };
+    },
+
+    /** Partition : chaque note touchée l'entame, chaque note ratée coûte */
+    partition(b, o) {
+      o = o || {};
+      const par = o.par != null ? o.par : 0.0022;      // dégâts par note, ×combo
+      const cost = o.cost != null ? o.cost : 0.04;     // PV max perdus par note ratée
+      const gain = o.gain != null ? o.gain : 0.06;
+      return (g) => {
+        /* surtout pas d'invulnérabilité ici : les notes doivent porter */
+        b.invuln = false;
+        NF.Interlude.start(g, {
+          mode: 'partition',
+          title: o.title || 'PARTITION',
+          subtitle: o.subtitle || 'Frappe la piste quand la note touche la ligne',
+          duration: o.duration || 24,
+          bpm: o.bpm || 104, lanes: 4,
+          need: o.need != null ? o.need : 0.5,
+          comboStep: o.comboStep || 0.08,
+          maxBonus: o.maxBonus || 2.0,
+          color: o.color || b.color,
+          onHit: (gg, combo, mult) =>
+            gg.damageEnemy(b, b.maxHp * par * mult, { silent: true, source: 'rythme' }),
+          onMiss: (gg) => NF.Interlude.noteCost(gg, cost),
+          onWin: (gg) => {
+            gg.damageEnemy(b, b.maxHp * gain, { silent: true, source: 'rythme' });
+            gg.toast(o.win || 'PARTITION TENUE', 'good');
+          },
+          onLose: (gg) => gg.toast(o.lose || 'PARTITION PERDUE', 'bad')
+        });
+      };
+    }
+  };
+
+  /* ============================================================
      Définitions des boss
      ============================================================ */
   const BOSSES = NF.BOSSES = [
@@ -106,7 +259,7 @@
        ------------------------------------------------------------ */
     {
       id: 'vortex', name: 'VORTEX-02 « CYCLONE »', color: '#7dd3ff', sides: 8, r: 44,
-      hpMul: 1150, dmgMul: 1.5,
+      hpMul: 1300, dmgMul: 1.5,
       hint: 'Il t\'aspire : reste près du centre ou fuis l\'anneau',
       init(b) {
         b.spiralA = 0; b.dir = 1; b.ringT = 4; b.spiralT = 0;
@@ -168,6 +321,11 @@
         b.dir *= -1;
         game.toast('INVERSION DU VORTEX', 'warn');
         for (const bl of game.ebullets) bl.spin = (bl.spin || 0) + .6 * b.dir;
+        /* première mécanique du jeu : un passage, lent, pour apprendre */
+        if (b.phase === 2) b.queueBreak(BREAK.timing(b, {
+          title: 'ŒIL DU CYCLONE', speed: .85, width: .3, gain: .12,
+          win: 'TU AS TROUVÉ L\'ŒIL', lose: 'LE VORTEX SE REFERME'
+        }));
       }
     },
 
@@ -176,7 +334,7 @@
        ------------------------------------------------------------ */
     {
       id: 'hydre', name: 'HYDRE-03 « RÉPLICANT »', color: C.magenta, sides: 6, r: 40,
-      hpMul: 850, dmgMul: 1.4,
+      hpMul: 1000, dmgMul: 1.4,
       hint: 'Frappe la copie dont le cœur brille — les autres sont des leurres',
       init(b, game) {
         b.decoys = [];
@@ -246,6 +404,11 @@
       onPhase(b, game) {
         b.spawnDecoys(game, 1);
         game.toast('L\'HYDRE SE DÉDOUBLE', 'bad');
+        if (b.phase === 2) b.queueBreak(BREAK.mash(b, {
+          title: 'FORCER LE VRAI CŒUR', taps: 14, time: 5, gain: .14,
+          hint: 'Martèle : elle ne peut pas tenir la copie longtemps',
+          win: 'LE LEURRE LÂCHE', lose: 'ELLE TIENT BON'
+        }));
       },
       draw(b, ctx) {
         const glow = (x, y) => {
@@ -268,7 +431,7 @@
        ------------------------------------------------------------ */
     {
       id: 'bastion', name: 'BASTION-04 « ÉGIDE »', color: '#3ef2ff', sides: 5, r: 48,
-      hpMul: 1350, dmgMul: 1.7,
+      hpMul: 1500, dmgMul: 1.7,
       hint: 'Son bouclier bloque de face — attaque-le par derrière',
       init(b) {
         b.shieldA = 0; b.shieldArc = Math.PI * 0.78;
@@ -338,6 +501,12 @@
       onPhase(b, game) {
         b.shieldArc = Math.max(Math.PI * .5, b.shieldArc - Math.PI * .12);
         game.toast('BOUCLIER RECONFIGURÉ', 'warn');
+        /* il t'expulse dans ses coursives de maintenance */
+        if (b.phase === 2) b.queueBreak(BREAK.conduit(b, {
+          title: 'COURSIVE DE MAINTENANCE',
+          subtitle: 'Sors de sa carcasse — DASH ou ULT pour sauter',
+          duration: 13, gain: .18
+        }));
       },
       draw(b, ctx) {
         ctx.save();
@@ -376,7 +545,7 @@
        ------------------------------------------------------------ */
     {
       id: 'architecte', name: 'OMEGA-05 « ARCHITECTE »', color: '#c58bff', sides: 4, r: 44,
-      hpMul: 1550, dmgMul: 1.6,
+      hpMul: 1850, dmgMul: 1.6,
       hint: 'Détruis les piliers et réfugie-toi dans le quadrant sûr',
       init(b, game) {
         b.pillars = [];
@@ -442,24 +611,17 @@
       onPhase(b, game) {
         b.spawnPillars(game, 2);
         game.toast('NOUVEAUX PILIERS', 'bad');
-        /* phase 2 : il recompile le secteur et t'impose son tempo */
-        if (b.phase === 2 && !b.scored) {
-          b.scored = true;
-          NF.Interlude.start(game, {
-            mode: 'partition',
-            title: 'RECOMPILATION',
-            subtitle: 'Frappe la piste en rythme — chaque note l\'entame',
-            duration: 26, bpm: 100, lanes: 4, need: 0.5, color: '#c58bff',
-            onHit: (g, combo, mult) =>
-              g.damageEnemy(b, b.maxHp * 0.0022 * mult, { silent: true, source: 'rythme' }),
-            onMiss: (g) => NF.Interlude.noteCost(g, 0.032),
-            onWin: (g) => {
-              g.damageEnemy(b, b.maxHp * 0.08, { silent: true, source: 'rythme' });
-              g.toast('SÉQUENCE COMPILÉE', 'good');
-            },
-            onLose: (g) => g.toast('COMPILATION ÉCHOUÉE', 'bad')
-          });
-        }
+        /* deux mécaniques, une par phase : il recompile, puis il verrouille */
+        if (b.phase === 2) b.queueBreak(BREAK.partition(b, {
+          title: 'RECOMPILATION',
+          subtitle: 'Frappe la piste en rythme — chaque note l\'entame',
+          duration: 22, bpm: 100, need: .5, cost: .032, color: '#c58bff',
+          win: 'SÉQUENCE COMPILÉE', lose: 'COMPILATION ÉCHOUÉE'
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.timing(b, {
+          title: 'VERROU DU SECTEUR', rounds: 2, speed: 1.4, width: .22, gain: .12,
+          color: '#c58bff', win: 'VERROU FORCÉ', lose: 'LE SECTEUR SE REFERME'
+        }));
       }
     },
 
@@ -472,7 +634,7 @@
        ------------------------------------------------------------ */
     {
       id: 'chimere', name: 'SYNTHÈSE-06 « CHIMÈRE »', color: '#ff6b4d', sides: 7, r: 46,
-      hpMul: 2100, dmgMul: 1.7,
+      hpMul: 2500, dmgMul: 1.7,
       hint: 'Elle rejoue les défenses que tu as déjà brisées',
       init(b, game) {
         b.nodeCount = 3;
@@ -547,6 +709,15 @@
         const nom = { 1: 'NŒUDS', 2: 'BOUCLIER', 3: 'LEURRES' }[b.mode];
         game.toast('LA CHIMÈRE PASSE EN ' + nom, 'bad');
         FX.screenFlash(b.color, .4);
+        if (b.phase === 2) b.queueBreak(BREAK.invaders(b, {
+          title: 'BANC D\'ESSAI',
+          subtitle: 'Elle te teste sur un autre terrain — tiens la ligne',
+          duration: 16, gain: .18
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.mash(b, {
+          title: 'FORCER LA SYNTHÈSE', taps: 20, time: 4.5, gain: .13,
+          win: 'SYNTHÈSE ROMPUE', lose: 'ELLE SE RECOMPOSE'
+        }));
       },
       draw(b, ctx) {
         if (b.mode === 2) {
@@ -576,7 +747,7 @@
        ------------------------------------------------------------ */
     {
       id: 'oracle', name: 'ORACLE-07 « PRÉDICTEUR »', color: '#7dd3ff', sides: 3, r: 42,
-      hpMul: 2450, dmgMul: 1.6,
+      hpMul: 2750, dmgMul: 1.6,
       hint: 'Il vise ta trajectoire : change de direction après le marquage',
       init(b) {
         b.predT = 2;
@@ -633,24 +804,18 @@
       onPhase(b, game) {
         game.toast('PRÉDICTION AFFINÉE', 'bad');
         b.trail.length = 0;
-        /* il ne se contente plus d'anticiper : il impose la mesure */
-        if (b.phase === 2 && !b.scored) {
-          b.scored = true;
-          NF.Interlude.start(game, {
-            mode: 'partition',
-            title: 'TEMPO IMPOSÉ',
-            subtitle: 'Il a déjà écrit la suite — joue-la sans faute',
-            duration: 28, bpm: 112, lanes: 4, need: 0.55, color: '#7dd3ff',
-            onHit: (g, combo, mult) =>
-              g.damageEnemy(b, b.maxHp * 0.0022 * mult, { silent: true, source: 'rythme' }),
-            onMiss: (g) => NF.Interlude.noteCost(g, 0.035),
-            onWin: (g) => {
-              g.damageEnemy(b, b.maxHp * 0.1, { silent: true, source: 'rythme' });
-              g.toast('PRÉDICTION DÉJOUÉE', 'good');
-            },
-            onLose: (g) => g.toast('IL AVAIT VU JUSTE', 'bad')
-          });
-        }
+        /* il ne se contente plus d'anticiper : il impose la mesure,
+           puis te met au défi de la briser */
+        if (b.phase === 2) b.queueBreak(BREAK.partition(b, {
+          title: 'TEMPO IMPOSÉ',
+          subtitle: 'Il a déjà écrit la suite — joue-la sans faute',
+          duration: 24, bpm: 112, need: .55, cost: .035, gain: .08, color: '#7dd3ff',
+          win: 'PRÉDICTION DÉJOUÉE', lose: 'IL AVAIT VU JUSTE'
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.timing(b, {
+          title: 'HORS DE SA LIGNE', rounds: 2, speed: 1.6, width: .2, gain: .12,
+          color: '#7dd3ff', win: 'IMPRÉVISIBLE', lose: 'ENCORE PRÉVU'
+        }));
       },
       draw(b, ctx) {
         /* fil reliant les positions mémorisées */
@@ -668,7 +833,7 @@
        ------------------------------------------------------------ */
     {
       id: 'ruche', name: 'ESSAIM-08 « RUCHE »', color: '#ffb43e', sides: 6, r: 50,
-      hpMul: 2200, dmgMul: 1.5,
+      hpMul: 2500, dmgMul: 1.5,
       hint: 'Détruis les couveuses : chacune arrache 15 % de sa coque',
       init(b, game) {
         b.pods = [];
@@ -735,6 +900,15 @@
       },
       onPhase(b, game) {
         game.toast('LA RUCHE S\'AGITE', 'bad');
+        if (b.phase === 2) b.queueBreak(BREAK.conduit(b, {
+          title: 'GALERIE DE LA RUCHE',
+          subtitle: 'Elle t\'avale — traverse sans percuter',
+          duration: 16, gain: .18, color: '#ffb43e'
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.mash(b, {
+          title: 'CRAQUER LA COQUE', taps: 22, time: 4.5, gain: .13,
+          color: '#ffb43e', win: 'COQUE FENDUE', lose: 'LA COQUE TIENT'
+        }));
       }
     },
 
@@ -799,6 +973,16 @@
           const pt = U.ringPoint(b.x, b.y, 140, 240);
           game.spawnAdd('phantom', pt.x, pt.y, b.tierScale);
         }
+        if (b.phase === 2) b.queueBreak(BREAK.timing(b, {
+          title: 'REFLET INVERSÉ', rounds: 3, speed: 1.5, width: .21, gain: .11,
+          hint: 'Trois synchronisations — le miroir ne pardonne pas',
+          color: '#c58bff', win: 'REFLET BRISÉ', lose: 'LE MIROIR TIENT'
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.invaders(b, {
+          title: 'DE L\'AUTRE CÔTÉ',
+          subtitle: 'Il t\'a renvoyé dans son reflet — tiens la ligne',
+          duration: 18, gain: .2, color: '#c58bff'
+        }));
       },
       draw(b, ctx) {
         if (!(b.dmgTaken > 1)) return;
@@ -892,6 +1076,17 @@
       onPhase(b, game) {
         game.toast('PHASE ' + b.phase + ' — ELLE S\'AFFAME', 'bad');
         b.feedT = Math.min(b.feedT, 3);
+        if (b.phase === 2) b.queueBreak(BREAK.partition(b, {
+          title: 'CHANT DE L\'ABYSSE',
+          subtitle: 'Elle t\'appelle en rythme — réponds-lui note pour note',
+          duration: 26, bpm: 108, need: .55, cost: .038, gain: .07, color: '#8b5cff',
+          win: 'CHANT RENVOYÉ', lose: 'ELLE T\'A ENDORMI'
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.mash(b, {
+          title: 'REMONTER DU PUITS', taps: 24, time: 4.5, gain: .12,
+          hint: 'Martèle pour t\'arracher à son aspiration',
+          color: '#8b5cff', win: 'TU REMONTES', lose: 'ELLE TE RATTRAPE'
+        }));
       },
       draw(b, ctx) {
         /* halo de gravité */
@@ -919,7 +1114,7 @@
        ------------------------------------------------------------ */
     {
       id: 'creuset', name: 'FORGE-11 « CREUSET »', color: '#ff8a3e', sides: 5, r: 48,
-      hpMul: 3000, dmgMul: 1.6,
+      hpMul: 3300, dmgMul: 1.6,
       hint: 'Il surchauffe : réussis la purge quand elle se déclenche',
       init(b) {
         b.heat = 0;
@@ -993,6 +1188,15 @@
       onPhase(b, game) {
         game.toast('LE CREUSET S\'EMBRASE', 'bad');
         b.heat = Math.max(b.heat, 55);
+        /* seconde mécanique : il vide sa chaleur dans ses conduits */
+        if (b.phase === 3) {
+          b.heat = 0;
+          b.queueBreak(BREAK.conduit(b, {
+            title: 'ÉVENT DE SURCHAUFFE',
+            subtitle: 'Il purge par ses conduits — ne percute rien',
+            duration: 15, rush: true, gain: .17, color: '#ff8a3e'
+          }));
+        }
       },
       draw(b, ctx) {
         /* jauge de chaleur autour du boss */
@@ -1011,7 +1215,7 @@
        ------------------------------------------------------------ */
     {
       id: 'orbitale', name: 'ORBITE-12 « SENTINELLE »', color: '#7dd3ff', sides: 4, r: 46,
-      hpMul: 2500, dmgMul: 1.5,
+      hpMul: 2950, dmgMul: 1.5,
       hint: 'Elle finira par t\'expédier en orbite : tiens la ligne',
       init(b) {
         b.beamT = 3;
@@ -1019,7 +1223,7 @@
       },
       update(b, dt, game) {
         b.hint = b.sent >= 2 ? 'Plus de relais — finis-la'
-          : `Transferts orbitaux subis : ${b.sent}/2`;
+          : `Elle prépare un transfert (${b.sent}/2 subis)`;
 
         b.beamT -= dt;
         if (b.beamT <= 0) {
@@ -1037,30 +1241,24 @@
         b.driftTo(dt, game, 280, .6);
       },
       onPhase(b, game) {
-        /* elle expédie en orbite à chaque changement de phase, la seconde
-           fois sur un relais plus serré */
-        if (b.sent >= 2) { game.toast('SENTINELLE RECONFIGURÉE', 'bad'); return; }
-        b.sent++;
-        const second = b.sent === 2;
-        b.invuln = true;
-        NF.Interlude.start(game, {
-          mode: 'invaders',
-          title: second ? 'SECOND TRANSFERT' : 'TRANSFERT ORBITAL',
-          subtitle: second ? 'Relais renforcé — moins de marge'
-                           : 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
-          duration: second ? 18 : 20, hp: 3, color: '#7dd3ff',
-          onWin: (g) => {
-            b.invuln = false;
-            g.damageEnemy(b, b.maxHp * (second ? 0.24 : 0.28), { silent: true, source: 'interlude' });
-            FX.text(b.x, b.y - 60, 'RELAIS DÉTRUIT', C.lime, true);
-            g.toast('ORBITE NETTOYÉE — ELLE ENCAISSE', 'good');
-          },
-          onLose: (g) => {
-            b.invuln = false;
-            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.09);
-            g.toast('LA SENTINELLE SE RECHARGE', 'bad');
-          }
-        });
+        /* elle t'expédie en orbite, puis tente de te garder là-haut */
+        if (b.phase === 2) {
+          b.sent++;
+          b.queueBreak(BREAK.invaders(b, {
+            title: 'TRANSFERT ORBITAL',
+            subtitle: 'Détruis la formation avant qu\'elle n\'atteigne la ligne',
+            duration: 20, gain: .26, color: '#7dd3ff',
+            win: 'ORBITE NETTOYÉE — ELLE ENCAISSE', lose: 'LA SENTINELLE SE RECHARGE'
+          }));
+        }
+        if (b.phase === 3) {
+          b.sent++;
+          b.queueBreak(BREAK.mash(b, {
+            title: 'FORCER LE RAPPEL', taps: 24, time: 4.5, gain: .14,
+            hint: 'Martèle pour rompre le faisceau de transfert',
+            color: '#7dd3ff', win: 'FAISCEAU ROMPU', lose: 'ELLE TE RETIENT'
+          }));
+        }
       }
     },
 
@@ -1069,7 +1267,7 @@
        ------------------------------------------------------------ */
     {
       id: 'conduit', name: 'CIRCUIT-13 « TRACEUR »', color: '#9dff4d', sides: 3, r: 44,
-      hpMul: 2400, dmgMul: 1.55,
+      hpMul: 2950, dmgMul: 1.55,
       hint: 'Il t\'aspire dans ses conduits : saute ou percute',
       init(b) {
         b.runs = 0;
@@ -1094,27 +1292,16 @@
         b.driftTo(dt, game, 240, .7);
       },
       onPhase(b, game) {
-        if (b.phase > 3 || b.runs >= 2) return;
+        if (b.runs >= 2) return;
         b.runs++;
-        b.invuln = true;
-        NF.Interlude.start(game, {
-          mode: 'conduit',
-          title: b.runs === 2 ? 'CONDUIT EN SURRÉGIME' : 'CONDUIT DE DONNÉES',
-          subtitle: b.runs === 2 ? 'Ça va plus vite, et ça vient aussi du plafond'
-                                 : 'DASH ou ULT pour sauter — double saut autorisé',
-          duration: 14 + b.runs * 3, hp: 3, color: '#9dff4d',
-          rush: b.runs === 2,
-          onWin: (g) => {
-            b.invuln = false;
-            g.damageEnemy(b, b.maxHp * 0.28, { silent: true, source: 'interlude' });
-            g.toast('CONDUIT TRAVERSÉ', 'good');
-          },
-          onLose: (g) => {
-            b.invuln = false;
-            b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.08);
-            g.toast('ÉJECTÉ DU CONDUIT', 'bad');
-          }
-        });
+        const second = b.runs === 2;
+        b.queueBreak(BREAK.conduit(b, {
+          title: second ? 'CONDUIT EN SURRÉGIME' : 'CONDUIT DE DONNÉES',
+          subtitle: second ? 'Ça va plus vite, et ça vient aussi du plafond'
+                           : 'DASH ou ULT pour sauter — double saut autorisé',
+          duration: second ? 20 : 17, rush: second, gain: .26, color: '#9dff4d'
+        }));
+        void game;
       }
     },
 
@@ -1191,6 +1378,13 @@
       onPhase(b, game) {
         game.toast('FRÉQUENCE MODIFIÉE', 'bad');
         b.qteT = Math.min(b.qteT, 2);
+        /* seconde mécanique : elle passe de l'onde au motif */
+        if (b.phase === 3) b.queueBreak(BREAK.partition(b, {
+          title: 'FRÉQUENCE PROPRE',
+          subtitle: 'Sa résonance devient une mesure — accorde-toi',
+          duration: 24, bpm: 116, need: .55, cost: .04, gain: .07, color: '#c58bff',
+          win: 'ACCORD TROUVÉ', lose: 'DISSONANCE'
+        }));
       }
     },
 
@@ -1199,7 +1393,7 @@
        ------------------------------------------------------------ */
     {
       id: 'coeur', name: 'NOYAU-15 « CŒUR DU PROTOCOLE »', color: '#ffd23e', sides: 12, r: 54,
-      hpMul: 2200, dmgMul: 1.65,
+      hpMul: 2700, dmgMul: 1.65,
       hint: 'Le protocole lui-même. Il te testera sur tous les tableaux.',
       init(b) {
         b.salvoT = 2;
@@ -1240,46 +1434,23 @@
         b.driftTo(dt, game, 270, .5);
       },
       onPhase(b, game) {
-        b.invuln = true;
-        if (b.phase === 2) {
-          /* première épreuve : la partition du protocole, la plus dense
-             du jeu — il n'est pas invulnérable, chaque note l'entame */
-          b.invuln = false;
-          NF.Interlude.start(game, {
-            mode: 'partition',
-            title: 'PROTOCOLE — ÉPREUVE 1',
-            subtitle: 'Sa cadence, ta main. Ne romps pas le combo.',
-            duration: 30, bpm: 124, lanes: 4, need: 0.6, color: '#ffd23e',
-            comboStep: 0.09, maxBonus: 2.6,
-            onHit: (g, combo, mult) =>
-              g.damageEnemy(b, b.maxHp * 0.0018 * mult, { silent: true, source: 'rythme' }),
-            onMiss: (g) => NF.Interlude.noteCost(g, 0.04),
-            onWin: (g) => {
-              b.trialsDone++;
-              g.damageEnemy(b, b.maxHp * 0.1, { silent: true, source: 'rythme' });
-              g.toast('ÉPREUVE FRANCHIE', 'good');
-            },
-            onLose: (g) => g.toast('ÉPREUVE ÉCHOUÉE', 'bad')
-          });
-        } else {
-          /* seconde épreuve : défense orbitale */
-          NF.Interlude.start(game, {
-            mode: 'invaders',
-            title: 'PROTOCOLE — ÉPREUVE 2',
-            subtitle: 'Le cœur t\'expulse : tiens la ligne orbitale',
-            duration: 22, hp: 3, color: '#ffd23e',
-            onWin: (g) => {
-              b.invuln = false; b.trialsDone++;
-              g.damageEnemy(b, b.maxHp * 0.2, { silent: true, source: 'interlude' });
-              g.toast('LE CŒUR VACILLE', 'good');
-            },
-            onLose: (g) => {
-              b.invuln = false;
-              b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.08);
-              g.toast('LE CŒUR SE RECOMPOSE', 'bad');
-            }
-          });
-        }
+        /* les deux épreuves du protocole : la partition la plus dense du
+           jeu, puis la ligne orbitale */
+        if (b.phase === 2) b.queueBreak(BREAK.partition(b, {
+          title: 'PROTOCOLE — ÉPREUVE 1',
+          subtitle: 'Sa cadence, ta main. Ne romps pas le combo.',
+          duration: 30, bpm: 124, need: .6, cost: .04, gain: .09,
+          par: 0.0018, comboStep: .09, maxBonus: 2.6, color: '#ffd23e',
+          win: 'ÉPREUVE FRANCHIE', lose: 'ÉPREUVE ÉCHOUÉE'
+        }));
+        if (b.phase === 3) b.queueBreak(BREAK.invaders(b, {
+          title: 'PROTOCOLE — ÉPREUVE 2',
+          subtitle: 'Le cœur t\'expulse : tiens la ligne orbitale',
+          duration: 22, gain: .2, color: '#ffd23e',
+          win: 'LE CŒUR VACILLE', lose: 'LE CŒUR SE RECOMPOSE'
+        }));
+        b.trialsDone++;
+        void game;
       },
       draw(b, ctx) {
         /* anneaux du cœur */
@@ -1421,6 +1592,9 @@
       }
     }
 
+    /** Programme une mécanique pour la première image où l'écran est libre */
+    queueBreak(fn) { this.pending = fn; }
+
     /** Le bouclier du Bastion bloque-t-il ce tir ? */
     blocks(x, y) {
       return this.bdef.block ? this.bdef.block(this, x, y) : false;
@@ -1434,6 +1608,15 @@
 
       if (this.entryT > 0) {                       // apparition
         this.entryT -= dt;
+        return;
+      }
+
+      /* une mécanique en attente ne se déclenche que sur un écran libre :
+         sans ça un QTE et un interlude pourraient se superposer */
+      if (this.pending && !game.qte && !game.interlude) {
+        const run = this.pending;
+        this.pending = null;
+        run(game);
         return;
       }
 

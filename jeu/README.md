@@ -47,9 +47,10 @@ Le même écran permet de couper les **vibrations** et la **secousse d'écran**.
   amélioration d'arme, statistique) + une relance offerte tous les 5 niveaux.
   Au retour dans l'arène, une **demi-seconde d'invincibilité** évite de se faire
   cueillir par ce qui attendait pendant le choix.
-- **Séquences d'action rapide, interludes et partitions** : certains boss figent
-  le combat pour un QTE, ou téléportent le joueur dans un mini-jeu le temps d'une
-  phase (défense orbitale, course d'obstacles, jeu de rythme).
+- **Ruptures d'écran** : dès la vague 10, les boss interrompent le combat pour
+  une mécanique à part — QTE de précision ou de martèlement, défense orbitale,
+  course d'obstacles, partition en rythme. Un boss en porte **une par phase**,
+  donc jusqu'à deux par combat à partir de la vague 25.
 - **Cristaux ◈** gagnés en fin de partie → arbre de talents (bonus permanents)
   et Arsenal (déblocage d'armes).
 - **Quêtes** à paliers infinis : chaque récompense réclamée relance un objectif
@@ -107,21 +108,23 @@ Le compteur du HUD affiche la progression dans le secteur (`VAGUE 17 / 25`).
 
 | Vague | Boss | Mécanique |
 |---|---|---|
-| 5 | **NEXUS-01 « Prisme »** | Invulnérable tant que ses 4 nœuds orbitaux vivent. Chaque nœud détruit **explose en onde de choc** : ne reste pas collé. Une fois à nu il panique et arrose en salves radiales. |
-| 10 | **VORTEX-02 « Cyclone »** | Aspire le joueur — puis, à partir de la phase 2, **inverse son souffle** et le repousse. Spirales de projectiles et anneaux de compression à traverser par l'intérieur. |
-| 15 | **HYDRE-03 « Réplicant »** | Se dédouble en leurres et échange sa place avec eux. Seule la copie au cœur allumé encaisse — mais elle allume parfois un **cœur fantôme** sur un leurre pendant que le vrai s'éteint. |
-| 20 | **BASTION-04 « Égide »** | Bouclier frontal à contourner. Rester dans son axe le **charge** : à saturation il libère une décharge frontale en trois faisceaux. Déploie des tourelles et charge. |
-| 25 | **OMEGA-05 « Architecte »** | Grille laser alimentée par des piliers et reconfiguration du secteur. En phase 2 il **recompile** : partition à jouer en rythme, chaque note l'entame. |
+| 5 | **NEXUS-01 « Prisme »** | Pas de rupture d'écran : le boss d'apprentissage. Invulnérable tant que ses 4 nœuds orbitaux vivent, et chaque nœud détruit **explose en onde de choc**. Une fois à nu il panique et arrose en salves radiales. |
+| 10 | **VORTEX-02 « Cyclone »** | Aspire le joueur, puis **inverse son souffle** dès la phase 2. Ph. 2 : *QTE de précision* — un seul passage, lent, pour découvrir la mécanique. |
+| 15 | **HYDRE-03 « Réplicant »** | Leurres, échanges de place et **cœur fantôme** allumé sur une copie pendant que le vrai s'éteint. Ph. 2 : *QTE de martèlement*. |
+| 20 | **BASTION-04 « Égide »** | Bouclier frontal à contourner ; rester dans son axe le **charge** jusqu'à une décharge en trois faisceaux. Ph. 2 : *conduit* court. |
+| 25 | **OMEGA-05 « Architecte »** | Grille laser sur piliers et reconfiguration du secteur. **Premier boss à deux mécaniques** — ph. 2 : *partition*, ph. 3 : *QTE de précision* en deux passages. |
 
 ### Secteur 2 — La Faille
 
 | Vague | Boss | Mécanique |
 |---|---|---|
-| 30 | **SYNTHÈSE-06 « Chimère »** | Rejoue les trois défenses — nœuds, bouclier frontal, leurres — mais dans un **ordre tiré au sort à chaque partie** : le combat appris la fois d'avant ne se récite pas. |
-| 35 | **ORACLE-07 « Prédicteur »** | Frappe ta position **anticipée** et mine le chemin parcouru. En phase 2 il cesse d'anticiper et **impose sa mesure** : partition dense à jouer sans faute. |
-| 40 | **ESSAIM-08 « Ruche »** | Coque scellée tant qu'une couveuse vit. Chacune arrache 15 % de sa coque — mais elles **rampent vers la ruche** et chaque retour la ravitaille de 8 %. |
-| 45 | **PARADOXE-09 « Miroir »** | Inverse tes commandes par cycles annoncés, et **les tirs déjà en l'air repartent en arrière**. Pendant l'inversion il encaisse le **double** : c'est ta fenêtre. |
-| 50 | **ABYSSE-10 « Dévoreuse »** | Invoque des sbires reliés par un lien pour les **avaler et se soigner**. Rompre un lien avant le repas lui coûte les 3 % qu'elle comptait gagner. Referme l'arène par un anneau. |
+À partir d'ici, **chaque boss a deux mécaniques, une par phase**.
+
+| 30 | **SYNTHÈSE-06 « Chimère »** | Rejoue ses trois défenses dans un **ordre tiré au sort à chaque partie**. Ph. 2 : *défense orbitale*, ph. 3 : *martèlement*. |
+| 35 | **ORACLE-07 « Prédicteur »** | Frappe ta position **anticipée** et mine le chemin parcouru. Ph. 2 : *partition* dense, ph. 3 : *QTE de précision* en deux passages. |
+| 40 | **ESSAIM-08 « Ruche »** | Coque scellée tant qu'une couveuse vit ; elles **rampent vers la ruche** et chaque retour la ravitaille de 8 %. Ph. 2 : *conduit*, ph. 3 : *martèlement*. |
+| 45 | **PARADOXE-09 « Miroir »** | Inverse tes commandes, et **les tirs en l'air repartent en arrière**. Pendant l'inversion il encaisse le **double**. Ph. 2 : *QTE de précision* en trois passages, ph. 3 : *défense orbitale*. |
+| 50 | **ABYSSE-10 « Dévoreuse »** | Invoque des sbires reliés pour les **avaler et se soigner** ; rompre un lien lui coûte ce qu'elle comptait gagner. Ph. 2 : *partition*, ph. 3 : *martèlement*. |
 
 ### Secteur 3 — Le Noyau
 
@@ -132,15 +135,34 @@ arrache une grosse part de vie au boss ; échouer le soigne.
 
 | Vague | Boss | Mécanique |
 |---|---|---|
-| 55 | **FORGE-11 « Creuset »** | Une jauge de surchauffe monte en continu, **près de deux fois plus vite au contact** : le combattre au corps à corps veut dire enchaîner les purges. À saturation il se verrouille et lance une **purge en QTE de précision**. Réussie, elle lui coûte 14 % ; ratée, il se régénère et l'arène crache du magma. |
-| 60 | **ORBITE-12 « Sentinelle »** | Elle t'**expédie en défense orbitale** à chaque changement de phase : écran type Space Invaders, formation qui descend, tir automatique, on glisse pour viser. Deux transferts, le second plus serré. |
-| 65 | **CIRCUIT-13 « Traceur »** | Il t'**aspire dans un conduit** : course d'obstacles à la Geometry Dash, DASH ou ULT pour sauter, double saut autorisé. Deux traversées, la seconde **en surrégime**. |
-| 70 | **ÉCHO-14 « Résonance »** | Bouclier invulnérable qui ne cède qu'au **martèlement**. La fenêtre ouverte, elle **décroche et fuit** : il faut la rattraper. Le bouclier se reforme deux fois ; au **troisième bris il ne revient plus**. |
-| 75 | **NOYAU-15 « Cœur du protocole »** | Le boss final, qui te teste sur tous les tableaux : salves radiales, triple balayage rotatif, la **partition la plus dense du jeu** en phase 2, puis une **épreuve orbitale** en phase 3. |
+| 55 | **FORGE-11 « Creuset »** | Jauge de surchauffe qui monte **près de deux fois plus vite au contact** : le combattre au corps à corps veut dire enchaîner les *QTE de purge*, autant de passages que sa phase. Ph. 3 : *conduit en surrégime*, il vide sa chaleur dans ses évents. |
+| 60 | **ORBITE-12 « Sentinelle »** | Ph. 2 : *défense orbitale*, elle t'expédie là-haut. Ph. 3 : *martèlement* pour rompre le faisceau qui veut t'y garder. |
+| 65 | **CIRCUIT-13 « Traceur »** | Deux traversées de *conduit*, la seconde **en surrégime** : plus rapide, et ça vient aussi du plafond. |
+| 70 | **ÉCHO-14 « Résonance »** | Bouclier qui ne cède qu'au *martèlement* ; la fenêtre ouverte elle **décroche et fuit**. Trois bris, le dernier définitif. Ph. 3 : *partition*, sa résonance devient une mesure. |
+| 75 | **NOYAU-15 « Cœur du protocole »** | Le boss final : salves radiales, triple balayage rotatif, la **partition la plus dense du jeu** en phase 2, puis l'*épreuve orbitale* en phase 3. |
+
+## Ruptures d'écran
+
+Un boss peut interrompre le combat pour une mécanique jouée à part, **une par
+phase** (les phases tombent à 66 % et 33 % de sa vie). La montée est
+progressive : rien sur le tout premier boss, une seule mécanique sur les
+suivants du secteur 1, puis deux par boss à partir de la vague 25.
+
+| Mécanique | Ce qu'on fait | Réussite | Échec |
+|---|---|---|---|
+| **QTE de précision** | Toucher quand le curseur entre dans la zone, une à trois fois | −10 à 14 % de sa vie | il se soigne de 5 % |
+| **QTE de martèlement** | Saturer une jauge avant la fin du chrono | −12 à 14 % | dégâts au joueur |
+| **Défense orbitale** | Écran type Space Invaders : la formation descend, le tir est automatique, on glisse pour viser | −18 à 26 % | il se soigne de 7 % |
+| **Conduit** | Course d'obstacles à la Geometry Dash : DASH ou ULT pour sauter, double saut autorisé | −17 à 26 % | il se soigne de 6 % |
+| **Partition** | Jeu de rythme sur quatre pistes (voir plus bas) | jusqu'à ~30 % | rien de plus que les dégâts subis |
+
+Le déclenchement attend toujours une image où l'écran est libre : deux
+mécaniques ne peuvent pas se superposer, même si les deux phases tombent dans
+le même souffle.
 
 ## Partitions
 
-Trois boss remplacent une phase de combat par un **jeu de rythme**. Les notes
+Cinq boss remplacent une phase de combat par un **jeu de rythme**. Les notes
 descendent sur quatre pistes vers une ligne de frappe ; on tape la colonne qui
 correspond (au doigt, ou touches `1`–`4` / `D F J K` au clavier).
 
@@ -328,8 +350,13 @@ jeu/
 - **Un QTE dans un boss** : appelle `NF.QTE.start(game, {...})` depuis son
   `update` ou son `onPhase` (`type: 'timing'` ou `'mash'`, `rounds`, `onWin`,
   `onLose`). Le monde se fige tant que la séquence tourne.
+- **Une rupture d'écran sur un boss** : dans son `onPhase`, appelle
+  `b.queueBreak(BREAK.timing(b, {...}))` — ou `mash`, `conduit`, `invaders`,
+  `partition`. Les fabriques `BREAK` (`js/entities/bosses.js`) portent les
+  rendements par défaut ; `queueBreak` attend une image libre pour que deux
+  mécaniques ne se superposent jamais.
 - **Un interlude** : appelle `NF.Interlude.start(game, {...})` (`mode:
-  'invaders'`, `'conduit'` ou `'partition'`, `duration`, `hp`, `onWin`,
+  'invaders'`, `'conduit'` ou `'partition'`, `duration`, `hp`, `rush`, `onWin`,
   `onLose`). Le mini-jeu prend la main sur la boucle et sur le rendu, puis rend
   l'arène. La partition accepte en plus `bpm`, `lanes`, `window`, `need`,
   `comboStep`, `maxBonus`, `onHit(game, combo, mult)` et `onMiss(game)`.

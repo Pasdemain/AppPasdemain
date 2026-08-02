@@ -254,7 +254,7 @@
        ============================================================ */
     updateConduit(dt, game, st, mv) {
       if (st.invuln > 0) st.invuln -= dt;
-      st.speed = (st.o.rush ? 400 : 320) + st.t * (st.o.rush ? 13 : 9);
+      st.speed = (st.o.rush ? 355 : 320) + st.t * (st.o.rush ? 10 : 9);
       st.scrollX += st.speed * dt;
 
       /* saut : le bouton DASH ou un appui sur la moitié droite */
@@ -274,7 +274,9 @@
       /* génération d'obstacles */
       st.spawnT -= dt;
       if (st.spawnT <= 0) {
-        st.spawnT = U.rand(0.75, 1.25) * (340 / st.speed) * 1.6;
+        /* en surrégime la piste défile plus vite : on espace davantage,
+           sinon la fenêtre de réaction devient impraticable au pouce */
+        st.spawnT = U.rand(0.75, 1.25) * (340 / st.speed) * (st.o.rush ? 2.0 : 1.6);
         const kind = U.chance(st.o.rush ? .45 : .28) ? 'haut' : 'bas';
         st.obstacles.push({
           x: st.w + 40,

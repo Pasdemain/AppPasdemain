@@ -579,7 +579,7 @@ const DATA = {
           "body": [
             "En eaux maritimes, la conduite d’un navire de plaisance à moteur d’une puissance supérieure à 6 CV (4,5 kW) exige un titre de conduite. L’option côtière s’obtient à partir de 16 ans.",
             "Elle autorise la navigation jusqu’à 6 milles d’un abri, de jour comme de nuit. Au-delà, l’extension hauturière est nécessaire ; elle ne comporte pas de limite de distance.",
-            "L’examen théorique est un QCM de 30 questions. Il est réussi avec 5 fautes au maximum, une erreur sur une question de sécurité étant éliminatoire."
+            "Depuis le 1er juin 2022, l’examen théorique est un QCM de 40 questions passé sur tablette avec un casque audio. Chaque question est lue, puis 20 secondes sont laissées pour répondre. Il faut au moins 35 bonnes réponses : 5 fautes sont tolérées."
           ],
           "keyPoints": [
             "Côtier : 6 milles d’un abri, 16 ans, moteur de plus de 6 CV."
@@ -1358,7 +1358,7 @@ const DATA = {
       "explanation": "Le GPS donne position, vitesse et route sur le fond. La profondeur vient du sondeur, et la sécurité vient du croisement des deux avec la carte."
     }
   ],
-  "EXAM_LENGTH": 30,
+  "EXAM_LENGTH": 40,
   "EXAM_MAX_ERRORS": 5
 };
 const { THEMES, LESSONS, QUESTIONS, EXAM_LENGTH, EXAM_MAX_ERRORS } = DATA;
@@ -1620,8 +1620,8 @@ function viewEntrainement() {
 
   <div class="card">
     <h4>Examen blanc</h4>
-    <p class="small muted">${EXAM_LENGTH} questions tirées de l’ensemble du programme. Admis avec
-      ${EXAM_MAX_ERRORS} fautes au maximum, une erreur sur une question de sécurité étant éliminatoire.</p>
+    <p class="small muted">${EXAM_LENGTH} questions tirées de l’ensemble du programme, comme à
+      l’examen depuis le 1<sup>er</sup> juin 2022. Admis avec ${EXAM_MAX_ERRORS} fautes au maximum.</p>
     <button class="btn" data-go="#/quiz/exam" style="margin-top:var(--sp-sm)">Commencer</button>
   </div>
 
@@ -1728,7 +1728,7 @@ function viewQuiz(mode) {
     <p class="eyebrow">${esc(themeById[q.theme].label)}</p>
   </div>
   ${bar((quiz.index + (revealed ? 1 : 0)) / quiz.questions.length, null, true)}
-  ${q.critical ? `<p class="tag">Question de sécurité · une erreur est éliminatoire</p>` : ""}
+  ${q.critical ? `<p class="tag">Question de sécurité · à ne pas rater</p>` : ""}
   <h3>${esc(q.prompt)}</h3>
   <div class="stack-md">
     ${q.choices.map((c, i) => {
@@ -1755,7 +1755,7 @@ function viewResult(mode) {
   const errors = total - correct;
   const criticalMissed = quiz.answers.filter((a) => !a.correct && a.question.critical);
   const isExam = mode === "exam";
-  const passed = isExam ? errors <= EXAM_MAX_ERRORS && criticalMissed.length === 0 : errors === 0;
+  const passed = isExam ? errors <= EXAM_MAX_ERRORS : errors === 0;
   const missed = quiz.answers.filter((a) => !a.correct);
 
   return `${topbar(modeTitle(mode), "#/entrainement")}
@@ -1767,7 +1767,7 @@ function viewResult(mode) {
         padding:var(--sp-lg);border-radius:var(--r-md);display:flex;flex-direction:column;gap:var(--sp-xs)">
       <h4 style="color:${passed ? "var(--success)" : "var(--danger)"}">${passed ? "Admis" : "Refusé"}</h4>
       <p class="small muted">${errors} faute${plural(errors)} sur ${EXAM_MAX_ERRORS} autorisées${
-        criticalMissed.length ? ` · ${criticalMissed.length} erreur${plural(criticalMissed.length)} éliminatoire${plural(criticalMissed.length)}` : ""}.</p>
+        criticalMissed.length ? ` · dont ${criticalMissed.length} sur une question de sécurité` : ""}.</p>
     </div>` : ""}
   </div>
 
@@ -1859,8 +1859,7 @@ document.addEventListener("click", (event) => {
       if (quiz.mode === "exam") {
         const total = quiz.questions.length;
         const correct = quiz.answers.filter((a) => a.correct).length;
-        const criticalMissed = quiz.answers.filter((a) => !a.correct && a.question.critical).length;
-        recordExam(total, correct, total - correct <= EXAM_MAX_ERRORS && criticalMissed === 0);
+        recordExam(total, correct, total - correct <= EXAM_MAX_ERRORS);
       }
       quiz.done = true;
     }

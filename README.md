@@ -34,8 +34,8 @@ C'est un fichier autonome : il marche aussi bien en mode avion.
   marques, signaux sonores, sécurité, météo et marées, VHF, réglementation, navigation. Chaque
   leçon se termine par un encadré « à retenir » et un raccourci vers les questions du thème.
 - **Entraînement** — séries par thème, correction immédiate et explication à chaque réponse.
-- **Examen blanc** — 30 questions tirées de tout le programme, avec la règle réelle : admis à
-  5 fautes maximum, une erreur sur une question de sécurité étant éliminatoire.
+- **Examen blanc** — 40 questions tirées de tout le programme, avec la règle réelle en vigueur
+  depuis le 1er juin 2022 : admis à 5 fautes maximum, soit 35 bonnes réponses minimum.
 - **Mes erreurs** — série constituée automatiquement des questions ratées à la dernière tentative.
 - **Progrès** — taux de réussite global et par thème, questions acquises, historique des examens.
 - **Thème clair et sombre**, réglé sur le système ou forcé via le bouton ◐.
@@ -78,9 +78,10 @@ Pour ajouter une question :
 ```
 
 `answer` est la position de la bonne réponse dans `choices` tel que vous l'écrivez ; l'ordre est
-mélangé à l'affichage et l'index recalculé. `critical` est facultatif et marque les questions
-dont l'erreur est éliminatoire. Les `id` doivent rester stables : ils servent de clé de
-progression. Les `theme` doivent correspondre à un identifiant de la liste `THEMES`.
+mélangé à l'affichage et l'index recalculé. `critical` est facultatif et met simplement en avant
+une question de sécurité pendant la révision — il n'a aucun effet sur le résultat. Les `id`
+doivent rester stables : ils servent de clé de progression. Les `theme` doivent correspondre à un
+identifiant de la liste `THEMES`.
 
 ## Avertissement
 

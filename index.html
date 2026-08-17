@@ -1356,6 +1356,1499 @@ const DATA = {
       ],
       "answer": 0,
       "explanation": "Le GPS donne position, vitesse et route sur le fond. La profondeur vient du sondeur, et la sécurité vient du croisement des deux avec la carte."
+    },
+    {
+      "id": "bal-07",
+      "theme": "balisage",
+      "prompt": "Une marque cardinale Ouest porte deux cônes noirs disposés :",
+      "choices": [
+        "Pointe contre pointe",
+        "Base contre base",
+        "Les deux pointes vers le haut",
+        "Les deux pointes vers le bas"
+      ],
+      "answer": 0,
+      "explanation": "Ouest : les pointes se rejoignent au milieu, dessinant un sablier. La bande noire est au milieu, entre deux bandes jaunes. Son feu est un scintillant à 9 éclats."
+    },
+    {
+      "id": "bal-08",
+      "theme": "balisage",
+      "prompt": "Une marque cardinale Est porte deux cônes noirs disposés :",
+      "choices": [
+        "Base contre base",
+        "Pointe contre pointe",
+        "Les deux pointes vers le haut",
+        "Les deux pointes vers le bas"
+      ],
+      "answer": 0,
+      "explanation": "Est : les bases se touchent, dessinant un losange. Le noir est en haut et en bas, le jaune au milieu. Feu scintillant à 3 éclats, comme 3 heures sur un cadran."
+    },
+    {
+      "id": "bal-09",
+      "theme": "balisage",
+      "prompt": "Vous voyez de nuit un feu blanc scintillant à 9 éclats groupés. De quelle marque s’agit-il ?",
+      "choices": [
+        "Une cardinale Ouest",
+        "Une cardinale Est",
+        "Une cardinale Sud",
+        "Une marque de danger isolé"
+      ],
+      "answer": 0,
+      "explanation": "Le nombre d’éclats se lit comme les heures sur un cadran : 3 pour l’Est, 6 (plus un éclat long) pour le Sud, 9 pour l’Ouest. Le Nord est un scintillement continu."
+    },
+    {
+      "id": "bal-10",
+      "theme": "balisage",
+      "prompt": "Le feu d’une cardinale Sud comporte 6 éclats suivis d’un éclat long. À quoi sert cet éclat long ?",
+      "choices": [
+        "À distinguer sans ambiguïté le Sud de l’Ouest quand on compte mal les éclats",
+        "À signaler un danger plus important qu’ailleurs",
+        "À indiquer la profondeur disponible",
+        "À prévenir d’un courant traversier"
+      ],
+      "answer": 0,
+      "explanation": "Compter 6 ou 9 éclats rapides de nuit est difficile. L’éclat long confirme qu’il s’agit bien d’une cardinale Sud."
+    },
+    {
+      "id": "bal-11",
+      "theme": "balisage",
+      "prompt": "Une marque entièrement jaune surmontée d’une croix de Saint-André signale :",
+      "choices": [
+        "Une zone particulière : mouillage, câble, baignade, zone de mesure",
+        "Un danger isolé de faible étendue",
+        "Le côté bâbord d’un chenal",
+        "Une épave récente"
+      ],
+      "answer": 0,
+      "explanation": "C’est la marque spéciale. Elle ne signale pas un danger de navigation mais une zone réglementée ou un dispositif particulier. Son feu, quand elle en a un, est jaune."
+    },
+    {
+      "id": "bal-12",
+      "theme": "balisage",
+      "prompt": "Comment se présente une marque de danger nouveau, par exemple une épave récente ?",
+      "choices": [
+        "Bandes verticales bleues et jaunes, avec une croix jaune en voyant",
+        "Corps noir à bandes rouges et deux sphères noires",
+        "Bandes verticales rouges et blanches",
+        "Corps entièrement vert"
+      ],
+      "answer": 0,
+      "explanation": "La marque de danger nouveau est bleue et jaune, avec un feu alterné bleu et jaune. Elle est mouillée en urgence sur un danger non encore porté sur les cartes, puis retirée."
+    },
+    {
+      "id": "bal-13",
+      "theme": "balisage",
+      "prompt": "Dans un chenal, une marque de bifurcation indiquant le chenal préféré à tribord se présente comment ?",
+      "choices": [
+        "Rouge avec une large bande verte horizontale",
+        "Verte avec une large bande rouge horizontale",
+        "Jaune avec une bande noire",
+        "Noire avec une bande rouge"
+      ],
+      "answer": 0,
+      "explanation": "La couleur principale indique le côté à laisser. Rouge dominant avec bande verte : c’est une marque de bâbord, à laisser à bâbord, et le chenal principal part donc à tribord."
+    },
+    {
+      "id": "bal-14",
+      "theme": "balisage",
+      "prompt": "Sur une bouée latérale de tribord en région A, le voyant est :",
+      "choices": [
+        "Un cône pointe en haut, vert",
+        "Un cylindre rouge",
+        "Une sphère rouge",
+        "Une croix jaune"
+      ],
+      "answer": 0,
+      "explanation": "Tribord : conique et vert. Bâbord : cylindrique et rouge. Le voyant permet d’identifier la marque de jour, même si la couleur est délavée ou à contre-jour."
+    },
+    {
+      "id": "bal-15",
+      "theme": "balisage",
+      "prompt": "Vous apercevez une bouée cardinale Est. Où se trouve le danger ?",
+      "choices": [
+        "À l’ouest de la marque",
+        "À l’est de la marque",
+        "Au nord de la marque",
+        "Tout autour de la marque"
+      ],
+      "answer": 0,
+      "explanation": "Une cardinale indique le secteur d’eaux saines. Sur une cardinale Est, on passe à l’est : le danger est donc à l’ouest de la marque."
+    },
+    {
+      "id": "bal-16",
+      "theme": "balisage",
+      "prompt": "Que signale un pavillon rouge à bande blanche diagonale, ou le pavillon Alpha, hissé sur un bateau ?",
+      "choices": [
+        "Une plongée sous-marine en cours : on s’écarte et on ralentit",
+        "Un navire en avarie de moteur",
+        "Un navire qui demande le passage",
+        "Un navire pratiquant la pêche au chalut"
+      ],
+      "answer": 0,
+      "explanation": "Des plongeurs sont à l’eau, parfois loin du bateau. On passe au large et à vitesse réduite : une hélice est mortelle pour un plongeur qui remonte.",
+      "critical": true
+    },
+    {
+      "id": "bal-17",
+      "theme": "balisage",
+      "prompt": "Le balisage latéral s’interprète dans quel sens ?",
+      "choices": [
+        "Le sens conventionnel du chenal, c’est-à-dire en venant du large vers le port",
+        "Toujours du nord vers le sud",
+        "Dans le sens du courant",
+        "Dans le sens choisi par le navigateur"
+      ],
+      "answer": 0,
+      "explanation": "En sortant du port, le balisage s’inverse donc du point de vue du barreur : le rouge se retrouve à tribord. C’est une erreur classique à la sortie d’un chenal."
+    },
+    {
+      "id": "bal-18",
+      "theme": "balisage",
+      "prompt": "Une marque d’eaux saines peut être laissée :",
+      "choices": [
+        "Indifféremment d’un bord ou de l’autre",
+        "Obligatoirement à bâbord",
+        "Obligatoirement à tribord",
+        "À plus de 500 mètres uniquement"
+      ],
+      "answer": 0,
+      "explanation": "Elle indique que les eaux sont saines tout autour. Elle marque en général un milieu de chenal ou un point d’atterrissage, et son feu blanc est isophase, à occultations, à un éclat long ou en morse A."
+    },
+    {
+      "id": "bal-19",
+      "theme": "balisage",
+      "prompt": "Vous voyez de nuit un feu blanc à deux éclats groupés sur une marque. Il s’agit :",
+      "choices": [
+        "D’une marque de danger isolé",
+        "D’une marque d’eaux saines",
+        "D’une cardinale Nord",
+        "D’une marque spéciale"
+      ],
+      "answer": 0,
+      "explanation": "Le danger isolé se signale par un feu blanc à deux éclats — Fl(2) — et, de jour, par deux sphères noires superposées sur un corps noir à bandes rouges."
+    },
+    {
+      "id": "bal-20",
+      "theme": "balisage",
+      "prompt": "Que signifie la couleur jaune dans le système de balisage AISM ?",
+      "choices": [
+        "Une marque spéciale ou une composante des marques cardinales",
+        "Un danger immédiat",
+        "Le côté tribord du chenal",
+        "Une zone de mouillage interdite"
+      ],
+      "answer": 0,
+      "explanation": "Le jaune apparaît sur les marques spéciales, entièrement jaunes, et en alternance avec le noir sur les cardinales. Il ne code jamais un côté de chenal."
+    },
+    {
+      "id": "bar-07",
+      "theme": "barre",
+      "prompt": "Quel indice révèle le plus sûrement un risque d’abordage avec un autre navire ?",
+      "choices": [
+        "Son relèvement reste constant alors que la distance diminue",
+        "Il change souvent de cap",
+        "Il est plus gros que vous",
+        "Il navigue plus vite que vous"
+      ],
+      "answer": 0,
+      "explanation": "Le relèvement constant signifie que vous convergez vers le même point. C’est le signal d’alerte de la règle 7 : agissez sans attendre que la situation se confirme.",
+      "critical": true
+    },
+    {
+      "id": "bar-08",
+      "theme": "barre",
+      "prompt": "Vous êtes le navire privilégié et l’autre ne manœuvre pas. Que devez-vous faire ?",
+      "choices": [
+        "Manœuvrer pour éviter l’abordage : le privilège n’autorise jamais la collision",
+        "Maintenir votre cap coûte que coûte, la faute lui incombera",
+        "Accélérer pour passer devant",
+        "Attendre le dernier moment puis virer sur bâbord"
+      ],
+      "answer": 0,
+      "explanation": "La règle 17 impose au navire privilégié d’agir lorsqu’il devient évident que l’autre ne fait pas le nécessaire. Aucune règle ne prime sur l’obligation d’éviter l’abordage.",
+      "critical": true
+    },
+    {
+      "id": "bar-09",
+      "theme": "barre",
+      "prompt": "Qu’est-ce que la vitesse de sécurité ?",
+      "choices": [
+        "Une vitesse permettant de stopper sur la distance de visibilité, compte tenu du trafic et de la manœuvrabilité",
+        "La vitesse maximale autorisée dans la zone",
+        "La vitesse économique du moteur",
+        "La vitesse à laquelle le bateau déjauge"
+      ],
+      "answer": 0,
+      "explanation": "Règle 6 : la vitesse de sécurité dépend de la visibilité, de la densité du trafic, de la manœuvrabilité du navire, de l’état de la mer et des dangers proches. Elle n’a pas de valeur chiffrée."
+    },
+    {
+      "id": "bar-10",
+      "theme": "barre",
+      "prompt": "Deux voiliers naviguent tribord amures, l’un au vent et l’autre sous le vent. Lequel s’écarte ?",
+      "choices": [
+        "Le navire au vent",
+        "Le navire sous le vent",
+        "Le plus rapide",
+        "Le plus grand"
+      ],
+      "answer": 0,
+      "explanation": "À amures identiques, le navire au vent s’écarte. Il a plus d’air et de manœuvrabilité, et il voit mieux la situation que celui qui est masqué sous le vent."
+    },
+    {
+      "id": "bar-11",
+      "theme": "barre",
+      "prompt": "À quel moment un navire est-il considéré comme rattrapant ?",
+      "choices": [
+        "Lorsqu’il approche par plus de 22,5° sur l’arrière du travers de l’autre navire",
+        "Lorsqu’il navigue plus vite, quel que soit l’angle",
+        "Lorsqu’il se trouve à moins de 100 mètres",
+        "Lorsqu’il est sur le même cap"
+      ],
+      "answer": 0,
+      "explanation": "C’est le secteur du feu de poupe : de nuit, le rattrapant ne voit aucun feu de côté. Dans le doute, on se considère rattrapant et on s’écarte."
+    },
+    {
+      "id": "bar-12",
+      "theme": "barre",
+      "prompt": "Un voilier avance à la voile mais son moteur tourne et propulse le bateau. Que doit-il faire ?",
+      "choices": [
+        "Se considérer comme un navire à propulsion mécanique et en porter les feux et marques",
+        "Rester prioritaire sur les navires à moteur",
+        "Hisser un pavillon jaune",
+        "Réduire sa vitesse de moitié"
+      ],
+      "answer": 0,
+      "explanation": "Dès que le moteur propulse, le voilier est réglementairement un navire à propulsion mécanique. De jour, il doit montrer un cône noir pointe en bas."
+    },
+    {
+      "id": "bar-13",
+      "theme": "barre",
+      "prompt": "Dans un chenal étroit, où doit naviguer un navire ?",
+      "choices": [
+        "Aussi près que possible de la limite tribord du chenal",
+        "Au milieu du chenal",
+        "Du côté bâbord",
+        "Là où le courant est le plus faible"
+      ],
+      "answer": 0,
+      "explanation": "Règle 9 : on serre le côté tribord du chenal. Un navire de moins de 20 mètres ou un voilier ne doit pas gêner un navire qui ne peut naviguer qu’à l’intérieur du chenal."
+    },
+    {
+      "id": "bar-14",
+      "theme": "barre",
+      "prompt": "Un navire à propulsion mécanique croise un navire en train de pêcher. Qui s’écarte ?",
+      "choices": [
+        "Le navire à propulsion mécanique",
+        "Le navire de pêche",
+        "Le plus petit des deux",
+        "Aucun, chacun vient sur tribord"
+      ],
+      "answer": 0,
+      "explanation": "Règle 18 : le navire à moteur s’écarte d’un navire en train de pêcher, dont les engins limitent fortement la manœuvre. Cela ne vaut pas pour un bateau de pêche en simple transit."
+    },
+    {
+      "id": "bar-15",
+      "theme": "barre",
+      "prompt": "Que doit faire tout navire en permanence, quelle que soit la situation ?",
+      "choices": [
+        "Assurer une veille visuelle et auditive permanente",
+        "Maintenir une vitesse constante",
+        "Naviguer au compas",
+        "Rester à plus d’un mille de la côte"
+      ],
+      "answer": 0,
+      "explanation": "Règle 5 : la veille permanente, par tous les moyens disponibles, est la première des obligations. Le pilote automatique et l’électronique ne dispensent jamais de regarder dehors.",
+      "critical": true
+    },
+    {
+      "id": "bar-16",
+      "theme": "barre",
+      "prompt": "Pour éviter un abordage, mieux vaut :",
+      "choices": [
+        "Un changement de cap important et bien visible, plutôt qu’une série de petites corrections",
+        "Une succession de petites corrections progressives",
+        "Un simple ralentissement discret",
+        "Attendre que l’autre navire manœuvre"
+      ],
+      "answer": 0,
+      "explanation": "Règle 8 : la manœuvre doit être franche et immédiatement perceptible, notamment au radar. Des petits changements successifs sont illisibles pour l’autre navire.",
+      "critical": true
+    },
+    {
+      "id": "bar-17",
+      "theme": "barre",
+      "prompt": "Vous naviguez au moteur et croisez la route d’un navire non maître de sa manœuvre. Qui s’écarte ?",
+      "choices": [
+        "Vous : il est en tête de la hiérarchie des privilèges",
+        "Lui, car il doit se signaler",
+        "Chacun vient sur tribord",
+        "Le plus rapide des deux"
+      ],
+      "answer": 0,
+      "explanation": "Un navire non maître de sa manœuvre — avarie de barre ou de propulsion — ne peut pas s’écarter. Il montre deux feux rouges superposés, ou deux boules noires de jour."
+    },
+    {
+      "id": "bar-18",
+      "theme": "barre",
+      "prompt": "Deux voiliers s’approchent, l’un bâbord amures, l’autre tribord amures. Qui est privilégié ?",
+      "choices": [
+        "Celui qui reçoit le vent de tribord",
+        "Celui qui reçoit le vent de bâbord",
+        "Celui qui est au vent",
+        "Celui qui a le plus de toile"
+      ],
+      "answer": 0,
+      "explanation": "Le voilier tribord amures — le vent vient de son côté tribord, la bôme est à bâbord — est privilégié. L’autre s’écarte."
+    },
+    {
+      "id": "bar-19",
+      "theme": "barre",
+      "prompt": "Vous rattrapez un voilier alors que vous êtes à la voile. Qui s’écarte ?",
+      "choices": [
+        "Vous : la règle du rattrapant prime sur les règles entre voiliers",
+        "Le voilier rattrapé, car il est moins rapide",
+        "Celui qui est bâbord amures",
+        "Personne, il suffit de passer sous le vent"
+      ],
+      "answer": 0,
+      "explanation": "Règle 13 : le rattrapant s’écarte, quelles que soient les amures et les modes de propulsion. C’est la règle qui prime sur toutes les autres.",
+      "critical": true
+    },
+    {
+      "id": "bar-20",
+      "theme": "barre",
+      "prompt": "Que devez-vous faire en approchant d’un navire de commerce manœuvrant dans un port ?",
+      "choices": [
+        "Vous tenir largement à l’écart : sa manœuvrabilité et sa visibilité sont très réduites",
+        "Passer au plus près pour être bien vu",
+        "Croiser sur son avant pour dégager rapidement",
+        "Maintenir votre cap, vous êtes plus manœuvrant"
+      ],
+      "answer": 0,
+      "explanation": "Un grand navire a un angle mort de plusieurs centaines de mètres sur l’avant et une distance d’arrêt considérable. Sa route ne se coupe jamais.",
+      "critical": true
+    },
+    {
+      "id": "feu-07",
+      "theme": "feux",
+      "prompt": "Quel secteur horizontal couvre un feu de côté ?",
+      "choices": [
+        "112,5°, de l’avant jusqu’à 22,5° sur l’arrière du travers",
+        "90°, du travers à l’avant",
+        "135° vers l’arrière",
+        "360° sur tout l’horizon"
+      ],
+      "answer": 0,
+      "explanation": "Les deux feux de côté couvrent ensemble 225°, et le feu de poupe les 135° restants : le total fait bien 360°."
+    },
+    {
+      "id": "feu-08",
+      "theme": "feux",
+      "prompt": "Quel secteur couvre le feu de poupe d’un navire ?",
+      "choices": [
+        "135°, centré sur l’axe arrière",
+        "112,5°",
+        "225°",
+        "360°"
+      ],
+      "answer": 0,
+      "explanation": "Le feu de poupe est blanc et couvre 135°, soit 67,5° de chaque bord de l’axe arrière. Le voir seul signifie que le navire s’éloigne."
+    },
+    {
+      "id": "feu-09",
+      "theme": "feux",
+      "prompt": "Un navire à propulsion mécanique de plus de 50 mètres porte, de nuit :",
+      "choices": [
+        "Deux feux de tête de mât, celui de l’arrière plus haut que celui de l’avant",
+        "Un seul feu de tête de mât",
+        "Trois feux blancs superposés",
+        "Deux feux rouges superposés"
+      ],
+      "answer": 0,
+      "explanation": "L’écart entre les deux feux de tête de mât renseigne sur le cap du navire : alignés, il vient vers vous ; très décalés, il présente son travers."
+    },
+    {
+      "id": "feu-10",
+      "theme": "feux",
+      "prompt": "Un navire montre deux feux rouges superposés visibles sur tout l’horizon. Il est :",
+      "choices": [
+        "Non maître de sa manœuvre",
+        "Au mouillage",
+        "En train de pêcher",
+        "Échoué"
+      ],
+      "answer": 0,
+      "explanation": "Deux feux rouges superposés, ou deux boules noires de jour, signalent un navire qui a perdu sa capacité à manœuvrer. Il est en tête de la hiérarchie des privilèges."
+    },
+    {
+      "id": "feu-11",
+      "theme": "feux",
+      "prompt": "De jour, un navire portant trois boules noires superposées est :",
+      "choices": [
+        "Échoué",
+        "Au mouillage",
+        "Non maître de sa manœuvre",
+        "En train de draguer"
+      ],
+      "answer": 0,
+      "explanation": "Une boule : au mouillage. Trois boules superposées : échoué. On s’en écarte, car les hauts-fonds qui l’ont piégé sont proches."
+    },
+    {
+      "id": "feu-12",
+      "theme": "feux",
+      "prompt": "Un voilier faisant route à la voile peut, en plus de ses feux réglementaires, montrer :",
+      "choices": [
+        "Deux feux superposés en tête de mât, rouge au-dessus du vert",
+        "Deux feux blancs superposés",
+        "Un feu jaune à éclats",
+        "Un feu vert unique"
+      ],
+      "answer": 0,
+      "explanation": "C’est une option pour les voiliers, distincte du feu tricolore et qui ne le remplace pas : les feux de côté et de poupe restent obligatoires en plus."
+    },
+    {
+      "id": "feu-13",
+      "theme": "feux",
+      "prompt": "Un navire à propulsion mécanique de moins de 12 mètres peut :",
+      "choices": [
+        "Regrouper feu de tête de mât et feu de poupe en un feu blanc visible sur tout l’horizon",
+        "Ne porter aucun feu",
+        "Porter uniquement un feu rouge",
+        "Utiliser une lampe torche à la place des feux"
+      ],
+      "answer": 0,
+      "explanation": "Cet allègement vaut pour les navires de moins de 12 mètres, mais les deux feux de côté, rouge et vert, restent obligatoires."
+    },
+    {
+      "id": "feu-14",
+      "theme": "feux",
+      "prompt": "De nuit, vous voyez un feu rouge seul, sans autre feu de couleur. Que voyez-vous ?",
+      "choices": [
+        "Le côté bâbord d’un navire",
+        "Le côté tribord d’un navire",
+        "Un navire au mouillage",
+        "Un navire non maître de sa manœuvre"
+      ],
+      "answer": 0,
+      "explanation": "Rouge à bâbord, vert à tribord. Voir son bâbord signifie qu’il se déplace de votre gauche vers votre droite, ou qu’il s’éloigne en biais."
+    },
+    {
+      "id": "feu-15",
+      "theme": "feux",
+      "prompt": "De jour, un voilier qui avance au moteur, voiles hissées, doit montrer :",
+      "choices": [
+        "Un cône noir pointe dirigée vers le bas",
+        "Une boule noire",
+        "Un cylindre noir",
+        "Aucune marque particulière"
+      ],
+      "answer": 0,
+      "explanation": "Le cône pointe en bas signale qu’il s’agit réglementairement d’un navire à propulsion mécanique, malgré les voiles. Cette marque est très souvent oubliée."
+    },
+    {
+      "id": "feu-16",
+      "theme": "feux",
+      "prompt": "Quelle est la portée minimale des feux de côté d’un navire de moins de 12 mètres ?",
+      "choices": [
+        "1 mille",
+        "3 milles",
+        "5 milles",
+        "6 milles"
+      ],
+      "answer": 0,
+      "explanation": "Les portées croissent avec la taille du navire. Sur un navire de moins de 12 mètres : 2 milles pour le feu de tête de mât, 1 mille pour les feux de côté et le feu de poupe."
+    },
+    {
+      "id": "feu-17",
+      "theme": "feux",
+      "prompt": "Un navire au mouillage de moins de 7 mètres, hors chenal et zone de trafic :",
+      "choices": [
+        "N’est pas tenu de montrer un feu de mouillage",
+        "Doit montrer deux feux blancs",
+        "Doit montrer un feu rouge",
+        "Doit montrer trois boules noires"
+      ],
+      "answer": 0,
+      "explanation": "L’exemption vaut hors des chenaux, mouillages et zones fréquentées. En pratique, allumer un feu blanc reste la sagesse même quand ce n’est pas obligatoire."
+    },
+    {
+      "id": "feu-18",
+      "theme": "feux",
+      "prompt": "Vous voyez de nuit un feu vert et, au-dessus, deux feux blancs alignés verticalement. Que se passe-t-il ?",
+      "choices": [
+        "Un navire de plus de 50 mètres vous présente son tribord et se rapproche",
+        "Un navire est au mouillage",
+        "Un navire s’éloigne",
+        "Un voilier fait route à la voile"
+      ],
+      "answer": 0,
+      "explanation": "Deux feux de tête de mât indiquent un navire de plus de 50 mètres ; le feu vert montre que vous voyez son côté tribord. C’est vous qui devez vous écarter s’il est sur votre tribord."
+    },
+    {
+      "id": "feu-19",
+      "theme": "feux",
+      "prompt": "Le feu tricolore de tête de mât d’un voilier de moins de 20 mètres :",
+      "choices": [
+        "Ne doit pas être utilisé lorsque le moteur propulse le bateau",
+        "Peut être utilisé en toutes circonstances",
+        "Remplace le feu de mouillage",
+        "Doit être allumé aussi de jour"
+      ],
+      "answer": 0,
+      "explanation": "Au moteur, le voilier doit montrer les feux d’un navire à propulsion mécanique : feu de tête de mât, feux de côté et feu de poupe, à leur place normale."
+    },
+    {
+      "id": "feu-20",
+      "theme": "feux",
+      "prompt": "Pourquoi les feux de navigation sont-ils obligatoires du coucher au lever du soleil ?",
+      "choices": [
+        "Ils permettent d’identifier la nature, la taille et le cap d’un navire",
+        "Ils éclairent le pont pour l’équipage",
+        "Ils signalent la présence d’un moteur",
+        "Ils remplacent la veille visuelle"
+      ],
+      "answer": 0,
+      "explanation": "Les feux sont un langage : leur couleur, leur nombre et leur disposition disent qui est le navire et vers où il va. Ils s’allument aussi de jour par visibilité réduite."
+    },
+    {
+      "id": "son-07",
+      "theme": "sonores",
+      "prompt": "Combien de temps dure un son prolongé ?",
+      "choices": [
+        "De 4 à 6 secondes",
+        "Environ 1 seconde",
+        "Environ 10 secondes",
+        "Environ 30 secondes"
+      ],
+      "answer": 0,
+      "explanation": "Un son bref dure environ une seconde, un son prolongé de quatre à six secondes. La distinction est essentielle pour interpréter correctement les signaux."
+    },
+    {
+      "id": "son-08",
+      "theme": "sonores",
+      "prompt": "Par visibilité réduite, un navire à propulsion mécanique stoppé et sans erre émet :",
+      "choices": [
+        "Deux sons prolongés séparés d’environ deux secondes, toutes les deux minutes au plus",
+        "Un son prolongé",
+        "Trois sons brefs",
+        "Cinq sons brefs"
+      ],
+      "answer": 0,
+      "explanation": "Un son prolongé signifie « je fais route » ; deux sons prolongés signifient « je suis stoppé et je n’ai plus d’erre ». La distinction renseigne les autres navires sur votre état."
+    },
+    {
+      "id": "son-09",
+      "theme": "sonores",
+      "prompt": "Par visibilité réduite, un voilier faisant route émet :",
+      "choices": [
+        "Un son prolongé suivi de deux sons brefs",
+        "Un son prolongé seul",
+        "Deux sons prolongés",
+        "Trois sons brefs"
+      ],
+      "answer": 0,
+      "explanation": "Ce signal — un long, deux brefs — est commun au voilier, au navire en train de pêcher, au navire non maître de sa manœuvre et au navire à capacité de manœuvre restreinte."
+    },
+    {
+      "id": "son-10",
+      "theme": "sonores",
+      "prompt": "Par visibilité réduite, un navire au mouillage de moins de 100 mètres signale sa présence :",
+      "choices": [
+        "En sonnant la cloche rapidement pendant environ 5 secondes, toutes les minutes au plus",
+        "Par cinq sons brefs",
+        "Par un son prolongé toutes les deux minutes",
+        "Par aucun signal"
+      ],
+      "answer": 0,
+      "explanation": "Un navire au mouillage dans la brume doit se signaler : il est invisible et immobile sur la route des autres. Au-delà de 100 mètres, un gong s’ajoute à la cloche."
+    },
+    {
+      "id": "son-11",
+      "theme": "sonores",
+      "prompt": "Un navire qui vous dépasse dans un chenal étroit émet deux sons prolongés suivis d’un son bref. Que demande-t-il ?",
+      "choices": [
+        "À vous dépasser par votre tribord",
+        "À vous dépasser par votre bâbord",
+        "À ce que vous stoppiez",
+        "À mouiller devant vous"
+      ],
+      "answer": 0,
+      "explanation": "Deux longs et un bref : dépassement par tribord. Deux longs et deux brefs : par bâbord. L’accord se donne par un long, un bref, un long, un bref."
+    },
+    {
+      "id": "son-12",
+      "theme": "sonores",
+      "prompt": "Un navire s’apprête à sortir d’un poste où la visibilité est masquée. Quel signal émet-il ?",
+      "choices": [
+        "Un son prolongé",
+        "Cinq sons brefs",
+        "Trois sons brefs",
+        "Deux sons prolongés"
+      ],
+      "answer": 0,
+      "explanation": "Règle 34(e) : un son prolongé prévient les navires qu’il ne peut pas voir, derrière un môle ou un coude de chenal. Les navires qui l’entendent répondent de même."
+    },
+    {
+      "id": "son-13",
+      "theme": "sonores",
+      "prompt": "Par visibilité réduite, quelle est la conduite à tenir si vous entendez un signal de brume droit devant ?",
+      "choices": [
+        "Réduire à l’allure minimale de gouverne, voire stopper le temps d’évaluer la situation",
+        "Maintenir votre vitesse pour dégager plus vite",
+        "Venir immédiatement sur bâbord",
+        "Émettre cinq sons brefs et poursuivre"
+      ],
+      "answer": 0,
+      "explanation": "Règle 19 : entendre un signal de brume vers l’avant du travers impose de réduire à l’allure minimale, et si nécessaire de stopper l’erre et de naviguer avec la plus grande précaution.",
+      "critical": true
+    },
+    {
+      "id": "son-14",
+      "theme": "sonores",
+      "prompt": "Les signaux de manœuvre à un, deux ou trois sons brefs s’emploient :",
+      "choices": [
+        "Lorsque les navires sont en vue les uns des autres",
+        "Uniquement par visibilité réduite",
+        "Uniquement de nuit",
+        "Uniquement dans les ports"
+      ],
+      "answer": 0,
+      "explanation": "Les signaux de manœuvre annoncent une action à un navire qui vous voit. Par visibilité réduite, ce sont les signaux de la règle 35 qui s’appliquent."
+    },
+    {
+      "id": "son-15",
+      "theme": "sonores",
+      "prompt": "Quel équipement sonore doit posséder un navire de plaisance de moins de 12 mètres ?",
+      "choices": [
+        "Un moyen de produire un signal sonore efficace, corne ou sifflet",
+        "Une sirène électrique de 200 décibels",
+        "Une cloche et un gong obligatoires",
+        "Aucun, le signal sonore est facultatif"
+      ],
+      "answer": 0,
+      "explanation": "Le règlement impose un moyen de faire un signal sonore efficace. Une corne de brume à gaz ou un sifflet suffit sur un petit bateau, mais il doit être à bord et accessible."
+    },
+    {
+      "id": "son-16",
+      "theme": "sonores",
+      "prompt": "Vous doutez des intentions d’un navire qui approche. Que faites-vous ?",
+      "choices": [
+        "Vous émettez au moins cinq sons brefs et rapprochés",
+        "Vous accélérez pour dégager",
+        "Vous coupez le moteur",
+        "Vous allumez tous vos feux"
+      ],
+      "answer": 0,
+      "explanation": "C’est le signal d’avertissement, doublé si possible d’au moins cinq éclats lumineux brefs. Il exprime un doute et appelle une clarification immédiate."
+    },
+    {
+      "id": "son-17",
+      "theme": "sonores",
+      "prompt": "À quelle fréquence maximale un navire faisant route émet-il son signal par visibilité réduite ?",
+      "choices": [
+        "Toutes les deux minutes au plus",
+        "Toutes les dix secondes",
+        "Toutes les cinq minutes",
+        "Toutes les quinze minutes"
+      ],
+      "answer": 0,
+      "explanation": "Deux minutes est l’intervalle maximal. Dans une brume dense et un trafic important, on signale plus souvent."
+    },
+    {
+      "id": "son-18",
+      "theme": "sonores",
+      "prompt": "Quelle est la première mesure à prendre lorsque la visibilité se dégrade brutalement ?",
+      "choices": [
+        "Réduire à une vitesse de sécurité, renforcer la veille et faire porter les équipements de flottabilité",
+        "Augmenter la vitesse pour rejoindre le port",
+        "Éteindre le moteur pour mieux entendre",
+        "Continuer au GPS sans autre changement"
+      ],
+      "answer": 0,
+      "explanation": "Vitesse de sécurité, veille renforcée, feux allumés, signaux sonores et position notée : la brume est la situation où l’on perd le plus vite la conscience de la situation.",
+      "critical": true
+    },
+    {
+      "id": "sec-07",
+      "theme": "securite",
+      "prompt": "Jusqu’à quelle distance d’un abri l’équipement dit « basique » permet-il de naviguer ?",
+      "choices": [
+        "2 milles",
+        "6 milles",
+        "1 mille",
+        "12 milles"
+      ],
+      "answer": 0,
+      "explanation": "Trois niveaux : basique jusqu’à 2 milles, côtier jusqu’à 6 milles, hauturier au-delà. La distance se compte depuis un abri, pas depuis la côte."
+    },
+    {
+      "id": "sec-08",
+      "theme": "securite",
+      "prompt": "Qu’appelle-t-on un abri au sens de la réglementation ?",
+      "choices": [
+        "Un lieu où le navire et son équipage peuvent se mettre en sécurité",
+        "Le port d’attache du bateau",
+        "La plage la plus proche",
+        "Une zone de mouillage autorisée"
+      ],
+      "answer": 0,
+      "explanation": "Un abri permet de mettre le navire et les personnes en sécurité. Une plage exposée au vent dominant n’en est pas un : la notion dépend de la météo du moment."
+    },
+    {
+      "id": "sec-09",
+      "theme": "securite",
+      "prompt": "Quel équipement de repérage est obligatoire dès l’équipement basique ?",
+      "choices": [
+        "Un dispositif lumineux individuel pour chaque équipement de flottabilité",
+        "Une balise satellitaire",
+        "Un radeau de survie",
+        "Un radar"
+      ],
+      "answer": 0,
+      "explanation": "Sans repérage lumineux, une personne à l’eau devient introuvable de nuit à quelques dizaines de mètres seulement. C’est l’équipement le plus décisif du lot.",
+      "critical": true
+    },
+    {
+      "id": "sec-10",
+      "theme": "securite",
+      "prompt": "Combien de feux rouges à main l’équipement côtier impose-t-il ?",
+      "choices": [
+        "Trois",
+        "Un",
+        "Six",
+        "Aucun"
+      ],
+      "answer": 0,
+      "explanation": "Trois feux rouges à main s’ajoutent à l’équipement basique pour la navigation jusqu’à 6 milles, avec le compas, les cartes, le RIPAM et la VHF fixe."
+    },
+    {
+      "id": "sec-11",
+      "theme": "securite",
+      "prompt": "Que faire des artifices de détresse périmés ?",
+      "choices": [
+        "Les rapporter à un point de collecte : ils ne se jettent ni à la mer ni aux ordures",
+        "Les jeter à la mer, ils sont biodégradables",
+        "Les brûler à terre",
+        "Les garder à bord indéfiniment"
+      ],
+      "answer": 0,
+      "explanation": "Ce sont des déchets pyrotechniques dangereux. Ils se déposent en déchetterie ou chez un revendeur agréé. Périmés, ils peuvent fuser de façon imprévisible."
+    },
+    {
+      "id": "sec-12",
+      "theme": "securite",
+      "prompt": "Quel est le rôle de la ligne de mouillage dans l’équipement de sécurité ?",
+      "choices": [
+        "Permettre de stopper la dérive du bateau en cas d’avarie",
+        "Servir uniquement au stationnement de confort",
+        "Remorquer un autre navire",
+        "Amarrer au ponton"
+      ],
+      "answer": 0,
+      "explanation": "En cas de panne moteur près d’une côte sous le vent, mouiller est souvent le geste qui évite l’échouement. C’est un équipement de sécurité, pas un accessoire.",
+      "critical": true
+    },
+    {
+      "id": "sec-13",
+      "theme": "securite",
+      "prompt": "Un équipement individuel de flottabilité doit avoir quelle flottabilité minimale en navigation côtière ?",
+      "choices": [
+        "100 newtons pour un adulte",
+        "20 newtons",
+        "10 newtons",
+        "500 newtons"
+      ],
+      "answer": 0,
+      "explanation": "La flottabilité s’exprime en newtons : 50 N pour l’aide à la flottabilité, 100 N et plus pour les gilets de sauvetage. Au-delà de 2 milles, 100 N minimum est exigé."
+    },
+    {
+      "id": "sec-14",
+      "theme": "securite",
+      "prompt": "Avant d’appareiller, quel élément de la météo est le plus déterminant pour un petit bateau ?",
+      "choices": [
+        "La force et la direction du vent, croisées avec l’état de la mer et le courant",
+        "La température de l’air",
+        "L’humidité relative",
+        "La pression atmosphérique seule"
+      ],
+      "answer": 0,
+      "explanation": "Un vent modéré contre un fort courant lève une mer courte et dangereuse. Le vent seul ne dit pas tout : il faut le croiser avec le courant et le fetch."
+    },
+    {
+      "id": "sec-15",
+      "theme": "securite",
+      "prompt": "Que faut-il vérifier concernant le carburant avant une sortie ?",
+      "choices": [
+        "Prévoir une marge : un tiers aller, un tiers retour, un tiers de réserve",
+        "Faire le plein au départ suffit",
+        "La moitié du réservoir suffit toujours",
+        "Rien, le moteur consomme peu"
+      ],
+      "answer": 0,
+      "explanation": "La règle des tiers laisse de la marge pour un vent contraire, un détour ou une avarie. La panne sèche est l’une des premières causes d’assistance en mer."
+    },
+    {
+      "id": "sec-16",
+      "theme": "securite",
+      "prompt": "Un incendie se déclare à bord. Quelle est la première mesure ?",
+      "choices": [
+        "Couper l’arrivée de carburant et l’alimentation électrique, puis attaquer le feu",
+        "Jeter de l’eau de mer sur le moteur",
+        "Ouvrir grand le capot moteur pour voir les flammes",
+        "Sauter immédiatement à l’eau"
+      ],
+      "answer": 0,
+      "explanation": "Ouvrir le capot apporte de l’oxygène et attise le feu. On coupe les alimentations, on utilise l’extincteur par un orifice si possible, et on prépare l’évacuation.",
+      "critical": true
+    },
+    {
+      "id": "sec-17",
+      "theme": "securite",
+      "prompt": "Qui doit informer une personne à terre du programme de navigation ?",
+      "choices": [
+        "Le chef de bord, avant d’appareiller",
+        "Personne, c’est facultatif en côtier",
+        "Uniquement le loueur du bateau",
+        "Le CROSS, par VHF"
+      ],
+      "answer": 0,
+      "explanation": "Prévenir un proche de la zone et de l’heure de retour prévue permet de déclencher les recherches à temps. C’est gratuit et cela sauve des vies.",
+      "critical": true
+    },
+    {
+      "id": "sec-18",
+      "theme": "securite",
+      "prompt": "À quoi sert le dispositif d’assèchement obligatoire à bord ?",
+      "choices": [
+        "À évacuer l’eau embarquée : écope, seau ou pompe selon le navire",
+        "À vider le réservoir de carburant",
+        "À nettoyer le pont",
+        "À alimenter le circuit de refroidissement"
+      ],
+      "answer": 0,
+      "explanation": "Une voie d’eau ou un paquet de mer se traite d’abord en évacuant l’eau. Un simple seau reste souvent plus efficace qu’une petite pompe électrique."
+    },
+    {
+      "id": "met-07",
+      "theme": "meteo",
+      "prompt": "Le vent annoncé « de secteur nord-ouest » souffle :",
+      "choices": [
+        "Depuis le nord-ouest vers le sud-est",
+        "Vers le nord-ouest",
+        "Parallèlement à la côte",
+        "Uniquement en altitude"
+      ],
+      "answer": 0,
+      "explanation": "En marine comme en météo, le vent est toujours nommé par la direction d’où il vient. Le courant, lui, est nommé par la direction vers laquelle il porte."
+    },
+    {
+      "id": "met-08",
+      "theme": "meteo",
+      "prompt": "À partir de quelle force un avis de coup de vent est-il diffusé ?",
+      "choices": [
+        "Force 8",
+        "Force 6",
+        "Force 7",
+        "Force 10"
+      ],
+      "answer": 0,
+      "explanation": "Avis de vent fort à partir de force 7, avis de coup de vent à partir de force 8, avis de tempête à partir de force 10. Un BMS annonce ces phénomènes."
+    },
+    {
+      "id": "met-09",
+      "theme": "meteo",
+      "prompt": "Que se passe-t-il lorsque le vent souffle contre le courant ?",
+      "choices": [
+        "La mer se creuse et les vagues deviennent courtes et abruptes",
+        "La mer s’aplatit",
+        "Le vent faiblit",
+        "Le courant s’inverse"
+      ],
+      "answer": 0,
+      "explanation": "C’est la situation la plus traître de la navigation côtière : une zone praticable au changement de marée peut devenir dangereuse deux heures plus tard, à vent constant.",
+      "critical": true
+    },
+    {
+      "id": "met-10",
+      "theme": "meteo",
+      "prompt": "Une brise de mer s’établit typiquement :",
+      "choices": [
+        "L’après-midi, soufflant de la mer vers la terre réchauffée",
+        "La nuit, de la terre vers la mer",
+        "Uniquement en hiver",
+        "Uniquement par ciel couvert"
+      ],
+      "answer": 0,
+      "explanation": "La terre chauffe plus vite que la mer : l’air chaud s’élève et appelle l’air marin. Le soir, le phénomène s’inverse en brise de terre, plus faible."
+    },
+    {
+      "id": "met-11",
+      "theme": "meteo",
+      "prompt": "Un coefficient de marée de 40 correspond à :",
+      "choices": [
+        "Des mortes-eaux : faible marnage et courants modérés",
+        "Des vives-eaux",
+        "Une marée exceptionnelle",
+        "Une absence de marée"
+      ],
+      "answer": 0,
+      "explanation": "L’échelle va de 20 à 120. Autour de 45, mortes-eaux ; autour de 95, vives-eaux. Le coefficient conditionne à la fois le marnage et la force des courants."
+    },
+    {
+      "id": "met-12",
+      "theme": "meteo",
+      "prompt": "Comment obtient-on la profondeur réelle sous la quille à un instant donné ?",
+      "choices": [
+        "En ajoutant la hauteur de marée du moment à la sonde portée sur la carte",
+        "En lisant directement la sonde de la carte",
+        "En retranchant la hauteur de marée de la sonde",
+        "En divisant la sonde par le coefficient"
+      ],
+      "answer": 0,
+      "explanation": "Les sondes sont référencées au zéro hydrographique, niveau des plus basses mers. La hauteur d’eau du moment s’y ajoute toujours.",
+      "critical": true
+    },
+    {
+      "id": "met-13",
+      "theme": "meteo",
+      "prompt": "Selon la règle des douzièmes, quelle fraction du marnage la marée parcourt-elle pendant la troisième heure ?",
+      "choices": [
+        "3/12",
+        "1/12",
+        "2/12",
+        "6/12"
+      ],
+      "answer": 0,
+      "explanation": "La séquence est 1, 2, 3, 3, 2, 1 douzièmes. La marée est donc la plus rapide au milieu du cycle, et les courants y sont les plus forts."
+    },
+    {
+      "id": "met-14",
+      "theme": "meteo",
+      "prompt": "Que désigne l’étale de marée ?",
+      "choices": [
+        "Le moment où le niveau ne varie plus, à pleine mer ou à basse mer",
+        "Le moment de plus fort courant",
+        "La différence entre deux pleines mers",
+        "La hauteur moyenne de la mer"
+      ],
+      "answer": 0,
+      "explanation": "L’étale est le court moment de niveau stable, généralement associé à un courant minimal. C’est souvent le meilleur moment pour franchir une passe."
+    },
+    {
+      "id": "met-15",
+      "theme": "meteo",
+      "prompt": "Où et comment obtenir un bulletin météo marine en mer ?",
+      "choices": [
+        "Par VHF, auprès des CROSS, après annonce sur le canal 16",
+        "Uniquement par téléphone portable",
+        "Uniquement avant le départ, à la capitainerie",
+        "Par le canal 70 en phonie"
+      ],
+      "answer": 0,
+      "explanation": "Les CROSS diffusent les bulletins côtiers et les BMS à heures fixes sur des canaux de travail, annoncés au préalable sur le 16. Le canal 70 est réservé à l’ASN."
+    },
+    {
+      "id": "met-16",
+      "theme": "meteo",
+      "prompt": "De combien les heures de marée se décalent-elles environ chaque jour ?",
+      "choices": [
+        "D’environ 50 minutes",
+        "De 5 minutes",
+        "De 2 heures",
+        "Elles ne se décalent pas"
+      ],
+      "answer": 0,
+      "explanation": "Le cycle lunaire semi-diurne dure environ 12 h 25, soit près de 24 h 50 pour deux cycles : les horaires reculent donc d’environ 50 minutes par jour."
+    },
+    {
+      "id": "met-17",
+      "theme": "meteo",
+      "prompt": "Que traduit une baisse rapide du baromètre ?",
+      "choices": [
+        "L’arrivée probable d’une perturbation et d’un renforcement du vent",
+        "Un beau temps durable",
+        "Une hausse de la température",
+        "Une baisse du niveau de la mer"
+      ],
+      "answer": 0,
+      "explanation": "Ce n’est pas la valeur absolue qui compte mais la tendance : une chute rapide annonce un vent qui forcit. Une hausse rapide peut aussi générer du vent fort."
+    },
+    {
+      "id": "met-18",
+      "theme": "meteo",
+      "prompt": "Force 6 sur l’échelle de Beaufort correspond à :",
+      "choices": [
+        "Un vent frais, environ 22 à 27 nœuds",
+        "Une brise légère",
+        "Un coup de vent",
+        "Un calme plat"
+      ],
+      "answer": 0,
+      "explanation": "Force 6, vent frais, 22 à 27 nœuds : la mer est formée, les crêtes déferlent. C’est déjà beaucoup pour un petit bateau de plaisance."
+    },
+    {
+      "id": "rad-07",
+      "theme": "radio",
+      "prompt": "Après avoir établi le contact sur le canal 16, que doit-on faire ?",
+      "choices": [
+        "Passer sur un canal de travail pour libérer le 16",
+        "Poursuivre la conversation sur le 16",
+        "Passer sur le canal 70",
+        "Couper la VHF"
+      ],
+      "answer": 0,
+      "explanation": "Le 16 est un canal d’appel et de détresse : il doit rester libre. Une conversation qui s’y prolonge peut empêcher un appel de détresse d’être entendu.",
+      "critical": true
+    },
+    {
+      "id": "rad-08",
+      "theme": "radio",
+      "prompt": "Quel est l’ordre correct des éléments d’un message de détresse ?",
+      "choices": [
+        "MAYDAY ×3, nom du navire ×3, indicatif ou MMSI, position, nature de la détresse, secours demandé, personnes à bord",
+        "Position, MAYDAY, nom du navire",
+        "Nom du navire, secours demandé, MAYDAY",
+        "MAYDAY, puis attendre une réponse avant de continuer"
+      ],
+      "answer": 0,
+      "explanation": "La structure est fixe pour être comprise même dans de mauvaises conditions de réception. On termine par « à vous » et on répète si personne ne répond.",
+      "critical": true
+    },
+    {
+      "id": "rad-09",
+      "theme": "radio",
+      "prompt": "Que se passe-t-il si l’on appuie longuement sur la touche de détresse d’une VHF ASN ?",
+      "choices": [
+        "Un appel numérique part avec l’identité du navire et, si le GPS est relié, sa position",
+        "Rien tant qu’on ne parle pas",
+        "La VHF s’éteint",
+        "Un message vocal préenregistré est diffusé"
+      ],
+      "answer": 0,
+      "explanation": "L’alerte ASN part sur le canal 70 et déclenche une alarme chez tous les navires équipés à portée, ainsi qu’aux CROSS. Elle complète l’appel vocal sans le remplacer."
+    },
+    {
+      "id": "rad-10",
+      "theme": "radio",
+      "prompt": "Que faire si vous déclenchez une alerte de détresse par erreur ?",
+      "choices": [
+        "Annuler immédiatement par un message vocal sur le canal 16 en précisant votre identité",
+        "Éteindre la VHF et ne rien dire",
+        "Attendre que les secours appellent",
+        "Changer de canal discrètement"
+      ],
+      "answer": 0,
+      "explanation": "Une fausse alerte non annulée mobilise des moyens de secours. L’annuler est une obligation, et ce n’est jamais sanctionné : le silence, lui, l’est."
+    },
+    {
+      "id": "rad-11",
+      "theme": "radio",
+      "prompt": "Quelle est la portée typique d’une VHF marine fixe entre deux bateaux de plaisance ?",
+      "choices": [
+        "Quelques milles seulement, car elle dépend de la hauteur des antennes",
+        "Une centaine de milles",
+        "Illimitée",
+        "Un demi-mille"
+      ],
+      "answer": 0,
+      "explanation": "La VHF se propage à vue directe. Entre deux antennes basses, la portée est de quelques milles ; vers une station côtière en hauteur, elle atteint 20 à 30 milles."
+    },
+    {
+      "id": "rad-12",
+      "theme": "radio",
+      "prompt": "Que signifie l’indicatif « SÉCURITÉ » répété trois fois ?",
+      "choices": [
+        "Un message de sécurité concernant la navigation ou la météorologie va suivre",
+        "Une détresse absolue",
+        "Une urgence médicale",
+        "Un essai radio"
+      ],
+      "answer": 0,
+      "explanation": "C’est le niveau le plus bas des trois : information de sécurité. Les CROSS l’utilisent pour annoncer les BMS ou signaler un objet flottant dangereux."
+    },
+    {
+      "id": "rad-13",
+      "theme": "radio",
+      "prompt": "Quel organisme assure la veille radio et coordonne les secours en mer en France ?",
+      "choices": [
+        "Le CROSS",
+        "La capitainerie du port",
+        "La gendarmerie maritime uniquement",
+        "Météo-France"
+      ],
+      "answer": 0,
+      "explanation": "Le CROSS — Centre régional opérationnel de surveillance et de sauvetage — veille en permanence le canal 16 et coordonne les moyens de secours de sa zone."
+    },
+    {
+      "id": "rad-14",
+      "theme": "radio",
+      "prompt": "Dans un message de détresse, pourquoi indiquer le nombre de personnes à bord ?",
+      "choices": [
+        "Pour que les secours sachent combien de personnes rechercher",
+        "Pour calculer le coût de l’intervention",
+        "Pour vérifier la capacité du bateau",
+        "Ce n’est pas nécessaire"
+      ],
+      "answer": 0,
+      "explanation": "C’est une information vitale : elle détermine les moyens engagés et indique aux sauveteurs quand les recherches sont terminées.",
+      "critical": true
+    },
+    {
+      "id": "rad-15",
+      "theme": "radio",
+      "prompt": "Un équipier est gravement blessé mais le bateau n’est pas en danger. Quel message émettez-vous ?",
+      "choices": [
+        "PAN PAN, ou PAN PAN MEDICO pour une assistance médicale",
+        "MAYDAY",
+        "SÉCURITÉ",
+        "Un simple appel de routine"
+      ],
+      "answer": 0,
+      "explanation": "PAN PAN signale une urgence sans danger immédiat pour le navire. La mention MEDICO oriente vers une consultation médicale à distance."
+    },
+    {
+      "id": "rad-16",
+      "theme": "radio",
+      "prompt": "Que ne doit-on jamais faire avec une VHF marine ?",
+      "choices": [
+        "L’utiliser pour des conversations privées ou brouiller les canaux de service",
+        "L’allumer au départ",
+        "Régler le squelch",
+        "Veiller le canal 16"
+      ],
+      "answer": 0,
+      "explanation": "La VHF est un service de sécurité, pas un téléphone. L’encombrement des canaux et les émissions fantaisistes sont sanctionnés et peuvent coûter des vies."
+    },
+    {
+      "id": "rad-17",
+      "theme": "radio",
+      "prompt": "À quoi correspondent les trois premiers chiffres d’un numéro MMSI ?",
+      "choices": [
+        "Au pays d’immatriculation de la station",
+        "À la longueur du navire",
+        "À l’année de mise en service",
+        "Au type de VHF"
+      ],
+      "answer": 0,
+      "explanation": "Ce préfixe est l’identifiant de nationalité maritime. Pour la France, il commence par 226, 227 ou 228."
+    },
+    {
+      "id": "reg-07",
+      "theme": "reglementation",
+      "prompt": "Qui est responsable de la sécurité à bord d’un navire de plaisance ?",
+      "choices": [
+        "Le chef de bord",
+        "Le propriétaire, même absent",
+        "Le passager le plus expérimenté",
+        "L’assureur"
+      ],
+      "answer": 0,
+      "explanation": "Le chef de bord répond du navire, de l’équipement de sécurité, du nombre de personnes embarquées et des décisions de navigation. C’est une responsabilité personnelle.",
+      "critical": true
+    },
+    {
+      "id": "reg-08",
+      "theme": "reglementation",
+      "prompt": "Le permis côtier autorise-t-il à naviguer de nuit ?",
+      "choices": [
+        "Oui, dans la limite de 6 milles d’un abri",
+        "Non, jamais",
+        "Oui, sans limite de distance",
+        "Seulement avec une extension spécifique"
+      ],
+      "answer": 0,
+      "explanation": "L’option côtière ne comporte pas de restriction horaire : elle vaut de jour comme de nuit, dans la limite des 6 milles d’un abri."
+    },
+    {
+      "id": "reg-09",
+      "theme": "reglementation",
+      "prompt": "Que faut-il pour naviguer au-delà de 6 milles d’un abri ?",
+      "choices": [
+        "L’extension hauturière, qui ne comporte pas de limite de distance",
+        "Rien de plus que le permis côtier",
+        "Une autorisation de la capitainerie",
+        "Un second permis côtier"
+      ],
+      "answer": 0,
+      "explanation": "L’extension hauturière s’obtient par une épreuve de navigation sur carte. L’équipement de sécurité doit alors passer au niveau hauturier."
+    },
+    {
+      "id": "reg-10",
+      "theme": "reglementation",
+      "prompt": "Dans une zone réservée aux baigneurs, la navigation est :",
+      "choices": [
+        "Interdite, sauf franchissement par un chenal traversier",
+        "Autorisée à 5 nœuds",
+        "Autorisée hors saison",
+        "Autorisée pour les voiliers seulement"
+      ],
+      "answer": 0,
+      "explanation": "Les ZRUB sont matérialisées par des bouées jaunes sphériques. On ne les traverse pas : on utilise le chenal traversier prévu, à 5 nœuds maximum.",
+      "critical": true
+    },
+    {
+      "id": "reg-11",
+      "theme": "reglementation",
+      "prompt": "À quelle distance de la côte la bande littorale des 300 mètres se mesure-t-elle ?",
+      "choices": [
+        "Depuis la limite des eaux à marée basse",
+        "Depuis la digue du port",
+        "Depuis la première bouée",
+        "Depuis la ligne des plus hautes mers"
+      ],
+      "answer": 0,
+      "explanation": "La bande des 300 mètres se compte depuis la limite des eaux côté rivage. La vitesse y est limitée à 5 nœuds, quelle que soit la fréquentation."
+    },
+    {
+      "id": "reg-12",
+      "theme": "reglementation",
+      "prompt": "Le ski nautique et les engins tractés sont-ils autorisés dans la bande des 300 mètres ?",
+      "choices": [
+        "Non, sauf dans un chenal balisé prévu à cet effet",
+        "Oui, à 5 nœuds",
+        "Oui, sans restriction",
+        "Oui, uniquement le matin"
+      ],
+      "answer": 0,
+      "explanation": "Ces activités sont incompatibles avec la limitation à 5 nœuds et la présence de baigneurs. Elles se pratiquent au large de la bande, hors zones interdites."
+    },
+    {
+      "id": "reg-13",
+      "theme": "reglementation",
+      "prompt": "Que faire des eaux de fond de cale contenant des hydrocarbures ?",
+      "choices": [
+        "Les débarquer dans une installation portuaire prévue à cet effet",
+        "Les rejeter au large des 3 milles",
+        "Les diluer avant rejet",
+        "Les rejeter la nuit"
+      ],
+      "answer": 0,
+      "explanation": "Tout rejet d’hydrocarbures est interdit. Un litre d’huile pollue des milliers de mètres carrés : les ports disposent de bacs de récupération gratuits."
+    },
+    {
+      "id": "reg-14",
+      "theme": "reglementation",
+      "prompt": "Comment doit-on se comporter à l’approche de dauphins ou de cétacés ?",
+      "choices": [
+        "Maintenir une vitesse et un cap constants, ne pas les poursuivre ni couper leur route",
+        "S’en approcher au plus près pour les photographier",
+        "Les suivre pour les observer plus longtemps",
+        "Accélérer pour les faire jouer à l’étrave"
+      ],
+      "answer": 0,
+      "explanation": "La perturbation des mammifères marins est réglementée. Une route constante et prévisible leur permet de décider eux-mêmes de s’approcher ou de s’éloigner."
+    },
+    {
+      "id": "reg-15",
+      "theme": "reglementation",
+      "prompt": "Le mouillage sur un herbier de posidonie en Méditerranée est :",
+      "choices": [
+        "Interdit ou strictement encadré selon les zones",
+        "Libre partout",
+        "Autorisé la nuit seulement",
+        "Autorisé si l’ancre est légère"
+      ],
+      "answer": 0,
+      "explanation": "Une ancre arrache des plants qui mettent des décennies à repousser. On privilégie les fonds de sable clairs ou les bouées de mouillage organisé."
+    },
+    {
+      "id": "reg-16",
+      "theme": "reglementation",
+      "prompt": "Que doit-on faire en cas d’assistance à un navire en difficulté ?",
+      "choices": [
+        "Porter assistance dans la mesure du possible, sans mettre son propre navire en danger",
+        "Ignorer, sauf s’il y a une prime",
+        "Appeler les secours puis poursuivre sa route",
+        "Attendre l’autorisation du CROSS"
+      ],
+      "answer": 0,
+      "explanation": "L’obligation d’assistance est un principe fondamental du droit maritime. Elle s’exerce dans la limite des moyens du bord et sans créer un second sinistre.",
+      "critical": true
+    },
+    {
+      "id": "reg-17",
+      "theme": "reglementation",
+      "prompt": "À partir de quel âge peut-on conduire seul un bateau de plaisance à moteur de plus de 6 CV en mer ?",
+      "choices": [
+        "16 ans, avec le permis plaisance option côtière",
+        "14 ans",
+        "18 ans",
+        "21 ans"
+      ],
+      "answer": 0,
+      "explanation": "Le permis plaisance option côtière s’obtient à 16 ans. En dessous de cette puissance, aucun titre n’est exigé, quel que soit l’âge."
+    },
+    {
+      "id": "reg-18",
+      "theme": "reglementation",
+      "prompt": "Les documents à avoir à bord d’un navire de plaisance en navigation côtière comprennent :",
+      "choices": [
+        "Le titre de navigation, le permis du chef de bord et l’acte de francisation le cas échéant",
+        "Uniquement le permis",
+        "Uniquement l’assurance",
+        "Aucun document"
+      ],
+      "answer": 0,
+      "explanation": "S’y ajoutent, pour la navigation côtière, les cartes de la zone, le RIPAM et le document de synthèse de la division 240."
+    },
+    {
+      "id": "nav-07",
+      "theme": "navigation",
+      "prompt": "Combien de mètres représente une minute de latitude ?",
+      "choices": [
+        "1 852 mètres, soit un mille nautique",
+        "1 000 mètres",
+        "100 mètres",
+        "10 000 mètres"
+      ],
+      "answer": 0,
+      "explanation": "C’est la définition même du mille nautique. Cette équivalence permet de mesurer toute distance directement sur l’échelle latérale d’une carte marine."
+    },
+    {
+      "id": "nav-08",
+      "theme": "navigation",
+      "prompt": "Pourquoi ne mesure-t-on pas les distances sur l’échelle des longitudes ?",
+      "choices": [
+        "Parce qu’en projection Mercator, la longueur d’une minute de longitude varie avec la latitude",
+        "Parce qu’elle est moins précise",
+        "Parce qu’elle est graduée en kilomètres",
+        "Parce qu’elle n’est pas imprimée sur les cartes"
+      ],
+      "answer": 0,
+      "explanation": "Les méridiens se rapprochent vers les pôles. Seule l’échelle des latitudes, en bordure verticale, donne le mille nautique."
+    },
+    {
+      "id": "nav-09",
+      "theme": "navigation",
+      "prompt": "Que représente la déclinaison magnétique ?",
+      "choices": [
+        "L’écart angulaire entre le nord géographique et le nord magnétique en un lieu donné",
+        "L’erreur propre au compas du bateau",
+        "L’angle entre le cap et la route fond",
+        "L’inclinaison du champ magnétique"
+      ],
+      "answer": 0,
+      "explanation": "La déclinaison dépend du lieu et évolue lentement dans le temps. Elle est indiquée sur la rose des vents de la carte, avec sa variation annuelle."
+    },
+    {
+      "id": "nav-10",
+      "theme": "navigation",
+      "prompt": "Qu’est-ce que la déviation du compas ?",
+      "choices": [
+        "L’erreur due au magnétisme propre du bateau, variable selon le cap",
+        "L’écart entre nord vrai et nord magnétique",
+        "La dérive due au vent",
+        "Le décalage horaire"
+      ],
+      "answer": 0,
+      "explanation": "Masses métalliques et appareils électriques perturbent le compas. La déviation change avec le cap, d’où la courbe de déviation propre à chaque bateau."
+    },
+    {
+      "id": "nav-11",
+      "theme": "navigation",
+      "prompt": "Quelle différence y a-t-il entre le cap suivi et la route sur le fond ?",
+      "choices": [
+        "La route sur le fond tient compte du courant et de la dérive due au vent",
+        "Aucune, ce sont deux mots pour la même chose",
+        "La route sur le fond se mesure au compas",
+        "Le cap se mesure au GPS"
+      ],
+      "answer": 0,
+      "explanation": "C’est la route sur le fond qui décide si vous évitez un danger. Par courant de travers, on peut tenir un cap parfait et dériver droit sur un caillou.",
+      "critical": true
+    },
+    {
+      "id": "nav-12",
+      "theme": "navigation",
+      "prompt": "Comment fait-on un point par relèvements ?",
+      "choices": [
+        "En croisant les relèvements d’au moins deux amers identifiés sur la carte",
+        "En mesurant la profondeur",
+        "En notant l’heure et la vitesse",
+        "En lisant la latitude au compas"
+      ],
+      "answer": 0,
+      "explanation": "Deux relèvements suffisent, trois valent mieux : le petit triangle qu’ils forment donne une idée de la précision. C’est la méthode de secours si le GPS tombe."
+    },
+    {
+      "id": "nav-13",
+      "theme": "navigation",
+      "prompt": "Vous naviguez à 6 nœuds. Quelle distance parcourez-vous en 30 minutes ?",
+      "choices": [
+        "3 milles",
+        "6 milles",
+        "12 milles",
+        "1,5 mille"
+      ],
+      "answer": 0,
+      "explanation": "Distance = vitesse × temps. À 6 nœuds pendant une demi-heure, on parcourt 3 milles. Ce calcul mental est la base de l’estime."
+    },
+    {
+      "id": "nav-14",
+      "theme": "navigation",
+      "prompt": "Que doit-on faire avant d’utiliser une carte marine ?",
+      "choices": [
+        "Vérifier qu’elle est à jour : les balisages et les fonds évoluent",
+        "Rien, une carte ne se périme pas",
+        "La plastifier",
+        "Vérifier son échelle uniquement"
+      ],
+      "answer": 0,
+      "explanation": "Bancs de sable, épaves et balisages changent. Une carte ancienne peut indiquer une bouée disparue ou ignorer un haut-fond nouvellement signalé.",
+      "critical": true
+    },
+    {
+      "id": "nav-15",
+      "theme": "navigation",
+      "prompt": "Que signifie une zone colorée en bleu foncé sur une carte marine ?",
+      "choices": [
+        "Une zone de faible profondeur, à approcher avec précaution",
+        "Une zone de mouillage recommandée",
+        "Une zone interdite à la navigation",
+        "Une zone de courant fort"
+      ],
+      "answer": 0,
+      "explanation": "Les teintes de bleu s’assombrissent quand la profondeur diminue ; le blanc correspond aux grands fonds. C’est une lecture visuelle rapide du danger."
+    },
+    {
+      "id": "nav-16",
+      "theme": "navigation",
+      "prompt": "Quelle information le sondeur donne-t-il exactement ?",
+      "choices": [
+        "La profondeur mesurée sous la sonde, à régler selon le tirant d’eau",
+        "La profondeur totale depuis la surface, toujours",
+        "La nature du fond",
+        "La distance à la côte"
+      ],
+      "answer": 0,
+      "explanation": "Selon le réglage, le sondeur affiche la profondeur sous la sonde, sous la quille ou depuis la surface. Savoir ce qu’il affiche évite un échouement."
+    },
+    {
+      "id": "nav-17",
+      "theme": "navigation",
+      "prompt": "Que faire si la position GPS ne correspond pas à ce que vous voyez autour de vous ?",
+      "choices": [
+        "Faire confiance à l’observation visuelle et vérifier par relèvements",
+        "Faire confiance au GPS, il est plus précis",
+        "Éteindre puis rallumer le GPS et continuer",
+        "Ignorer l’incohérence"
+      ],
+      "answer": 0,
+      "explanation": "Une incohérence est un signal d’alerte : mauvais datum de carte, position saisie à la main, ou panne. Les yeux et la sonde priment toujours.",
+      "critical": true
+    },
+    {
+      "id": "nav-18",
+      "theme": "navigation",
+      "prompt": "Quelle est l’unité de mesure de la vitesse en navigation maritime ?",
+      "choices": [
+        "Le nœud, égal à un mille nautique par heure",
+        "Le kilomètre-heure",
+        "Le mètre par seconde",
+        "Le mille terrestre par heure"
+      ],
+      "answer": 0,
+      "explanation": "Un nœud vaut environ 1,852 km/h. L’expression « nœuds à l’heure » est fautive : l’unité contient déjà la notion de temps."
     }
   ],
   "EXAM_LENGTH": 40,

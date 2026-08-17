@@ -33,7 +33,8 @@ C'est un fichier autonome : il marche aussi bien en mode avion.
 - **Cours** — neuf leçons couvrant le programme officiel : balisage, règles de barre, feux et
   marques, signaux sonores, sécurité, météo et marées, VHF, réglementation, navigation. Chaque
   leçon se termine par un encadré « à retenir » et un raccourci vers les questions du thème.
-- **Entraînement** — séries par thème, correction immédiate et explication à chaque réponse.
+- **Entraînement** — 167 questions réparties sur les neuf thèmes, en séries par thème, avec
+  correction immédiate et explication à chaque réponse.
 - **Examen blanc** — 40 questions tirées de tout le programme, avec la règle réelle en vigueur
   depuis le 1er juin 2022 : admis à 5 fautes maximum, soit 35 bonnes réponses minimum.
 - **Mes erreurs** — série constituée automatiquement des questions ratées à la dernière tentative.
